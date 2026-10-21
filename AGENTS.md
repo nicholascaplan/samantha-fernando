@@ -21,7 +21,7 @@
 - `docs/content.md` is the complete CMS-ready source of truth for all content rendered on the site, including metadata, page copy, works, events, media, links, writing, and contact fields. Update it whenever site content changes.
 - `docs/decisions.md` records settled decisions that constrain future work.
 - `docs/next-steps.md` contains unresolved implementation, product and maintenance work.
-- `docs/go-live-plan.md` contains the GitHub Pages cutover and rollback procedure. It is operational documentation and is not part of the published artifact.
+- `docs/hosting.md` covers production hosting, DNS precautions, deployment verification and recovery. It is operational documentation and is not part of the published artifact.
 - `docs/questions-for-sam.md` contains content and product decisions requiring Samantha's input.
 - `docs/website-content-map-specifications.md` is a concise reference to the retired site's structure.
 - `docs/website-critique-redesign-strategy.md` records the redesign direction and outstanding product questions.
