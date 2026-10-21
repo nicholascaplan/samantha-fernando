@@ -56,6 +56,7 @@ Record only decisions that constrain future work. Implementation history and com
 
 ## Testing And Deployment
 
+- Pull requests targeting `main` must pass all unit tests and the complete configured Playwright matrix before merging. Enforce this with required GitHub status checks, not only post-merge deployment tests.
 - Test provider integrations through mocked browser APIs, not live providers.
 - Test the deployed-host mapping locally to ensure the public site loads without host-specific behaviour.
 - For theme-dependent interactive surfaces, Playwright coverage must exercise the visible state in both light and dark modes.

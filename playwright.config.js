@@ -3,6 +3,8 @@ const { defineConfig, devices } = require('@playwright/test');
 module.exports = defineConfig({
   testDir: './tests',
   timeout: 30_000,
+  forbidOnly: !!process.env.CI,
+  workers: process.env.CI ? 2 : undefined,
   use: {
     baseURL: 'http://127.0.0.1:8000',
     trace: 'on-first-retry',
@@ -10,7 +12,7 @@ module.exports = defineConfig({
   webServer: {
     command: 'exec python3 -m http.server 8000',
     url: 'http://127.0.0.1:8000',
-    reuseExistingServer: true,
+    reuseExistingServer: !process.env.CI,
   },
   projects: [
     {
