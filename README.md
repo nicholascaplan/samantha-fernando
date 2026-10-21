@@ -36,6 +36,8 @@ Open <http://localhost:8000>. Serve the site over HTTP rather than opening it wi
 
 Install dependencies and Chromium once with `npm install` and `npx playwright install chromium`, then run `npm test`. The test starts the local HTTP server automatically. Use `npm run test:all` for the full browser matrix.
 
+PR checks run unit tests and all four Playwright projects (Chromium, Firefox, WebKit and mobile Chromium). Install all desktop browser engines locally with `npx playwright install chromium firefox webkit` to run the full matrix. See [the test strategy](docs/test-strategy.md#pull-requests) for the required merge checks and branch-protection setup.
+
 ## Deployment
 
 - Production domain: <https://www.samanthafernando.com/>
