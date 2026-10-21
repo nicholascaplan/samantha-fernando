@@ -5,7 +5,7 @@ Use this plan for the scheduled move of `www.samanthafernando.com` from Squaresp
 ## Scope
 
 - Target canonical URL: `https://www.samanthafernando.com/`
-- Hosting: GitHub Pages, repository `nicholascaplan/sam-clone`, `main` branch
+- Hosting: GitHub Pages, repository `nicholascaplan/samantha-fernando`, `main` branch
 - DNS provider: Namecheap
 - Existing site: Squarespace
 - Email address and its MX, SPF, DKIM and DMARC records are out of scope. Do not change or remove them.
