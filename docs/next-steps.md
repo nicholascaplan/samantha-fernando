@@ -4,6 +4,7 @@ Use this file to track unresolved implementation, product and maintenance work. 
 
 ## Verification And Accessibility
 
+- [ ] **Restore local Firefox and WebKit execution.** The local harness fails during Firefox page creation and stalls launching WebKit. Use the full PR-check browser matrix for cross-browser verification until local execution is repaired.
 - [ ] **Plan the GitHub Actions runner upgrade.** The Pages test and deploy jobs are pinned to `ubuntu-24.04`; test them on `ubuntu-26.04` and update both jobs deliberately after confirming the workflow passes.
 - [ ] **HIGH PRIORITY: Manually verify third-party media on the deployed site.** Check SoundCloud playback events, Spotify and SoundCloud mutual exclusion, soundbar restart and stop controls, soundbar visibility during navigation, and YouTube thumbnail/modal behaviour. Use widget events, not the soundbar alone, to establish that audio is playing.
 - [ ] **HIGH PRIORITY: Configure and verify Formspree delivery controls.** Confirm server-side spam protection, recipient notifications and the intended recipient inbox in Formspree; submit a non-sensitive deployed-site test and confirm delivery.
