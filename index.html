@@ -100,6 +100,25 @@
             transition: background-color 0.3s ease, color 0.3s ease;
         }
 
+        /* Let enlarged text reflow instead of imposing intrinsic page widths. */
+        main { overflow-wrap: anywhere; container-type: inline-size; }
+        main .grid > *,
+        .works-catalogue > *,
+        .works-catalogue .flex > * { min-width: 0; }
+        footer > div,
+        footer > div > div:last-child { flex-wrap: wrap; }
+        footer > div > div { max-width: 100%; }
+        @container (width < 50rem) {
+            #tab-home > .grid:first-child,
+            #tab-contact > .grid { grid-template-columns: minmax(0, 1fr); }
+            #tab-home > .grid:first-child > *,
+            #tab-contact > .grid > * { grid-column: auto; }
+        }
+        @container (width < 44rem) {
+            #worksContainer { grid-template-columns: minmax(0, 1fr); }
+            .works-catalogue > .flex { flex-direction: column; }
+        }
+
         /* Role-based tokens keep shared interactive states consistent across themes. */
         :where(button, a, input, select, textarea, [role="button"], [role="option"]):focus-visible {
             outline: 3px solid var(--color-focus);
@@ -222,7 +241,7 @@
         }
         .work-media-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem; }
         .work-media-actions .work-media-action,
-        .media-catalog-actions .work-media-action { width: 10.5rem; justify-content: center; }
+        .media-catalog-actions .work-media-action { width: 10.5rem; max-width: 100%; justify-content: center; }
         .work-media-actions--multiple { flex-direction: column; align-items: flex-end; }
         .media-catalog-actions { align-items: flex-end; }
         .work-media-action:hover { border-color: #f59e0b; color: #fcd6a7; background: rgba(180, 83, 9, 0.12); }
@@ -543,7 +562,10 @@
             header { position: sticky; top: 0; }
             header > div:first-child {
                 height: 3.5rem !important;
+                min-height: 0;
                 gap: 0.5rem;
+                padding-top: 0;
+                padding-bottom: 0;
                 padding-left: 1rem;
                 padding-right: 1rem;
             }
@@ -623,6 +645,8 @@
                 transform: translateY(-0.5rem);
             }
             .bio-mobile-portrait img { width: 100%; height: 100%; object-fit: cover; object-position: center; }
+        }
+        @media (max-width: 1023px) {
             #mobileMenu:not(.hidden) {
                 display: block !important;
                 position: absolute;
@@ -648,6 +672,8 @@
                 position: relative;
                 z-index: 1;
             }
+        }
+        @media (max-width: 767px) {
             #tab-works > * + * { margin-top: 1rem !important; }
             #tab-works .works-description-full { display: none; }
             #tab-works .works-description-mobile { display: inline; }
@@ -726,7 +752,7 @@
     </div>
 
     <header class="sticky top-0 z-50 glass-panel border-b border-neutral-800/60">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-20 py-4 flex flex-wrap items-center justify-between gap-4">
             
             <!-- Site Title / Logo -->
                 <a href="#home" onclick="event.preventDefault(); switchTab('home')" class="flex flex-col group cursor-pointer flex-shrink-0">
@@ -739,7 +765,7 @@
             </a>
 
             <!-- Streamlined Desktop Navigation -->
-            <nav class="hidden md:flex items-center space-x-6 text-xs font-medium tracking-wider">
+            <nav class="hidden lg:flex flex-wrap items-center gap-x-6 gap-y-2 text-xs font-medium tracking-wider">
                 <button onclick="switchTab('home')" id="nav-home" class="nav-btn py-1.5 text-neutral-400 hover:text-neutral-100 border-b-2 border-transparent transition-all">Home</button>
                 <button onclick="switchTab('works')" id="nav-works" class="nav-btn py-1.5 text-neutral-400 hover:text-neutral-100 border-b-2 border-transparent transition-all">Works</button>
                 <button onclick="switchTab('listen')" id="nav-listen" class="nav-btn py-1.5 text-neutral-400 hover:text-neutral-100 border-b-2 border-transparent transition-all">Listen</button>
@@ -771,14 +797,14 @@
                 </button>
 
                 <!-- Mobile Navigation Toggle Button -->
-                <button id="mobileMenuToggle" onclick="toggleMobileMenu()" aria-label="Open navigation menu" title="Open navigation menu" aria-expanded="false" aria-controls="mobileMenu" class="md:hidden p-2 text-neutral-300 hover:text-white text-lg">
+                <button id="mobileMenuToggle" onclick="toggleMobileMenu()" aria-label="Open navigation menu" title="Open navigation menu" aria-expanded="false" aria-controls="mobileMenu" class="lg:hidden p-2 text-neutral-300 hover:text-white text-lg">
                     <i id="mobileMenuIcon" class="fa-solid fa-bars"></i>
                 </button>
             </div>
         </div>
 
         <!-- Mobile Navigation Drawer -->
-        <div id="mobileMenu" class="hidden md:hidden border-t border-neutral-800 bg-neutral-950/95 px-6 py-5 space-y-3 font-mono text-xs tracking-wider">
+        <div id="mobileMenu" class="hidden lg:hidden border-t border-neutral-800 bg-neutral-950/95 px-6 py-5 space-y-3 font-mono text-xs tracking-wider">
                 <button data-mobile-nav="home" onclick="switchTab('home')" class="mobile-nav-btn block w-full text-left py-2 text-neutral-300 hover:text-amber-400">Home</button>
                 <button data-mobile-nav="works" onclick="switchTab('works')" class="mobile-nav-btn block w-full text-left py-2 text-neutral-300 hover:text-amber-400">Works</button>
                 <button data-mobile-nav="listen" onclick="switchTab('listen')" class="mobile-nav-btn block w-full text-left py-2 text-neutral-300 hover:text-amber-400">Listen</button>
@@ -1206,7 +1232,7 @@
                 <p class="text-neutral-500 mt-1">© <span id="currentYear"></span> Samantha Fernando. All rights reserved.</p>
             </div>
 
-            <div class="flex items-center space-x-6 text-neutral-400">
+            <div class="flex items-center gap-6 text-neutral-400">
                 <button id="manageAnalyticsCookies" type="button" class="hover:text-amber-400 transition-colors font-sans text-xs uppercase font-semibold">Cookie preferences</button>
                 <a href="https://on.soundcloud.com/Ohbj2UPBnWa5Scw8AB" target="_blank" rel="noopener" aria-label="Samantha Fernando on SoundCloud" class="hover:text-amber-400 transition-colors"><i class="fa-brands fa-soundcloud text-base"></i></a>
                 <a href="https://open.spotify.com/artist/1AOLNCJ11mI6ewx8CZ8gvM?si=-nnE1u-AQnypJGW2RpvPMg" target="_blank" rel="noopener" aria-label="Samantha Fernando on Spotify" class="hover:text-amber-400 transition-colors"><i class="fa-brands fa-spotify text-base"></i></a>
