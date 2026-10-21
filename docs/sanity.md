@@ -73,10 +73,12 @@ Keep Create, Update and Delete triggers enabled and Drafts off. The dispatch ver
 
 Configured under **API**, then **Webhooks** in Sanity Manage.
 
+The webhook URL uses the renamed repository endpoint below. After any repository rename, update this URL in Manage rather than relying on redirects for the POST request. Leave the Authorization header unchanged and verify a new `repository_dispatch` workflow run after a test publication.
+
 | Field | Value |
 |---|---|
 | Name | `Trigger site deploy` |
-| URL | `https://api.github.com/repos/nicholascaplan/sam-clone/dispatches` |
+| URL | `https://api.github.com/repos/nicholascaplan/samantha-fernando/dispatches` |
 | Dataset | `production` |
 | Trigger on | Create, Update, Delete |
 | Filter | `_id == "biographyPage"` |
@@ -91,7 +93,7 @@ The table describes the currently configured Biography-only filter. Replace it w
 
 The header uses a GitHub fine-grained personal access token. It is stored only in the webhook's headers in Sanity Manage; never put it in the repository, docs, logs or chat.
 
-- Repository access: only `nicholascaplan/sam-clone`.
+- Repository access: only `nicholascaplan/samantha-fernando`.
 - Permissions: **Contents: Read and write** (required for `repository_dispatch`) and the mandatory read-only **Metadata**.
 - **Expiry: 90 days.** The current token was created on 7 October 2026 and expires on or about **5 January 2027**. Check the exact date in GitHub under Settings, Developer settings, Personal access tokens, Fine-grained tokens.
 - **Renew before it expires.** An expired token fails silently for editors: publishing still works in Sanity but the site is not rebuilt.
@@ -107,7 +109,7 @@ Open the webhook in Manage and check **Attempts**.
 | `204` | GitHub accepted the dispatch. A "Deploy GitHub Pages" run should start within seconds. |
 | `401` "Requires authentication" | The `Authorization` header is missing or lacks the `Bearer ` prefix. |
 | `401` "Bad credentials" | The token is wrong or has expired. Renew it. |
-| `403` or `404` | The token lacks Contents write access, is not scoped to `sam-clone`, or the URL is wrong. |
+| `403` or `404` | The token lacks Contents write access, is not scoped to `samantha-fernando`, or the URL is wrong. |
 | `422` | The projection is not `{"event_type": "sanity-content-published"}`. |
 | No attempt | The trigger or filter did not match, or the edit was only a draft. |
 

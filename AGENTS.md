@@ -2,7 +2,7 @@
 
 ## GitHub Pages
 
-- Repository: https://github.com/nicholascaplan/sam-clone
+- Repository: https://github.com/nicholascaplan/samantha-fernando
 - Production domain: https://www.samanthafernando.com/
 - Deployment workflow: `.github/workflows/pages.yml`
 - Deployment branch: `main`
