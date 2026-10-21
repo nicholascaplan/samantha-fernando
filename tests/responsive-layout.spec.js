@@ -38,22 +38,29 @@ for (const width of [390, 768, 820, 1024, 1280]) {
 
         for (const destination of destinations) {
           const menuToggle = page.locator('#mobileMenuToggle');
-          const compact = await menuToggle.isVisible();
-          if (compact) {
-            await menuToggle.click();
-            await expect(menuToggle).toHaveAttribute('aria-expanded', 'true');
-            await expectWithinViewport(page);
-          }
-          const link = page.locator(compact
-            ? `[data-mobile-nav="${destination}"]`
-            : `#nav-${destination}`);
-          await expect(link).toBeInViewport({ ratio: 1 });
-          await link.focus();
-          await expect(link).toBeFocused();
+          // At the exact breakpoint, WebKit can change menus as scrollbars settle.
+          // Re-select the rendered navigation rather than retaining a now-hidden link.
+          await expect(async () => {
+            const compact = await menuToggle.isVisible();
+            if (compact) {
+              if (await menuToggle.getAttribute('aria-expanded') === 'false') {
+                await menuToggle.click();
+              }
+              await expect(menuToggle).toHaveAttribute('aria-expanded', 'true', { timeout: 500 });
+              await expectWithinViewport(page);
+            }
+            const link = page.locator(compact
+              ? `[data-mobile-nav="${destination}"]`
+              : `#nav-${destination}`);
+            await expect(link).toBeVisible({ timeout: 500 });
+            await expect(link).toBeInViewport({ ratio: 1, timeout: 500 });
+            await link.focus();
+            await expect(link).toBeFocused({ timeout: 500 });
+          }).toPass({ timeout: 5000 });
           await page.keyboard.press('Enter');
           await expect(page).toHaveURL(destination === 'home' ? /\/$/ : new RegExp(`#${destination}$`));
           await expect(page.locator(`#tab-${['listen', 'watch'].includes(destination) ? 'works' : destination}`)).toBeVisible();
-          if (compact) await expect(page.locator('#mobileMenu')).toBeHidden();
+          await expect(page.locator('#mobileMenu')).toBeHidden();
           await expectWithinViewport(page);
           await expect(page.locator('#themeToggleBtn')).toBeInViewport({ ratio: 1 });
           await expect(page.locator('#ambientSoundBtn')).toBeInViewport({ ratio: 1 });
