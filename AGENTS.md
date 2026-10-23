@@ -19,7 +19,7 @@
 
 - `README.md` is the concise public project overview.
 - `docs/content.md` is the complete CMS-ready source of truth for all content rendered on the site, including metadata, page copy, works, events, media, links, writing, and contact fields. Update it whenever site content changes.
-- `docs/decisions.md` records settled decisions that constrain future work.
+- `docs/project-brief.md` records the project overview and settled decisions that constrain future work.
 - `docs/next-steps.md` contains unresolved implementation, product and maintenance work.
 - `docs/hosting.md` covers production hosting, DNS precautions, deployment verification and recovery. It is operational documentation and is not part of the published artifact.
 - `docs/questions-for-sam.md` contains content and product decisions requiring Samantha's input.
@@ -34,21 +34,21 @@
 - Keep each document scoped to its stated purpose. Do not duplicate content between documents; link to the canonical record instead.
 - `docs/content.md` is the only detailed content inventory. Keep its facts aligned with the rendered site.
 - `docs/next-steps.md` contains only unresolved work. Move Samantha decisions to `docs/questions-for-sam.md` and remove completed work rather than recording session history.
-- `docs/decisions.md` contains only durable constraints. Replace superseded decisions and omit implementation logs.
+- `docs/project-brief.md` contains only durable constraints. Replace superseded decisions and omit implementation logs.
 - Keep `README.md` and `docs/test-strategy.md` operational: commands, current behaviour and coverage only.
 - Treat legacy and strategy documents as concise context. Update them only when the current direction changes.
 - Before completing a significant change, remove or correct any documentation statement it makes stale. Prefer editing an existing sentence over adding a dated note.
 
 ## Maintenance Notes
 
-- Biography content comes from Sanity at build time (`npm run build:content`, see `docs/decisions.md`). The Studio is at https://samantha-fernando.sanity.studio (administration and token renewal: `docs/sanity.md`). Edit copy in Sanity Studio, not in the marked region of `index.html`, which is only the fallback. When fallback copy changes, update the Sanity document and `docs/content.md` together. Unit tests live in `unit-tests/` (`npm run test:unit`).
+- Biography content comes from Sanity at build time (`npm run build:content`, see `docs/project-brief.md`). The Studio is at https://samantha-fernando.sanity.studio (administration and token renewal: `docs/sanity.md`). Edit copy in Sanity Studio, not in the marked region of `index.html`, which is only the fallback. When fallback copy changes, update the Sanity document and `docs/content.md` together. Unit tests live in `unit-tests/` (`npm run test:unit`).
 
 - This repository is public. Before committing or pushing, inspect changed files for passwords, API keys, tokens, private URLs, personal data and other secrets. Never commit secrets, even in Markdown, tests, logs or documentation examples; use placeholders and ask the user for any required runtime values instead.
-- Follow the applicable decisions in `docs/decisions.md` when changing layout, interaction, accessibility or responsive behaviour.
+- Follow the applicable decisions in `docs/project-brief.md` when changing layout, interaction, accessibility or responsive behaviour.
 - **IMPORTANT: `assets/tailwind.min.css` is generated and must be rebuilt after every change to Tailwind utility classes in `index.html` or `tailwind.css`. Run `npm run build:css` before testing or reporting the change complete.** The browser loads `assets/tailwind.min.css`, not the source Tailwind directives, so utility changes will not take effect until this build runs.
 - After making code changes, run the relevant automated tests when possible. For this site, use `npx playwright test` for the full suite or `npx playwright test tests/site-load.spec.js --project=chromium -g "<test name>"` for a focused check. Report whether the test passed, failed, or was blocked; do not describe browser tests as unavailable if they actually started. If the configured web-server port is already in use, report the process ID and the command needed to kill it to the user, then stop the stale server/process or use the project's configured test workflow before retrying.
 - When refining UX or reusable components, offer multiple functional, clearly labelled on-page options for the user to compare when practical. Keep each option responsive and accessible, then apply the chosen direction and remove the temporary alternatives.
-- Review `docs/decisions.md` before revisiting an established product or implementation choice, and update it when a significant decision changes.
+- Review `docs/project-brief.md` before revisiting an established product or implementation choice, and update it when a significant decision changes.
 - After every major or significant site change or decision, update the relevant local Markdown documentation, including files in `docs/`, `README.md`, or the planning documents as appropriate. Do this before reporting the work complete.
 - When the user says "closing the session now", review the current session for outstanding documentation, tests, verification and follow-up updates, then make or record the necessary changes before closing. Before closing, ask whether the user wants the changes deployed; deployment remains opt-in and must not happen without explicit approval.
 - Do not deploy or push changes unless the user explicitly asks; ask before deploying if deployment would be useful.
