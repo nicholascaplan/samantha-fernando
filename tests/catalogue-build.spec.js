@@ -3,17 +3,23 @@ const {readFile} = require('node:fs/promises');
 
 let sourceHtml;
 let catalogue;
+let pages;
 
 test.beforeAll(async () => {
   catalogue = await import('../scripts/lib/catalogue.mjs');
+  pages = await import('../scripts/lib/pages.mjs');
   sourceHtml = await readFile('index.html', 'utf8');
 });
 
 async function serveSnapshot(page, update) {
   const data = catalogue.readCatalogueFallback(sourceHtml);
   update(data);
-  const builtHtml = catalogue.renderCatalogue(sourceHtml, data);
-  await page.route('http://127.0.0.1:8000/', route => route.fulfill({contentType: 'text/html', body: builtHtml}));
+  const files = pages.renderPages(catalogue.renderCatalogue(sourceHtml, data));
+  await page.route('http://127.0.0.1:8010/**', route => {
+    const path = new URL(route.request().url()).pathname;
+    const body = files.get(path === '/' ? 'index.html' : `${path.slice(1)}index.html`);
+    return body ? route.fulfill({contentType: 'text/html', body}) : route.continue();
+  });
   await page.addInitScript(() => {
     window.__calls = [];
     window.__spotifyApi = {
@@ -54,7 +60,7 @@ test('generated catalogue keeps renamed Work relationships and editorial action 
     data.media.find(media => media.title === 'How Many Moments Must').actionOrder = 2;
     data.settings.heading = 'Edited catalogue heading';
   });
-  await page.goto('/#works');
+  await page.goto('/works/');
   await expect(page.locator('#worksHeading')).toHaveText('Edited catalogue heading');
   await page.locator('#worksSearchInput').fill('Renamed song cycle');
   const actions = page.locator('#worksContainer [data-spotify-track]');
@@ -106,7 +112,7 @@ test('CMS quotes and markup render as text, with functional media actions in bot
     film.title = maliciousTitle;
     film.detail = '<script>window.__injected=true</script>';
   });
-  await page.goto('/#watch');
+  await page.goto('/works/#watch');
   for (const theme of ['light', 'dark']) {
     if (theme === 'dark') await page.locator('#themeToggleBtn').click();
     await page.locator('#worksSearchInput').fill('quoted');
@@ -127,10 +133,10 @@ test('empty published catalogue stays empty and header Listen opens the catalogu
     data.media = [];
     data.settings.defaultRecording = null;
   });
-  await page.goto('/#works');
+  await page.goto('/works/');
   await expect(page.locator('#worksContainer')).toContainText('No compositions found');
   await page.locator('#ambientSoundBtn').click();
-  await expect(page).toHaveURL(/#listen$/);
+  await expect(page).toHaveURL(/\/works\/#listen$/);
   await expect(page.locator('#worksContainer')).toContainText('No recordings found');
   await expect(page.locator('#soundbar')).toBeHidden();
   await page.locator('#nav-watch').click();
@@ -141,7 +147,7 @@ test('unrelated recordings remain playable and films need no composition relatio
   await serveSnapshot(page, data => {
     data.media.find(media => media.type === 'watch').workId = null;
   });
-  await page.goto('/#listen');
+  await page.goto('/works/#listen');
   await page.locator('#worksSearchInput').fill('Recollections');
   await expect(page.locator('#worksContainer h3')).toHaveText('Recollections');
   await page.locator('#worksContainer [data-track="recollections"]').click();

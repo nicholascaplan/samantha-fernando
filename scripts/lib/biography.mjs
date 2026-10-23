@@ -57,7 +57,7 @@ export function renderBiography(doc, {portraitSrc}) {
                         <img src="${esc(portraitSrc)}" alt="" width="${width}" height="${height}" loading="lazy"${objectPosition}>
                     </div>
 ${body}
-                    <button type="button" onclick="switchTab('contact')" class="bio-contact-cta">${esc(doc.contactCtaLabel)} <span aria-hidden="true">→</span></button>
+                    <a href="/contact/" class="bio-contact-cta">${esc(doc.contactCtaLabel)} <span aria-hidden="true">→</span></a>
                 </article>
 
                 <aside class="space-y-6">

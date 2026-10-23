@@ -2,6 +2,34 @@ const { test, expect } = require('@playwright/test');
 
 const destinations = ['home', 'works', 'listen', 'watch', 'bio', 'writing', 'contact'];
 
+for (const theme of ['light', 'dark']) {
+  test(`catalogue action widths stay consistent with long copy in ${theme} mode`, async ({ page }) => {
+    await page.addInitScript(theme => localStorage.setItem('theme', theme), theme);
+    await page.goto('/works/');
+    await page.evaluate(() => document.fonts.ready);
+
+    for (const view of ['all', 'listen']) {
+      await page.locator(`#works-view-${view}`).click();
+      for (const width of [768, 820, 1024, 1280]) {
+        await page.setViewportSize({ width, height: 1000 });
+        const actions = await page.locator('#worksContainer .work-media-action').evaluateAll(buttons => {
+          const expectedWidth = 10.5 * parseFloat(getComputedStyle(document.documentElement).fontSize);
+          return buttons.map(button => ({
+            label: button.textContent.trim(),
+            width: button.getBoundingClientRect().width,
+            expectedWidth,
+          }));
+        });
+        expect(actions.length).toBeGreaterThan(0);
+        for (const action of actions) {
+          expect(action.width, `${view} at ${width}px: ${JSON.stringify(action)}`).toBeCloseTo(action.expectedWidth, 0);
+        }
+        await expectWithinViewport(page);
+      }
+    }
+  });
+}
+
 async function expectWithinViewport(page) {
   const layout = await page.evaluate(() => {
     const width = document.documentElement.clientWidth;
@@ -13,7 +41,7 @@ async function expectWithinViewport(page) {
           const rect = element.getBoundingClientRect();
           return rect.width && rect.height && (rect.left < -1 || rect.right > width + 1);
         })
-        .map(element => element.id || element.tagName),
+        .map(element => ({id: element.id, tag: element.tagName, text: element.textContent.trim().slice(0, 80), class: element.className})),
     };
   });
   expect(layout.scrollWidth, JSON.stringify(layout)).toBeLessThanOrEqual(layout.width);
@@ -58,7 +86,7 @@ for (const width of [390, 768, 820, 1024, 1280]) {
             await expect(link).toBeFocused({ timeout: 500 });
           }).toPass({ timeout: 5000 });
           await page.keyboard.press('Enter');
-          await expect(page).toHaveURL(destination === 'home' ? /\/$/ : new RegExp(`#${destination}$`));
+          await expect(page).toHaveURL(new RegExp(`${({home: '/', works: '/works/', listen: '/works/#listen', watch: '/works/#watch', bio: '/biography/', writing: '/writing/', contact: '/contact/'})[destination]}$`));
           await expect(page.locator(`#tab-${['listen', 'watch'].includes(destination) ? 'works' : destination}`)).toBeVisible();
           await expect(page.locator('#mobileMenu')).toBeHidden();
           await expectWithinViewport(page);

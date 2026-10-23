@@ -1,6 +1,6 @@
 # Samantha Fernando Website Content Record
 
-This file is the complete content inventory for the static site. Biography is managed in Sanity; Works & Media has a prepared Sanity import and build integration pending activation. Keep this record aligned with published CMS content and committed fallbacks rather than treating `index.html` as the editorial content store.
+This file is the complete content inventory for the static site. Biography and Works & Media are managed in Sanity and rendered into static pages at build time. Keep this record aligned with published CMS content and committed fallbacks rather than treating `index.html` as the editorial content store.
 
 Copy conventions: use British English, do not use em dashes and do not use Oxford commas.
 
@@ -11,7 +11,7 @@ Copy conventions: use British English, do not use em dashes and do not use Oxfor
 - Canonical URL: https://www.samanthafernando.com/
 - Meta description: Official website of British composer Samantha Fernando. Explore her compositions, recordings, films, writing and score-hire information.
 - Social image: `assets/sam-1-1200.webp`, Samantha Fernando portrait
-- Structured data: `Person` for Samantha Fernando and an `ItemList` of her compositions. Official profiles are SoundCloud, Spotify, Instagram and NMC.
+- Structured data: consistent `Person` identity across pages, page-specific `WebPage`/`AboutPage`/`ContactPage`, composition `ItemList` on Works and `Article` on the full essay. Official profiles are SoundCloud, Spotify, Instagram and NMC.
 - Primary navigation: Home, Works, Listen, Watch, Biography, Writing, Contact
 - Header label: Samantha Fernando
 - Header descriptor: Composer
@@ -22,11 +22,25 @@ Copy conventions: use British English, do not use em dashes and do not use Oxfor
 - Footer copyright: © Samantha Fernando. All rights reserved.
 - Analytics: Google Analytics 4 uses Measurement ID `G-N74SECKP5X`. The tag loads only after a visitor accepts analytics cookies. Visitors can reject analytics or revisit the choice through the footer's Cookie preferences control.
 
+### Page Search And Social Metadata
+
+All page paths use `https://www.samanthafernando.com` as their canonical origin and share the portrait social image above. Social titles and descriptions match each page's search metadata.
+
+| Path | Title | Description |
+|---|---|---|
+| `/` | Samantha Fernando - Composer | Official website of British composer Samantha Fernando. Explore her compositions, recordings, films, writing and score-hire information. |
+| `/biography/` | Biography \| Samantha Fernando | About British composer Samantha Fernando: her artistic practice, collaborations, selected milestones, education and fellowship. |
+| `/works/` | Works & Media \| Samantha Fernando | Explore compositions by Samantha Fernando, with instrumentation, commissions, premiere details, recordings and performance films. |
+| `/writing/` | Writing \| Samantha Fernando | Essays by composer Samantha Fernando on creative process, composition and artistic philosophy. |
+| `/contact/` | Contact & Score Hire \| Samantha Fernando | Contact Samantha Fernando about commissions, score hire, performance materials, performance notifications and academic enquiries. |
+
+Listen and Watch open `/works/#listen` and `/works/#watch`, both canonicalised to `/works/`. Search and instrumentation filters do not create separate pages.
+
 ## Biography Page
 
-**Source of truth: Sanity.** The Biography is managed in the `biographyPage` singleton in Sanity project `9a66iw1t` (dataset `production`) and rendered into `index.html` at build time. The copy below is the seeded content and the committed fallback; after the first edit in Sanity, the Studio is canonical and this section should be kept in step with it.
+**Source of truth: Sanity.** The Biography is managed in the `biographyPage` singleton in Sanity project `9a66iw1t` (dataset `production`) and rendered into `/biography/` at build time using the shared source template in `index.html`. The copy below is the seeded content and the committed fallback; after the first edit in Sanity, the Studio is canonical and this section should be kept in step with it.
 
-Biography is an in-page `#bio` route in `index.html`, opened by the `Biography` navigation item. On mobile, a compact circular portrait breaks up the opening copy; larger screens retain the supporting portrait alongside the profile, milestones, education and fellowship.
+Biography is the `/biography/` page, opened by the `Biography` navigation item. On mobile, a compact circular portrait breaks up the opening copy; larger screens retain the supporting portrait alongside the profile, milestones, education and fellowship.
 
 ### Artistic Philosophy & Biography
 
@@ -78,7 +92,7 @@ In 2021, Samantha saw the opening of Current, Rising, a world-first hyper-realit
 
 ## Featured Operas & Major Projects
 
-This Spotlight Works section appears beneath the homepage hero. The full biography is presented separately at the in-page `#bio` route.
+This Spotlight Works section appears beneath the homepage hero. The full biography is presented separately at `/biography/`.
 
 ### Wintering
 
@@ -208,6 +222,8 @@ More tracks are available on Samantha's SoundCloud and Spotify pages. Not all re
 - Video behaviour: Watch renders editorial YouTube thumbnail cards from `768px` in two columns and from `1280px` in three columns, showing the year without a redundant `Film` label, then opens the existing in-page modal after a user clicks.
 
 ## Writing
+
+The `/writing/` page shows the Writing introduction, complete Wintering essay, portrait and related video directly. There is no summary-only overview or separate essay page.
 
 - Page description: Personal essays on creative process, composition, and artistic philosophy.
 - Article type: Featured Essay

@@ -4,7 +4,9 @@ Use this file to track unresolved implementation, product and maintenance work. 
 
 ## Verification And Accessibility
 
-- [ ] **Restore local Firefox and WebKit execution.** The local harness fails during Firefox page creation and stalls launching WebKit. Use the full PR-check browser matrix for cross-browser verification until local execution is repaired.
+- [ ] **Restore local Firefox and WebKit execution.** The local harness fails during Firefox page creation (`browserContext.newPage`, undefined `_page`) and stalls launching WebKit. Use the full PR-check browser matrix to verify multi-page navigation and responsive behaviour until local execution is repaired.
+- [ ] **Release the multi-page site after explicit deployment approval.** Verify direct nested URLs and refreshes, page metadata, contact delivery and uninterrupted real-provider playback outside BoxedCode. Submit the generated sitemap in Search Console if owner access is available and monitor page indexing after launch. Old hash bookmarks are intentionally unsupported.
+- [ ] **Disable automatic GA4 history-based page views before releasing enhanced navigation.** Follow [analytics setup](google-analytics-setup.md); the site now sends explicit consented page views. Verify the data-stream setting and Realtime reporting externally to rule out duplicates.
 - [ ] **Plan the GitHub Actions runner upgrade.** The Pages test and deploy jobs are pinned to `ubuntu-24.04`; test them on `ubuntu-26.04` and update both jobs deliberately after confirming the workflow passes.
 - [ ] **HIGH PRIORITY: Manually verify third-party media on the deployed site.** Check SoundCloud playback events, Spotify and SoundCloud mutual exclusion, soundbar restart and stop controls, soundbar visibility during navigation, and YouTube thumbnail/modal behaviour. Use widget events, not the soundbar alone, to establish that audio is playing.
 - [ ] **HIGH PRIORITY: Configure and verify Formspree delivery controls.** Confirm server-side spam protection, recipient notifications and the intended recipient inbox in Formspree; submit a non-sensitive deployed-site test and confirm delivery.
@@ -25,7 +27,6 @@ Use this file to track unresolved implementation, product and maintenance work. 
 - [ ] **Instrument cold and warm preview startup.** Record iframe navigation, DOM readiness, first paint, route readiness and load completion, then inspect the request waterfall to identify what accounts for the current first-open delay before making further optimisations.
 - [ ] **Create a lightweight preview boot profile.** Keep the real page and responsive CSS, but use the `mobilePreview` flag to avoid initializing media providers, hidden modals, inactive catalogue views and other functionality that is not needed until it is used.
 - [ ] **Reduce render-blocking external assets.** Measure Google Fonts and Font Awesome in the preview critical path; evaluate self-hosted/subset fonts and inline SVG icons so first render does not depend on third-party stylesheet requests.
-- [ ] **Render only the active route initially.** Avoid building or decoding content for hidden tabs during preview startup, then initialize a route when the visitor navigates to it inside the iframe.
 - [ ] **Audit preview image delivery.** Add appropriately sized `srcset` candidates, preserve lazy loading for inactive content and ensure only the visible route's critical image receives high priority.
 - [ ] **Add an explicit preview-ready handshake.** Have the iframe notify the parent when its current route is rendered, show a lightweight loading state until then and distinguish navigation readiness from slow non-critical resources.
 - [ ] **Add mobile-preview regression and performance coverage.** Verify first open, repeated open/close reuse, current-route synchronization, refresh restoration, recursion prevention and a bounded set of preview startup requests. Capture timing as diagnostic output before enforcing a stable performance budget.
@@ -33,6 +34,7 @@ Use this file to track unresolved implementation, product and maintenance work. 
 
 ## Deferred Structural Work
 
+- [ ] **Review content for individual composition pages.** Add stable Work slugs and detail routes only when sufficient work-specific notes, credits, recordings and score-enquiry context are available; do not generate thin duplicates of catalogue cards.
 - [ ] **Evaluate Cloudflare.** Compare its DNS, redirects, caching, security, analytics and traffic-measurement benefits against the current Namecheap and GitHub Pages setup.
 - [ ] **Secure durable Google Analytics ownership.** Ask the existing GA4 account administrator to grant Administrator access to Samantha or another durable site-owner account, then retain at least two trusted administrators. The site implementation and consent controls are documented in `docs/google-analytics-setup.md`.
 
@@ -40,5 +42,5 @@ Use this file to track unresolved implementation, product and maintenance work. 
 
 - The visualizer is simulated because the SoundCloud Widget API does not expose audio amplitude. SoundCloud progress comes from the Widget API; Spotify progress is a display-only local elapsed-time estimate. Neither progress bar supports seeking.
 - Tailwind is compiled locally to `assets/tailwind.min.css`. Run `npm run build:css` after changing `tailwind.css` or Tailwind utility usage.
-- Serve the site over HTTP, not `file://`: `python3 -m http.server 8000`.
+- Build with `npm run build:test` (committed fallbacks) or `npm run build:content` (Sanity), then serve the generated site over HTTP with `npm run serve`, not the source tree or `file://`.
 - Run `npm test` before deployment. Use `npm run test:all` for the full Chromium, Firefox, WebKit and tagged-mobile matrix.

@@ -17,10 +17,10 @@ The original site used separate pages for Home, Events, Past Performances, Works
 
 | Legacy area | Current location |
 | --- | --- |
-| Home and Biography | `/` and `#bio` |
+| Home and Biography | `/` and `/biography/` |
 | Works, Listen and Watch | Shared Works & Media catalogue |
 | Events and Past Performances | Content archive only, not public UI |
 | Dedicated project pages | Spotlight, Biography and catalogue context |
-| Writing and Contact | `#writing` and `#contact` |
+| Writing and Contact | `/writing/` (including the full essay) and `/contact/` |
 
 For current copy, metadata, media URLs and detailed catalogue records, use `docs/content.md`. For missing or disputed content, use `docs/questions-for-sam.md`.

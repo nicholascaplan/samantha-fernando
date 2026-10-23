@@ -1,5 +1,5 @@
 module.exports = {
-  content: ['./index.html'],
+  content: ['./index.html', './assets/catalogue-renderer.js', './scripts/lib/pages.mjs'],
   theme: {
     extend: {
       colors: {

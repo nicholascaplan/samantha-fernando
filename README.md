@@ -1,10 +1,12 @@
 # Samantha Fernando Website
 
-Static single-page portfolio for composer Samantha Fernando. Biography, works, recordings, writing and contact information use in-page routes in `index.html`.
+Static multi-page portfolio for composer Samantha Fernando. Biography, Works & Media, Writing and Contact have directly loadable HTML pages. Writing shows the complete Wintering essay directly. Listen and Watch remain catalogue filters.
 
 ## Technical Overview
 
-- Plain HTML, CSS, and JavaScript in `index.html`.
+- Shared HTML/CSS/JavaScript source and committed content fallbacks in `index.html`; `scripts/lib/pages.mjs` generates distinct pages and a shared `assets/site.js` runtime into `_site/`.
+- Ordinary navigation links are progressively enhanced to preserve audio controllers while replacing page content and metadata. Full loads work without the enhancement; reloading resets playback.
+- Page-specific titles, descriptions, canonical/social metadata and structured data, plus a sitemap generated from the canonical route registry. The Works catalogue is pre-rendered using `assets/catalogue-renderer.js`, shared with browser filtering.
 - Compiled Tailwind CSS in `assets/tailwind.min.css`; Font Awesome and Google Fonts loaded from CDNs.
 - SoundCloud Widget API for verified SoundCloud recordings.
 - Spotify track playback through the Spotify IFrame API.
@@ -14,7 +16,7 @@ Static single-page portfolio for composer Samantha Fernando. Biography, works, r
 
 ## Content (Sanity)
 
-Biography and the Works & Media catalogue have Sanity schemas (`studio/`, project `9a66iw1t`) and build-time integration. Biography is editable at <https://samantha-fernando.sanity.studio>. Catalogue schemas and the initial content are in Sanity; wait until the website deployment and publish-webhook update are complete before editing the catalogue. Published content is baked into the static site, never fetched from Sanity in the browser.
+Biography and the Works & Media catalogue have Sanity schemas (`studio/`, project `9a66iw1t`) and build-time integration. Both are editable at <https://samantha-fernando.sanity.studio>. Published content is baked into the static pages, never fetched from Sanity in the browser.
 
 ```bash
 npm run build:content        # writes the publishable site to _site/ using live Sanity content
@@ -27,14 +29,16 @@ If Sanity is unavailable or incomplete, `build:content` keeps the committed sect
 ## Run Locally
 
 ```bash
-python3 -m http.server 8000
+npm run build:css
+npm run build:test     # deterministic committed content; use build:content for published Sanity content
+npm run serve
 ```
 
-Open <http://localhost:8000>. Serve the site over HTTP rather than opening it with `file://`.
+Open <http://localhost:8000>. Serve `_site/`, not the repository root or `file://`. Rebuild after source changes. Generated pages live at `/`, `/biography/`, `/works/`, `/writing/` and `/contact/`. `/works/#listen` and `/works/#watch` select media views; old root-fragment bookmarks are not mapped.
 
 ## Tests
 
-Install dependencies and Chromium once with `npm install` and `npx playwright install chromium`, then run `npm test`. The test starts the local HTTP server automatically. Use `npm run test:all` for the full browser matrix.
+Install dependencies and Chromium once with `npm install` and `npx playwright install chromium`, then run `npm test`. Playwright builds deterministic pages and serves `_site/` on port 8010 without reusing an existing server. Use `npm run test:unit` for build/renderer checks and `npm run test:all` for the full browser matrix. `playwright.built.config.js` tests an already-built artifact without replacing its content.
 
 PR checks run unit tests and all four Playwright projects (Chromium, Firefox, WebKit and mobile Chromium). Install all desktop browser engines locally with `npx playwright install chromium firefox webkit` to run the full matrix. See [the test strategy](docs/test-strategy.md#pull-requests) for the required merge checks and branch-protection setup.
 

@@ -6,7 +6,7 @@ This guide records the Google Analytics 4 (GA4) setup for Samantha Fernando's we
 
 - Property: the existing GA4 property for Samantha Fernando's website.
 - Measurement ID: `G-N74SECKP5X`.
-- Site integration: `index.html` loads the GA4 tag dynamically only after a visitor accepts analytics cookies.
+- Site integration: the shared runtime generated from `index.html` loads the GA4 tag dynamically only after a visitor accepts analytics cookies. Initial and enhanced-navigation page views are sent explicitly with the current page title and URL; automatic initial page views are disabled with `send_page_view: false`. Local mobile-preview iframes do not load GA4.
 - Visitor controls: the initial banner provides Accept and Reject options. The footer's Cookie preferences control lets visitors reopen the notice and revise the choice. Rejecting analytics disables future GA collection for the page and clears this site's GA cookies.
 - The Measurement ID is public by design because it is used in the rendered website. It is not a secret or an API credential.
 
@@ -50,7 +50,11 @@ The standard GA4 tag, with `G-XXXXXXXXXX` replaced by the real Measurement ID, i
 </script>
 ```
 
-For this static site, the Measurement ID is intentionally public in the rendered HTML. Do not put it in local environment files. The implementation uses a dynamically created script in `index.html` so consent controls when the tag loads.
+For this static site, the Measurement ID is intentionally public in the shared runtime. Do not put it in local environment files. The implementation uses a dynamically created script so consent controls when the tag loads; the generic snippet above is not a replacement for that implementation.
+
+### Required Data-Stream Setting For Enhanced Navigation
+
+In GA4 **Admin → Data streams → Web stream → Enhanced measurement → Page views → Advanced settings**, turn off **Page changes based on browser history events**. The site's router already sends explicit page views, so automatic history measurement would count navigations twice. `send_page_view: false` alone does not disable history-event measurement. This setting must be checked by someone with sufficient GA4 access; it is not managed by the repository or verified by mocked browser tests.
 
 Google Consent Mode may support the configuration but does not replace the banner, visitor choice, or privacy policy.
 
@@ -67,10 +71,10 @@ Avoid sending personally identifiable information to GA4.
 
 ## 5. Test Before Deployment
 
-1. Start the site locally with `python3 -m http.server 8000`.
+1. Build the site with `npm run build:test`, then serve `_site/` with `npm run serve`.
 2. Open the site and reject analytics. In browser developer tools, verify that no GA requests occur.
 3. Change the choice to accept analytics and verify GA requests then occur.
-4. In Google Analytics, open **Reports > Realtime** and confirm the test visit appears. Initial data can take several minutes.
+4. In Google Analytics, open **Reports > Realtime** and confirm a test visit and subsequent page changes appear once each, with the correct URLs/titles. Initial data can take several minutes. Confirm the history-measurement setting above before release.
 5. Run the repository's browser tests with `npm test`.
 
 ## 6. Publish

@@ -78,6 +78,11 @@ jobs:
       - name: Prepare public site
         run: npm run build:content
 
+      - name: Test production artifact without rebuilding
+        run: |
+          npx playwright install --with-deps chromium
+          npx playwright test tests/multi-page.spec.js --project=chromium --config=playwright.built.config.js
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5
         with:

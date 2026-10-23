@@ -65,10 +65,10 @@ test('loads the site and renders primary navigation', async ({ page }) => {
 
   await expect(page).toHaveTitle('Samantha Fernando - Composer');
   await expect(page.getByRole('navigation')).toContainText('Biography');
-  await expect(page.getByRole('button', { name: 'Home' }).first()).toHaveClass(/text-amber-400/);
+  await expect(page.getByRole('link', { name: 'Home' }).first()).toHaveClass(/text-amber-400/);
   await expect(page.locator('#nav-works')).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Listen', exact: true }).first()).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Watch', exact: true }).first()).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Listen', exact: true }).first()).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Watch', exact: true }).first()).toBeVisible();
 });
 
 test('exposes canonical metadata and structured data for search', async ({ page }) => {
@@ -87,7 +87,7 @@ test('exposes canonical metadata and structured data for search', async ({ page 
     'https://www.samanthafernando.com/assets/sam-1-1200.webp',
   );
   await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute('content', 'summary_large_image');
-  await expect(page.locator('link[rel="preload"][href="assets/sam-1-1200.webp"]')).toHaveAttribute(
+  await expect(page.locator('link[rel="preload"][href="/assets/sam-1-1200.webp"]')).toHaveAttribute(
     'fetchpriority',
     'high',
   );
@@ -102,7 +102,7 @@ test('exposes canonical metadata and structured data for search', async ({ page 
     name: 'Samantha Fernando',
     jobTitle: 'Composer',
   });
-  expect(graph.find(item => item['@type'] === 'ItemList').itemListElement).toHaveLength(23);
+  expect(graph.find(item => item['@type'] === 'ItemList')).toBeUndefined();
 });
 
 test('publishes crawl-discovery files', async ({ request }) => {
@@ -120,20 +120,20 @@ test('publishes crawl-discovery files', async ({ request }) => {
 test('navigation opens the Listen and Watch catalogue views', async ({ page }) => {
   await page.goto('/');
 
-  await page.getByRole('button', { name: 'Listen', exact: true }).first().click();
-  await expect(page).toHaveURL(/#listen$/);
+  await page.getByRole('link', { name: 'Listen', exact: true }).first().click();
+  await expect(page).toHaveURL(/\/works\/#listen$/);
   await expect(page.locator('#works-view-listen')).toHaveAttribute('aria-pressed', 'true');
 
-  await page.getByRole('button', { name: 'Watch', exact: true }).first().click();
-  await expect(page).toHaveURL(/#watch$/);
+  await page.getByRole('link', { name: 'Watch', exact: true }).first().click();
+  await expect(page).toHaveURL(/\/works\/#watch$/);
   await expect(page.locator('#works-view-watch')).toHaveAttribute('aria-pressed', 'true');
 });
 
 test('uses compact browser and home-screen icons', async ({ page }) => {
   await page.goto('/');
 
-  await expect(page.locator('link[rel="icon"]')).toHaveAttribute('href', 'assets/favicon.png');
-  await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveAttribute('href', 'assets/apple-touch-icon.png');
+  await expect(page.locator('link[rel="icon"]')).toHaveAttribute('href', '/assets/favicon.png');
+  await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveAttribute('href', '/assets/apple-touch-icon.png');
   await expect(page.locator('link[rel="icon"]')).not.toHaveAttribute('href', /new-favicon/);
 });
 
@@ -184,7 +184,7 @@ test('defers the Spotify API until playback is requested', async ({ page }) => {
   await page.goto('/');
   expect(spotifyRequests).toEqual([]);
 
-  await page.getByRole('button', { name: 'Listen', exact: true }).first().click();
+  await page.getByRole('link', { name: 'Listen', exact: true }).first().click();
   await page.locator('#worksContainer [data-spotify-track="2wNL47uCuwDpbOqCIpbSTS"]').click();
   await expect.poll(() => spotifyRequests).toHaveLength(1);
 });
@@ -198,7 +198,7 @@ test('uses the precompiled local stylesheet', async ({ page }) => {
 
   await page.goto('/');
 
-  await expect(page.locator('link[href="assets/tailwind.min.css"]')).toHaveCount(1);
+  await expect(page.locator('link[href="/assets/tailwind.min.css"]')).toHaveCount(1);
   expect(tailwindCompilerRequests).toEqual([]);
 });
 
@@ -206,7 +206,7 @@ test('switches to the works list and filters by category', async ({ page }) => {
   await page.goto('/');
 
   await page.locator('#nav-works').click();
-  await expect(page).toHaveURL(/#works$/);
+  await expect(page).toHaveURL(/\/works\/$/);
   await expect(page.locator('#tab-works')).toBeVisible();
   await expect(page.locator('#worksContainer')).toContainText('Wintering');
   await expect(page.locator('#worksFilterToolbar')).toBeVisible();
@@ -225,7 +225,7 @@ test('switches to the works list and filters by category', async ({ page }) => {
 });
 
 test('supports keyboard navigation in the instrumentation menu', async ({ page }) => {
-  await page.goto('/#works');
+  await page.goto('/works/');
 
   await page.getByRole('button', { name: 'Instrumentation: All' }).click();
   await expect(page.getByRole('option', { name: 'Instrumentation: All' })).toBeFocused();
@@ -240,36 +240,36 @@ test('supports keyboard navigation in the instrumentation menu', async ({ page }
 test('hero actions navigate to their destinations', async ({ page }) => {
   await page.goto('/');
 
-  await page.locator('.hero-actions').getByRole('button', { name: 'Listen' }).click();
+  await page.locator('.hero-actions').getByRole('link', { name: 'Listen' }).click();
   await expect(page.locator('#tab-works')).toBeVisible();
   await expect(page.locator('#works-view-listen')).toHaveAttribute('aria-pressed', 'true');
 
   await page.goto('/');
-  await page.locator('.hero-actions').getByRole('button', { name: 'Explore works' }).click();
+  await page.locator('.hero-actions').getByRole('link', { name: 'Explore works' }).click();
   await expect(page.locator('#tab-works')).toBeVisible();
 
   await page.goto('/');
-  await page.locator('.hero-actions').getByRole('button', { name: 'Get in touch' }).click();
+  await page.locator('.hero-actions').getByRole('link', { name: 'Get in touch' }).click();
   await expect(page.locator('#tab-contact')).toBeVisible();
   await expect(page.locator('#tab-contact img[alt="Samantha Fernando"]')).toHaveAttribute('loading', 'eager');
   await expect(page.locator('#tab-contact img[alt="Samantha Fernando"]')).toHaveAttribute('src', /sam-6-800\.webp$/);
 });
 
-test('Biography opens as the shared in-page route', async ({ page }) => {
+test('Biography opens as a real page', async ({ page }) => {
   await page.goto('/');
 
-  await page.getByRole('button', { name: 'Biography' }).click();
-  await expect(page).toHaveURL(/#bio$/);
+  await page.getByRole('link', { name: 'Biography' }).click();
+  await expect(page).toHaveURL(/\/biography\/$/);
   await expect(page.locator('#tab-bio')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Samantha Fernando' })).toBeVisible();
   await expect(page.locator('#tab-bio')).toContainText('In recent years, her music');
-  await page.getByRole('button', { name: 'Discuss a commission or performance' }).click();
-  await expect(page).toHaveURL(/#contact$/);
+  await page.getByRole('link', { name: 'Discuss a commission or performance' }).click();
+  await expect(page).toHaveURL(/\/contact\/$/);
   await expect(page.locator('#tab-contact')).toBeVisible();
 });
 
-test('Writing shows the Wintering essay, portrait and video', async ({ page }) => {
-  await page.goto('/#writing');
+test('Writing shows the full Wintering essay, portrait and video directly', async ({ page }) => {
+  await page.goto('/writing/');
 
   const writing = page.locator('#tab-writing');
   await expect(writing).toBeVisible();
@@ -286,31 +286,32 @@ test('restores site sections with browser Back and Forward', async ({ page }) =>
   await page.goto('/');
 
   await page.locator('#nav-works').click();
-  await page.getByRole('button', { name: 'Writing' }).click();
-  await expect(page).toHaveURL(/#writing$/);
+  await page.getByRole('link', { name: 'Writing' }).click();
+  await expect(page).toHaveURL(/\/writing\/$/);
 
-  await page.goBack();
-  await expect(page).toHaveURL(/#works$/);
+  // Wait for the enhanced route, not a full document load event.
+  await page.evaluate(() => history.back());
+  await expect(page).toHaveURL(/\/works\/$/);
   await expect(page.locator('#tab-works')).toBeVisible();
 
-  await page.goBack();
+  await page.evaluate(() => history.back());
   await expect(page).toHaveURL(/\/$/);
   await expect(page.locator('#tab-home')).toBeVisible();
 
-  await page.goForward();
-  await expect(page).toHaveURL(/#works$/);
+  await page.evaluate(() => history.forward());
+  await expect(page).toHaveURL(/\/works\/$/);
   await expect(page.locator('#tab-works')).toBeVisible();
 });
 
 test('restores Listen and Watch views with browser Back', async ({ page }) => {
-  await page.goto('/#works');
+  await page.goto('/works/');
 
   await page.locator('#works-view-listen').click();
   await page.locator('#works-view-watch').click();
-  await expect(page).toHaveURL(/#watch$/);
+  await expect(page).toHaveURL(/\/works\/#watch$/);
 
-  await page.goBack();
-  await expect(page).toHaveURL(/#listen$/);
+  await page.evaluate(() => history.back());
+  await expect(page).toHaveURL(/\/works\/#listen$/);
   await expect(page.locator('#works-view-listen')).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('#worksContainer .work-media-action').first()).toBeVisible();
 });
@@ -333,7 +334,7 @@ test('toggles the visual theme', async ({ page }) => {
 });
 
 test('uses the dark palette for the Instrumentation menu', async ({ page }) => {
-  await page.goto('/#works');
+  await page.goto('/works/');
   await page.locator('#themeToggleBtn').click();
   await page.getByRole('button', { name: 'Instrumentation: All' }).click();
 
@@ -342,7 +343,7 @@ test('uses the dark palette for the Instrumentation menu', async ({ page }) => {
 });
 
 test('keeps the selected Instrumentation option legible in both themes', async ({ page }) => {
-  await page.goto('/#works');
+  await page.goto('/works/');
   await page.getByRole('button', { name: 'Instrumentation: All' }).click();
 
   const selectedOption = page.getByRole('option', { name: 'Instrumentation: All' });
@@ -365,11 +366,11 @@ test('opens and closes the mobile navigation menu @mobile', async ({ page }) => 
   await menuButton.click();
   await expect(menuButton).toHaveAttribute('aria-expanded', 'true');
   await expect(menu).toBeVisible();
-  await expect(menu.getByRole('button', { name: 'Home' })).toBeVisible();
-  await expect(menu.getByRole('button', { name: 'Listen', exact: true })).toBeVisible();
-  await expect(menu.getByRole('button', { name: 'Watch', exact: true })).toBeVisible();
-  await expect(menu.getByRole('button', { name: 'Biography' })).toBeVisible();
-  await expect(menu.getByRole('button', { name: 'Contact' })).toBeVisible();
+  await expect(menu.getByRole('link', { name: 'Home' })).toBeVisible();
+  await expect(menu.getByRole('link', { name: 'Listen', exact: true })).toBeVisible();
+  await expect(menu.getByRole('link', { name: 'Watch', exact: true })).toBeVisible();
+  await expect(menu.getByRole('link', { name: 'Biography' })).toBeVisible();
+  await expect(menu.getByRole('link', { name: 'Contact' })).toBeVisible();
 
   await menuButton.click();
   await expect(menuButton).toHaveAttribute('aria-expanded', 'false');
@@ -383,7 +384,7 @@ test('uses the dark palette for the mobile navigation menu @mobile', async ({ pa
   await page.locator('#mobileMenuToggle').click();
 
   await expect(page.locator('#mobileMenu')).toHaveCSS('background-color', 'rgb(26, 26, 26)');
-  await expect(page.locator('#mobileMenu').getByRole('button', { name: 'Home' })).toHaveCSS('color', 'rgb(251, 191, 36)');
+  await expect(page.locator('#mobileMenu').getByRole('link', { name: 'Home' })).toHaveCSS('color', 'rgb(251, 191, 36)');
   await expect(page.locator('#mobileMenuToggle')).toHaveCSS('border-top-color', 'rgba(245, 158, 11, 0.7)');
 });
 
@@ -419,7 +420,7 @@ test('shows the next home section in the initial mobile viewport @mobile', async
 
 test('uses the shared Instrumentation menu on mobile @mobile', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('/#works');
+  await page.goto('/works/');
 
   await page.getByRole('button', { name: 'Instrumentation: All' }).click();
   await expect(page.getByRole('option', { name: 'Opera & Stage' })).toBeVisible();
@@ -430,7 +431,7 @@ test('uses the shared Instrumentation menu on mobile @mobile', async ({ page }) 
 
 test('uses a compact portrait on mobile Biography @mobile', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('/#bio');
+  await page.goto('/biography/');
 
   await expect(page.locator('.bio-mobile-portrait')).toBeVisible();
   await expect(page.locator('#tab-bio aside > figure')).toBeHidden();
@@ -438,7 +439,7 @@ test('uses a compact portrait on mobile Biography @mobile', async ({ page }) => 
 
 test('aligns Works and Listen CTAs with card content on mobile @mobile', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('/#works');
+  await page.goto('/works/');
 
   const wintering = page.locator('#worksContainer > div', { has: page.getByRole('heading', { name: 'Wintering' }) });
   const worksAction = wintering.getByRole('button', { name: 'Watch Wintering (Trailer)' });
@@ -482,7 +483,7 @@ test('restores mobile preview after refresh', async ({ page }) => {
 
 test('gates the mobile preview tool on the production hostname', async ({ page, browserName }) => {
   test.skip(browserName !== 'chromium', 'Chromium maps the production hostname to the local server.');
-  await page.goto('http://www.samanthafernando.com:8000/');
+  await page.goto('http://www.samanthafernando.com:8010/');
 
   await expect(page.locator('#mobilePreviewBtn')).toBeHidden();
   await page.evaluate(() => window.toggleMobilePreview());
@@ -495,7 +496,7 @@ test('submits the contact form through Formspree', async ({ page }) => {
     await route.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
   });
 
-  await page.getByRole('button', { name: 'Contact' }).click();
+  await page.getByRole('link', { name: 'Contact' }).click();
   await expect(page.locator('#tab-contact')).toBeVisible();
 
   await page.getByPlaceholder('Name...').fill('Test Visitor');
@@ -508,7 +509,7 @@ test('submits the contact form through Formspree', async ({ page }) => {
 });
 
 test('includes a non-interactive Formspree honeypot', async ({ page }) => {
-  await page.goto('/#contact');
+  await page.goto('/contact/');
 
   const honeypot = page.locator('#contactForm input[name="_gotcha"]');
   await expect(honeypot).toHaveAttribute('tabindex', '-1');
@@ -518,7 +519,7 @@ test('includes a non-interactive Formspree honeypot', async ({ page }) => {
 });
 
 test('keeps Samantha email address out of public contact content', async ({ page }) => {
-  await page.goto('/#contact');
+  await page.goto('/contact/');
 
   await expect(page.locator('a[href^="mailto:"]')).toHaveCount(0);
   await expect(page.locator('body')).not.toContainText('sam@samanthafernando.com');
@@ -528,7 +529,7 @@ test('keeps Samantha email address out of public contact content', async ({ page
 });
 
 test('shows a contact error when Formspree rejects the submission', async ({ page }) => {
-  await page.goto('/#contact');
+  await page.goto('/contact/');
   await page.route('https://formspree.io/f/mlgqqjen', async route => {
     await route.fulfill({ status: 422, contentType: 'application/json', body: '{}' });
   });
@@ -545,7 +546,7 @@ test('shows a contact error when Formspree rejects the submission', async ({ pag
 test('filters the Listen view by instrumentation', async ({ page }) => {
   await page.goto('/');
 
-  await page.getByRole('button', { name: 'Listen', exact: true }).first().click();
+  await page.getByRole('link', { name: 'Listen', exact: true }).first().click();
   await expect(page.locator('#tab-works')).toBeVisible();
   await expect(page.locator('#works-view-listen')).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('#worksContainer .work-media-action').first()).toBeVisible();
@@ -558,14 +559,14 @@ test('filters the Listen view by instrumentation', async ({ page }) => {
 });
 
 test('shows Wintering watch CTA in All Works', async ({ page }) => {
-  await page.goto('/#works');
+  await page.goto('/works/');
 
   const wintering = page.locator('#worksContainer > div', { has: page.getByRole('heading', { name: 'Wintering' }) });
   await expect(wintering.getByRole('button', { name: 'Watch Wintering (Trailer)' })).toBeVisible();
 });
 
 test('lists TRAPPIST-1e as an orchestral work with both premieres', async ({ page }) => {
-  await page.goto('/#works');
+  await page.goto('/works/');
 
   const exoplanets = page.locator('#worksContainer > div', {
     has: page.getByRole('heading', { name: 'Exoplanets: TRAPPIST-1e' })
@@ -577,14 +578,14 @@ test('lists TRAPPIST-1e as an orchestral work with both premieres', async ({ pag
 });
 
 test('shows the TRAPPIST-1e introduction in Watch', async ({ page }) => {
-  await page.goto('/#watch');
+  await page.goto('/works/#watch');
 
   await expect(page.locator('#worksContainer')).toContainText('The Exoplanets: Samantha Fernando introduces TRAPPIST-1e');
   await expect(page.locator('#worksContainer').getByRole('button', { name: 'Watch The Exoplanets: Samantha Fernando introduces TRAPPIST-1e' })).toBeVisible();
 });
 
 test('excludes removed films from Watch', async ({ page }) => {
-  await page.goto('/#watch');
+  await page.goto('/works/#watch');
 
   const works = page.locator('#worksContainer');
   await expect(works).not.toContainText('Today the Letter Must Come');
@@ -595,7 +596,7 @@ test('excludes removed films from Watch', async ({ page }) => {
 });
 
 test('shows CTAs for title variants linked to works', async ({ page }) => {
-  await page.goto('/#works');
+  await page.goto('/works/');
 
   for (const [workTitle, mediaTitle] of [
     ['Current, Rising', "Trailer: Current, Rising - The World's First Hyper-Reality Opera"],
@@ -611,13 +612,13 @@ test('shows CTAs for title variants linked to works', async ({ page }) => {
 });
 
 test('includes Samantha\'s PhD in the biography', async ({ page }) => {
-  await page.goto('/#bio');
+  await page.goto('/biography/');
 
   await expect(page.locator('#tab-bio')).toContainText('She holds a PhD in Composition.');
 });
 
 test('resets filters when switching between Works, Listen and Watch views', async ({ page }) => {
-  await page.goto('/#listen');
+  await page.goto('/works/#listen');
   const search = page.locator('#worksSearchInput');
 
   await search.fill('Vocal');
@@ -625,7 +626,7 @@ test('resets filters when switching between Works, Listen and Watch views', asyn
   await page.getByRole('option', { name: 'Vocal & Choral', exact: true }).click();
 
   await page.locator('#works-view-watch').click();
-  await expect(page).toHaveURL(/#watch$/);
+  await expect(page).toHaveURL(/\/works\/#watch$/);
   await expect(page.locator('#works-view-watch')).toHaveAttribute('aria-pressed', 'true');
   await expect(search).toHaveValue('');
   await expect(page.locator('#worksInstrumentationLabel')).toHaveText('Instrumentation: All');
@@ -633,7 +634,7 @@ test('resets filters when switching between Works, Listen and Watch views', asyn
   await expect(page.locator('#worksContainer').getByRole('button', { name: 'Watch Sound Inhabitants' })).toBeVisible();
 
   await page.locator('#works-view-all').click();
-  await expect(page).toHaveURL(/#works$/);
+  await expect(page).toHaveURL(/\/works\/$/);
   await expect(page.locator('#works-view-all')).toHaveAttribute('aria-pressed', 'true');
   await expect(search).toHaveValue('');
   await expect(page.locator('#worksInstrumentationLabel')).toHaveText('Instrumentation: All');
@@ -659,13 +660,13 @@ test('soundbar starts with the default track name', async ({ page }) => {
   await page.goto('/');
 
   await expect(page.locator('#soundbarLabel')).toHaveText('Everything Passes, Everything is Connected · The Crossing');
-  await page.getByRole('button', { name: 'Listen', exact: true }).first().click();
+  await page.getByRole('link', { name: 'Listen', exact: true }).first().click();
   await expect(page.locator('#worksContainer [data-spotify-track="3YV79qjiJLOgYjjEzTsVEy"]')).toBeVisible();
 });
 
 test('exposes catalogue audio actions as keyboard-operable buttons', async ({ page }) => {
   await mockPlaybackProviders(page);
-  await page.goto('/#listen');
+  await page.goto('/works/#listen');
 
   const action = page.locator('#worksContainer [data-track="illuminations"]');
   await expect(action).toHaveRole('button');
@@ -674,7 +675,7 @@ test('exposes catalogue audio actions as keyboard-operable buttons', async ({ pa
 });
 
 test('lists confirmed Listen metadata without placeholder details', async ({ page }) => {
-  await page.goto('/#listen');
+  await page.goto('/works/#listen');
 
   const works = page.locator('#worksContainer');
   await expect(works).toContainText('The Journey Between Us - Reflection 1');
@@ -690,7 +691,7 @@ test('lists confirmed Listen metadata without placeholder details', async ({ pag
 });
 
 test('keeps Works view controls legible in light mode', async ({ page }) => {
-  await page.goto('/#listen');
+  await page.goto('/works/#listen');
 
   await expect(page.locator('#works-view-listen')).toHaveCSS('background-color', 'rgb(111, 53, 8)');
   await expect(page.locator('#works-view-listen')).toHaveCSS('color', 'rgb(255, 255, 255)');
@@ -702,7 +703,7 @@ test('Spotify loads the selected first track from the beginning', async ({ page 
   await mockPlaybackProviders(page);
   await page.goto('/');
   await page.evaluate(() => window.onSpotifyIframeApiReady(window.__spotifyIFrameApi));
-  await page.getByRole('button', { name: 'Listen', exact: true }).first().click();
+  await page.getByRole('link', { name: 'Listen', exact: true }).first().click();
 
   await page.locator('#worksContainer [data-spotify-track="2wNL47uCuwDpbOqCIpbSTS"]').click();
 
@@ -720,7 +721,7 @@ test('SoundCloud and Spotify playback are mutually exclusive', async ({ page }) 
   await mockPlaybackProviders(page);
   await page.goto('/');
   await page.evaluate(() => window.onSpotifyIframeApiReady(window.__spotifyIFrameApi));
-  await page.getByRole('button', { name: 'Listen', exact: true }).first().click();
+  await page.getByRole('link', { name: 'Listen', exact: true }).first().click();
 
   await page.locator('#worksContainer [data-spotify-track="2wNL47uCuwDpbOqCIpbSTS"]').click();
   await page.locator('#worksContainer [data-track="look-up"]').click();
@@ -737,7 +738,7 @@ test('SoundCloud queued playback responds to pause and finish events', async ({ 
   await mockPlaybackProviders(page);
   await page.goto('/');
   await rejectAnalyticsCookies(page);
-  await page.getByRole('button', { name: 'Listen', exact: true }).first().click();
+  await page.getByRole('link', { name: 'Listen', exact: true }).first().click();
 
   await page.locator('#worksContainer [data-track="look-up"]').click();
   await expect.poll(() => page.evaluate(() => Boolean(window.__soundCloudPlayers?.soundcloudPlayerLookUp))).toBe(true);
@@ -796,6 +797,37 @@ test('soundbar stays visible while navigating between pages', async ({ page }) =
   await expect(page.locator('#soundbar')).toBeVisible();
 });
 
+for (const provider of ['soundcloud', 'spotify']) {
+  test(`${provider} controllers and playback survive repeated real-page navigation`, async ({page}) => {
+    await mockPlaybackProviders(page);
+    await page.goto('/works/#listen');
+    await rejectAnalyticsCookies(page);
+    if (provider === 'soundcloud') {
+      await page.locator('#worksContainer [data-track="look-up"]').click();
+      await expect.poll(() => page.evaluate(() => Boolean(window.__soundCloudPlayers?.soundcloudPlayerLookUp))).toBe(true);
+      await page.evaluate(() => window.__soundCloudPlayers.soundcloudPlayerLookUp.handlers.READY());
+    } else {
+      await page.evaluate(() => window.onSpotifyIframeApiReady(window.__spotifyIFrameApi));
+      await page.locator('#worksContainer [data-spotify-track="2wNL47uCuwDpbOqCIpbSTS"]').click();
+    }
+    await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
+    const calls = await page.evaluate(() => JSON.stringify([window.__soundCloudCalls, window.__spotifyCalls]));
+    await page.evaluate(() => { window.__originalPlayers = document.getElementById('soundcloudPlayers'); });
+    for (const tab of ['bio', 'contact', 'writing', 'listen', 'home', 'listen']) {
+      await page.locator(`#nav-${tab}`).click();
+      await expect(page.locator(`#nav-${tab}`)).toHaveAttribute('aria-current', 'page');
+      await expect(page.locator('#soundbar')).toBeVisible();
+      await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
+    }
+    expect(await page.evaluate(() => document.getElementById('soundcloudPlayers') === window.__originalPlayers)).toBe(true);
+    expect(await page.evaluate(() => JSON.stringify([window.__soundCloudCalls, window.__spotifyCalls]))).toBe(calls);
+    const active = provider === 'soundcloud' ? '[data-track="look-up"]' : '[data-spotify-track="2wNL47uCuwDpbOqCIpbSTS"]';
+    await expect(page.locator(`#worksContainer ${active} .fa-pause`)).toBeVisible();
+    await page.locator(`#worksContainer ${active}`).click();
+    await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Resume playback');
+  });
+}
+
 test('stopped playback is cleared when navigating away', async ({ page }) => {
   await page.goto('/');
   await rejectAnalyticsCookies(page);
@@ -827,7 +859,7 @@ test('initialises navigation before the audio players', async ({ page }) => {
   await page.goto('/');
 
   await page.locator('#nav-works').click();
-  await expect(page).toHaveURL(/#works$/);
+  await expect(page).toHaveURL(/\/works\/$/);
   await expect(page.locator('#tab-works')).toBeVisible();
 });
 
@@ -850,7 +882,7 @@ test('opens and closes a featured project modal', async ({ page }) => {
 test('opens and closes a YouTube modal without playing video', async ({ page }) => {
   await page.goto('/', { waitUntil: 'domcontentloaded' });
 
-  await page.getByRole('button', { name: 'Watch', exact: true }).first().click();
+  await page.getByRole('link', { name: 'Watch', exact: true }).first().click();
   await page.locator('#worksContainer').getByRole('button', { name: /^Watch / }).first().click();
 
   await expect(page.locator('#videoModalOverlay')).toBeVisible();
@@ -867,7 +899,7 @@ test('opening a video removes active audio and hides the soundbar', async ({ pag
   await page.locator('#ambientSoundBtn').click();
   await expect(page.locator('#soundbar')).toBeVisible();
 
-  await page.getByRole('button', { name: 'Watch', exact: true }).first().click();
+  await page.getByRole('link', { name: 'Watch', exact: true }).first().click();
   await page.locator('#worksContainer').getByRole('button', { name: /^Watch / }).first().click();
 
   await expect(page.locator('#videoModalOverlay')).toBeVisible();
@@ -876,7 +908,7 @@ test('opening a video removes active audio and hides the soundbar', async ({ pag
 });
 
 test('announces catalogue result changes and exposes mutually exclusive views', async ({ page }) => {
-  await page.goto('/#works');
+  await page.goto('/works/');
 
   await expect(page.locator('#worksContainer')).toHaveAttribute('role', 'region');
   await expect(page.locator('#worksContainer')).toHaveAttribute('aria-live', 'polite');
@@ -887,29 +919,29 @@ test('announces catalogue result changes and exposes mutually exclusive views', 
 });
 
 test('Listen and Watch views expose their selected state and deep links', async ({ page }) => {
-  await page.goto('/#listen');
+  await page.goto('/works/#listen');
 
   await expect(page.locator('#works-view-listen')).toHaveAttribute('aria-pressed', 'true');
   await page.locator('#works-view-watch').click();
-  await expect(page).toHaveURL(/#watch$/);
+  await expect(page).toHaveURL(/\/works\/#watch$/);
   await expect(page.locator('#works-view-watch')).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('#works-view-listen')).toHaveAttribute('aria-pressed', 'false');
 
   await page.getByLabel('Works and media view').getByRole('button', { name: 'Works', exact: true }).click();
-  await expect(page).toHaveURL(/#works$/);
+  await expect(page).toHaveURL(/\/works\/$/);
   await expect(page.locator('#works-view-all')).toHaveAttribute('aria-pressed', 'true');
 });
 
 test('deployed hostname is publicly accessible', async ({ page, browserName }) => {
   test.skip(browserName !== 'chromium', 'Chromium maps the production hostname to the local server.');
-  await page.goto('http://www.samanthafernando.com:8000/');
+  await page.goto('http://www.samanthafernando.com:8010/');
 
   await expect(page.getByRole('navigation')).toBeVisible();
   await expect(page.getByRole('dialog', { name: 'Private site' })).toHaveCount(0);
 });
 
 test('searches works and shows the empty result state', async ({ page }) => {
-  await page.goto('/#works');
+  await page.goto('/works/');
 
   const search = page.locator('#worksSearchInput');
   await search.fill('Wintering');
@@ -924,7 +956,7 @@ test('uses mobile navigation to switch sections @mobile', async ({ page }) => {
   await page.goto('/');
 
   await page.locator('#mobileMenuToggle').click();
-  await page.getByRole('button', { name: 'Contact' }).last().click();
+  await page.getByRole('link', { name: 'Contact' }).last().click();
 
   await expect(page.locator('#tab-contact')).toBeVisible();
   await expect(page.locator('#mobileMenu')).toBeHidden();
@@ -935,13 +967,13 @@ test('mobile navigation opens Listen and Watch directly @mobile', async ({ page 
   await page.goto('/');
 
   await page.locator('#mobileMenuToggle').click();
-  await page.locator('#mobileMenu').getByRole('button', { name: 'Listen', exact: true }).click();
-  await expect(page).toHaveURL(/#listen$/);
+  await page.locator('#mobileMenu').getByRole('link', { name: 'Listen', exact: true }).click();
+  await expect(page).toHaveURL(/\/works\/#listen$/);
   await expect(page.locator('#works-view-listen')).toHaveAttribute('aria-pressed', 'true');
 
   await page.locator('#mobileMenuToggle').click();
-  await page.locator('#mobileMenu').getByRole('button', { name: 'Watch', exact: true }).click();
-  await expect(page).toHaveURL(/#watch$/);
+  await page.locator('#mobileMenu').getByRole('link', { name: 'Watch', exact: true }).click();
+  await expect(page).toHaveURL(/\/works\/#watch$/);
   await expect(page.locator('#works-view-watch')).toHaveAttribute('aria-pressed', 'true');
 });
 
@@ -954,9 +986,10 @@ test('mobile navigation opens Listen and Watch directly @mobile', async ({ page 
   ['contact', '#tab-contact'],
 ].forEach(([anchor, sectionSelector]) => {
   test(`opens the ${anchor} deep link`, async ({ page }) => {
-    await page.goto(`/#${anchor}`, { waitUntil: 'domcontentloaded' });
+    const path = { bio: '/biography/', works: '/works/', listen: '/works/#listen', watch: '/works/#watch', writing: '/writing/', contact: '/contact/' }[anchor];
+    await page.goto(path, { waitUntil: 'domcontentloaded' });
 
-    await expect(page).toHaveURL(new RegExp(`#${anchor}$`));
+    await expect(page).toHaveURL(new RegExp(`${path}$`));
     await expect(page.locator(sectionSelector)).toBeVisible();
   });
 });
@@ -979,13 +1012,13 @@ test('has no serious or critical accessibility violations across interactive sta
   await page.locator('#nav-works').click();
   await expectNoSeriousAxeViolations(page);
 
-  await page.getByRole('button', { name: 'Listen', exact: true }).first().click();
+  await page.getByRole('link', { name: 'Listen', exact: true }).first().click();
   await expectNoSeriousAxeViolations(page);
 
-  await page.getByRole('button', { name: 'Contact' }).click();
+  await page.getByRole('link', { name: 'Contact' }).click();
   await expectNoSeriousAxeViolations(page);
 
-  await page.getByRole('button', { name: 'Biography' }).click();
+  await page.getByRole('link', { name: 'Biography' }).click();
   await expectNoSeriousAxeViolations(page);
 
   await page.setViewportSize({ width: 390, height: 844 });
