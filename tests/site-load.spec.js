@@ -289,15 +289,16 @@ test('restores site sections with browser Back and Forward', async ({ page }) =>
   await page.getByRole('link', { name: 'Writing' }).click();
   await expect(page).toHaveURL(/\/writing\/$/);
 
-  await page.goBack();
+  // Wait for the enhanced route, not a full document load event.
+  await page.evaluate(() => history.back());
   await expect(page).toHaveURL(/\/works\/$/);
   await expect(page.locator('#tab-works')).toBeVisible();
 
-  await page.goBack();
+  await page.evaluate(() => history.back());
   await expect(page).toHaveURL(/\/$/);
   await expect(page.locator('#tab-home')).toBeVisible();
 
-  await page.goForward();
+  await page.evaluate(() => history.forward());
   await expect(page).toHaveURL(/\/works\/$/);
   await expect(page.locator('#tab-works')).toBeVisible();
 });
@@ -309,7 +310,7 @@ test('restores Listen and Watch views with browser Back', async ({ page }) => {
   await page.locator('#works-view-watch').click();
   await expect(page).toHaveURL(/\/works\/#watch$/);
 
-  await page.goBack();
+  await page.evaluate(() => history.back());
   await expect(page).toHaveURL(/\/works\/#listen$/);
   await expect(page.locator('#works-view-listen')).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('#worksContainer .work-media-action').first()).toBeVisible();

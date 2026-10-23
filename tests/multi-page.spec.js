@@ -61,7 +61,9 @@ test('enhanced navigation keeps the document and updates metadata, focus and his
   await expect(page.locator('#tab-writing')).toContainText('Why do I write?');
   await expect(page).toHaveURL(/\/writing\/$/);
   await expect(page.locator('meta[property="og:type"]')).toHaveAttribute('content', 'article');
-  await page.goBack();
+  // Enhanced history navigation has no document load event to wait for in WebKit.
+  await page.evaluate(() => history.back());
+  await expect(page).toHaveURL(/\/biography\/$/);
   await expect(page.locator('#tab-bio')).toBeVisible();
   expect(await page.evaluate(() => Boolean(window.__documentMarker))).toBe(true);
 });
@@ -111,7 +113,8 @@ test('browser Back restores the previous page scroll position', async ({page}) =
   await expect(page.locator('#tab-bio')).toBeVisible();
   // Navigation must not leave a smooth scroll running when Back restores its entry.
   expect(await page.evaluate(() => window.scrollY)).toBe(0);
-  await page.goBack();
+  await page.evaluate(() => history.back());
+  await expect(page).toHaveURL(/\/$/);
   await expect(page.locator('#tab-home')).toBeVisible();
   // Font/image layout settling can move the restored document by a few pixels.
   await expect.poll(() => page.evaluate(() => Math.abs(window.scrollY - 400))).toBeLessThanOrEqual(4);
