@@ -23,7 +23,7 @@ npm test
 - Responsive layout (`tests/responsive-layout.spec.js`): all seven navigation destinations at 390, 768, 820, 1024 and 1280px in light/dark mode with 100% and 200% root text size. Checks document width, individual element bounds, open-drawer bounds, keyboard activation of every navigation link, drawer dismissal and visible header utilities. Works and Listen action buttons retain their shared desktop width even beside long copy. Root text scaling exercises reflow; it is not OS text scaling or browser zoom emulation.
 - Real page routes, browser history, Works/Listen/Watch fragment filters and search. Old root fragments have no compatibility redirects.
 - Persisted theme switching and mobile preview state, the Instrumentation menu's selected state in both themes, and mobile-navigation menus. Theme-dependent interactive states are exercised in both light and dark modes.
-- Works and YouTube modal semantics, focus restoration, score-request flow and contact-form success/failure states.
+- Works and YouTube modal semantics, focus restoration, score-request flow and contact-form success/failure states. Enhanced page navigation leaves an inactive video iframe untouched; closing an active video disposes of the player without adding iframe history entries.
 - Keyboard-operable audio rows, catalogue view state, result announcements and Instrumentation-menu keyboard navigation.
 - Mocked Spotify and SoundCloud playback state, including provider hand-off and controller/playback preservation through repeated page changes.
 - Public accessibility on the deployed hostname mapped to the local server.

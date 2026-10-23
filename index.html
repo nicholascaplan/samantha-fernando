@@ -2185,7 +2185,14 @@
 
         function closeVideoModal(restoreFocus = true) {
             const overlay = document.getElementById('videoModalOverlay');
-            document.getElementById('videoFrame').src = '';
+            const frame = document.getElementById('videoFrame');
+            if (frame.getAttribute('src')) {
+                // Dispose of the player without adding an iframe navigation to
+                // the joint session history (which also consumes browser Back).
+                const emptyFrame = frame.cloneNode(false);
+                emptyFrame.setAttribute('src', '');
+                frame.replaceWith(emptyFrame);
+            }
             overlay.classList.add('hidden');
             overlay.classList.remove('flex');
             const trigger = videoModalTrigger;

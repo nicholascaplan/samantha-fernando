@@ -51,6 +51,12 @@ for (const [path, title, section] of pages) {
 test('enhanced navigation keeps the document and updates metadata, focus and history', async ({page}) => {
   await page.goto('/');
   await page.evaluate(() => { window.__documentMarker = {}; });
+  await page.evaluate(() => {
+    window.__inactiveVideoNavigations = 0;
+    new MutationObserver(mutations => {
+      window.__inactiveVideoNavigations += mutations.filter(mutation => mutation.attributeName === 'src').length;
+    }).observe(document.getElementById('videoFrame'), {attributes: true});
+  });
   await page.locator('#nav-bio').click();
   await expect(page).toHaveTitle('Biography | Samantha Fernando');
   await expect(page.locator('main h1')).toBeFocused();
@@ -61,6 +67,7 @@ test('enhanced navigation keeps the document and updates metadata, focus and his
   await expect(page.locator('#tab-writing')).toContainText('Why do I write?');
   await expect(page).toHaveURL(/\/writing\/$/);
   await expect(page.locator('meta[property="og:type"]')).toHaveAttribute('content', 'article');
+  expect(await page.evaluate(() => window.__inactiveVideoNavigations)).toBe(0);
   // Enhanced history navigation has no document load event to wait for in WebKit.
   await page.evaluate(() => history.back());
   await expect(page).toHaveURL(/\/biography\/$/);
