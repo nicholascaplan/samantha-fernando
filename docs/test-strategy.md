@@ -40,10 +40,11 @@ npm test
 
 - `Unit tests`: all Node unit tests.
 - `Browser tests (chromium)`, `Browser tests (firefox)`, `Browser tests (webkit)` and `Browser tests (mobile-chromium)`: the complete configured Playwright matrix, with a fresh stylesheet build in each job.
+- `Studio build`: a clean install from `studio/package-lock.json` and a local Studio bundle build with `npm run build -- --no-auto-updates`. This checks the locked dependencies rather than the hosted auto-update module and needs no CMS credentials.
 
 Browser projects run independently so one failure does not cancel the remaining projects. Failed jobs upload `test-results/` for diagnosis. CI rejects focused tests (`test.only`) and starts its own HTTP server. Provider integrations remain mocked; checks need no CMS credentials and never deploy.
 
-The GitHub branch protection rule for `main` requires pull requests, all five checks above and branches to be up to date. It applies to administrators without bypass. The workflow alone does not block merging; keep the required check names aligned with these job names when changing the workflow.
+The GitHub branch protection rule for `main` requires pull requests, the unit and four browser checks above and branches to be up to date. It applies to administrators without bypass. `Studio build` runs on every PR but is not required by branch protection unless the repository owner adds it in settings. The workflow alone does not block merging; keep the required check names aligned with these job names when changing the workflow.
 
 ## Deployment
 
