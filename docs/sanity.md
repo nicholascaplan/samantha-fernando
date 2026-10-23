@@ -1,6 +1,6 @@
 # Sanity Operations
 
-Operational guide for the Sanity CMS that manages site content. Settled design decisions are in `docs/decisions.md`; the content itself is in `docs/content.md`. Never record tokens or secrets here.
+Operational guide for the Sanity CMS that manages site content. Settled design decisions are in `docs/project-brief.md`; the content itself is in `docs/content.md`. Never record tokens or secrets here.
 
 ## Key Locations
 
