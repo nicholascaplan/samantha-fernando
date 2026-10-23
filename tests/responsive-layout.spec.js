@@ -2,6 +2,34 @@ const { test, expect } = require('@playwright/test');
 
 const destinations = ['home', 'works', 'listen', 'watch', 'bio', 'writing', 'contact'];
 
+for (const theme of ['light', 'dark']) {
+  test(`catalogue action widths stay consistent with long copy in ${theme} mode`, async ({ page }) => {
+    await page.addInitScript(theme => localStorage.setItem('theme', theme), theme);
+    await page.goto('/works/');
+    await page.evaluate(() => document.fonts.ready);
+
+    for (const view of ['all', 'listen']) {
+      await page.locator(`#works-view-${view}`).click();
+      for (const width of [768, 820, 1024, 1280]) {
+        await page.setViewportSize({ width, height: 1000 });
+        const actions = await page.locator('#worksContainer .work-media-action').evaluateAll(buttons => {
+          const expectedWidth = 10.5 * parseFloat(getComputedStyle(document.documentElement).fontSize);
+          return buttons.map(button => ({
+            label: button.textContent.trim(),
+            width: button.getBoundingClientRect().width,
+            expectedWidth,
+          }));
+        });
+        expect(actions.length).toBeGreaterThan(0);
+        for (const action of actions) {
+          expect(action.width, `${view} at ${width}px: ${JSON.stringify(action)}`).toBeCloseTo(action.expectedWidth, 0);
+        }
+        await expectWithinViewport(page);
+      }
+    }
+  });
+}
+
 async function expectWithinViewport(page) {
   const layout = await page.evaluate(() => {
     const width = document.documentElement.clientWidth;
