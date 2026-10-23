@@ -13,7 +13,7 @@ async function expectWithinViewport(page) {
           const rect = element.getBoundingClientRect();
           return rect.width && rect.height && (rect.left < -1 || rect.right > width + 1);
         })
-        .map(element => element.id || element.tagName),
+        .map(element => ({id: element.id, tag: element.tagName, text: element.textContent.trim().slice(0, 80), class: element.className})),
     };
   });
   expect(layout.scrollWidth, JSON.stringify(layout)).toBeLessThanOrEqual(layout.width);
@@ -58,7 +58,7 @@ for (const width of [390, 768, 820, 1024, 1280]) {
             await expect(link).toBeFocused({ timeout: 500 });
           }).toPass({ timeout: 5000 });
           await page.keyboard.press('Enter');
-          await expect(page).toHaveURL(destination === 'home' ? /\/$/ : new RegExp(`#${destination}$`));
+          await expect(page).toHaveURL(new RegExp(`${({home: '/', works: '/works/', listen: '/works/#listen', watch: '/works/#watch', bio: '/biography/', writing: '/writing/', contact: '/contact/'})[destination]}$`));
           await expect(page.locator(`#tab-${['listen', 'watch'].includes(destination) ? 'works' : destination}`)).toBeVisible();
           await expect(page.locator('#mobileMenu')).toBeHidden();
           await expectWithinViewport(page);

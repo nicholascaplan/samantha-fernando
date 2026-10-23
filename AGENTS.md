@@ -12,7 +12,7 @@
 - This is a static GitHub Pages site.
 - The published site is publicly accessible without a client-side password gate.
 - SoundCloud playback uses the SoundCloud Widget API. Spotify recordings use custom rows backed by the Spotify IFrame API.
-- `Works`, `Listen` and `Watch` are separate entry points into the exposed Works & Media catalogue. They open All Works, Listen and Watch respectively. The former separate Watch and Listen sections remain in `index.html` as source content for playback and media metadata.
+- `Works`, `Listen` and `Watch` link to `/works/`, `/works/#listen` and `/works/#watch` respectively. They share one catalogue, not three standalone pages. `index.html` is the shared source template/fallback, not the publishable homepage; build and serve `_site/` for local review.
 - YouTube cards use thumbnails and the existing in-page modal rather than loading multiple embedded players on page load.
 
 ## Documentation
@@ -54,4 +54,4 @@
 - Do not deploy or push changes unless the user explicitly asks; ask before deploying if deployment would be useful.
 - When the user explicitly asks to push changes, push the requested commit or branch and verify the GitHub Pages Actions workflow completed successfully. BoxedCode cannot fetch the externally published GitHub Pages URL because outbound access to that site is blocked by the sandbox network allowlist: do not attempt `webfetch`, `curl`, or another external fetch after deployment. Treat live-site propagation as unverified unless the user confirms it outside BoxedCode, and report that limitation explicitly.
 - Documentation may be committed to source control when relevant, but it must not be included in the published GitHub Pages artifact.
-- The published artifact must contain only the public website files: `index.html` and `assets/`. Never publish Markdown, tests, package files, workflow files, repository metadata, or maintainer notes as part of the live site.
+- The published artifact must contain only the public website files: root `index.html`, the generated `biography/`, `works/`, `writing/` and `contact/` page directories, `CNAME`, `robots.txt`, `sitemap.xml` and `assets/`. Writing contains the full essay directly, not a separate essay page. Keep the exact page allowlist in `scripts/lib/pages.mjs` and `scripts/lib/public-output.mjs`. Never publish Markdown, tests, package files, workflow files, repository metadata, source templates or maintainer notes as part of the live site.

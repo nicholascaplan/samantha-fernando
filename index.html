@@ -407,7 +407,7 @@
         .hero-actions {
             border-top: 1px solid rgba(216, 212, 202, 0.2);
         }
-        .hero-actions button {
+        .hero-actions :is(button, a) {
             display: flex;
             align-items: center;
             gap: 0.85rem;
@@ -422,8 +422,8 @@
             text-align: left;
             transition: color 0.2s ease;
         }
-        .hero-actions button:hover { color: #d6a55f; }
-        .hero-actions button:focus-visible { outline: 2px solid #d97706; outline-offset: 3px; }
+        .hero-actions :is(button, a):hover { color: #d6a55f; }
+        .hero-actions :is(button, a):focus-visible { outline: 2px solid #d97706; outline-offset: 3px; }
         .hero-action-icon {
             display: inline-flex;
             flex: 0 0 1.8rem;
@@ -459,14 +459,14 @@
             stroke-width: 1.4;
             transition: width 180ms ease, transform 180ms ease;
         }
-        .hero-actions button:hover .hero-action-arrow svg,
-        .hero-actions button:focus-visible .hero-action-arrow svg {
+        .hero-actions :is(button, a):hover .hero-action-arrow svg,
+        .hero-actions :is(button, a):focus-visible .hero-action-arrow svg {
             width: 2.35rem;
             transform: translateX(0.1rem);
         }
         .light-mode .hero-actions { border-color: rgba(24, 33, 31, 0.2); }
-        .light-mode .hero-actions button { border-color: rgba(24, 33, 31, 0.2); color: #34403a; }
-        .light-mode .hero-actions button:hover { color: #944900; }
+        .light-mode .hero-actions :is(button, a) { border-color: rgba(24, 33, 31, 0.2); color: #34403a; }
+        .light-mode .hero-actions :is(button, a):hover { color: #944900; }
         .light-mode .hero-action-icon { color: #944900; }
         .bio-contact-cta {
             display: inline-flex;
@@ -626,7 +626,7 @@
             #tab-home .lg\:col-span-7 { gap: 1rem; }
             #tab-home h1 { font-size: 1.675rem; line-height: 1.2; }
             .hero-actions { grid-template-columns: minmax(0, 1fr); padding-top: 0; }
-            .hero-actions button { min-height: 3.25rem; }
+            .hero-actions :is(button, a) { min-height: 3.25rem; }
             .hero-introduction { font-size: 1rem !important; line-height: 1.5; }
             #tab-home .mobile-cta-break { display: inline; }
             #tab-bio { gap: 2rem; }
@@ -667,7 +667,7 @@
                 border-bottom-color: rgba(24, 33, 31, 0.2);
                 box-shadow: 0 0.75rem 1.5rem rgba(24, 33, 31, 0.14);
             }
-            #mobileMenu:not(.hidden) button {
+            #mobileMenu:not(.hidden) :is(button, a) {
                 display: block;
                 position: relative;
                 z-index: 1;
@@ -678,7 +678,7 @@
             #tab-works .works-description-full { display: none; }
             #tab-works .works-description-mobile { display: inline; }
             .work-media-actions { align-items: flex-start; }
-            .work-media-actions--multiple { width: 100%; flex-direction: row; align-items: stretch; justify-content: space-between; gap: 0.45rem; }
+            .work-media-actions--multiple { width: 100%; flex-direction: row; flex-wrap: wrap; align-items: stretch; justify-content: space-between; gap: 0.45rem; }
             .work-media-actions--multiple .work-media-action { width: min(10.5rem, calc((100% - 0.45rem) / 2)); }
             .works-filter-groups { gap: 1.25rem; }
             .works-filter-divider { margin: 0 -0.25rem; }
@@ -712,6 +712,10 @@
             document.documentElement.classList.add('mobile-preview-session');
         }
     </script>
+    <noscript><style>
+        #mobileMenuToggle, #themeToggleBtn, #mobilePreviewBtn, #ambientSoundBtn, #manageAnalyticsCookies { display: none !important; }
+        @media (max-width: 1023px) { #mobileMenu { display: block !important; } }
+    </style></noscript>
     <section id="cookieConsentBanner" class="hidden fixed inset-x-4 bottom-4 z-[70] mx-auto max-w-2xl rounded-2xl border border-neutral-700 bg-neutral-950 p-5 shadow-2xl" aria-label="Analytics cookie choice">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div class="space-y-2">
@@ -755,7 +759,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-20 py-4 flex flex-wrap items-center justify-between gap-4">
             
             <!-- Site Title / Logo -->
-                <a href="#home" onclick="event.preventDefault(); switchTab('home')" class="flex flex-col group cursor-pointer flex-shrink-0">
+                <a href="/" class="flex flex-col group cursor-pointer flex-shrink-0">
                 <span class="font-display text-lg sm:text-2xl font-medium tracking-wider text-neutral-100 group-hover:text-amber-400 transition-colors uppercase">
                     Samantha Fernando
                 </span>
@@ -766,13 +770,13 @@
 
             <!-- Streamlined Desktop Navigation -->
             <nav class="hidden lg:flex flex-wrap items-center gap-x-6 gap-y-2 text-xs font-medium tracking-wider">
-                <button onclick="switchTab('home')" id="nav-home" class="nav-btn py-1.5 text-neutral-400 hover:text-neutral-100 border-b-2 border-transparent transition-all">Home</button>
-                <button onclick="switchTab('works')" id="nav-works" class="nav-btn py-1.5 text-neutral-400 hover:text-neutral-100 border-b-2 border-transparent transition-all">Works</button>
-                <button onclick="switchTab('listen')" id="nav-listen" class="nav-btn py-1.5 text-neutral-400 hover:text-neutral-100 border-b-2 border-transparent transition-all">Listen</button>
-                <button onclick="switchTab('watch')" id="nav-watch" class="nav-btn py-1.5 text-neutral-400 hover:text-neutral-100 border-b-2 border-transparent transition-all">Watch</button>
-                <button onclick="switchTab('bio')" id="nav-bio" class="nav-btn py-1.5 text-neutral-400 hover:text-neutral-100 border-b-2 border-transparent transition-all">Biography</button>
-                <button onclick="switchTab('writing')" id="nav-writing" class="nav-btn py-1.5 text-neutral-400 hover:text-neutral-100 border-b-2 border-transparent transition-all">Writing</button>
-                <button onclick="switchTab('contact')" id="nav-contact" class="nav-btn py-1.5 text-neutral-400 hover:text-neutral-100 border-b-2 border-transparent transition-all">Contact</button>
+                <a href="/" id="nav-home" class="nav-btn py-1.5 text-neutral-400 hover:text-neutral-100 border-b-2 border-transparent transition-all">Home</a>
+                <a href="/works/" id="nav-works" class="nav-btn py-1.5 text-neutral-400 hover:text-neutral-100 border-b-2 border-transparent transition-all">Works</a>
+                <a href="/works/#listen" id="nav-listen" class="nav-btn py-1.5 text-neutral-400 hover:text-neutral-100 border-b-2 border-transparent transition-all">Listen</a>
+                <a href="/works/#watch" id="nav-watch" class="nav-btn py-1.5 text-neutral-400 hover:text-neutral-100 border-b-2 border-transparent transition-all">Watch</a>
+                <a href="/biography/" id="nav-bio" class="nav-btn py-1.5 text-neutral-400 hover:text-neutral-100 border-b-2 border-transparent transition-all">Biography</a>
+                <a href="/writing/" id="nav-writing" class="nav-btn py-1.5 text-neutral-400 hover:text-neutral-100 border-b-2 border-transparent transition-all">Writing</a>
+                <a href="/contact/" id="nav-contact" class="nav-btn py-1.5 text-neutral-400 hover:text-neutral-100 border-b-2 border-transparent transition-all">Contact</a>
             </nav>
 
             <!-- Utility Controls (Theme Toggle + Soundscape + Mobile Menu Toggle) -->
@@ -805,13 +809,13 @@
 
         <!-- Mobile Navigation Drawer -->
         <div id="mobileMenu" class="hidden lg:hidden border-t border-neutral-800 bg-neutral-950/95 px-6 py-5 space-y-3 font-mono text-xs tracking-wider">
-                <button data-mobile-nav="home" onclick="switchTab('home')" class="mobile-nav-btn block w-full text-left py-2 text-neutral-300 hover:text-amber-400">Home</button>
-                <button data-mobile-nav="works" onclick="switchTab('works')" class="mobile-nav-btn block w-full text-left py-2 text-neutral-300 hover:text-amber-400">Works</button>
-                <button data-mobile-nav="listen" onclick="switchTab('listen')" class="mobile-nav-btn block w-full text-left py-2 text-neutral-300 hover:text-amber-400">Listen</button>
-                <button data-mobile-nav="watch" onclick="switchTab('watch')" class="mobile-nav-btn block w-full text-left py-2 text-neutral-300 hover:text-amber-400">Watch</button>
-                <button data-mobile-nav="bio" onclick="switchTab('bio')" class="mobile-nav-btn block w-full text-left py-2 text-neutral-300 hover:text-amber-400">Biography</button>
-                <button data-mobile-nav="writing" onclick="switchTab('writing')" class="mobile-nav-btn block w-full text-left py-2 text-neutral-300 hover:text-amber-400">Writing</button>
-                <button data-mobile-nav="contact" onclick="switchTab('contact')" class="mobile-nav-btn block w-full text-left py-2 text-neutral-300 hover:text-amber-400">Contact</button>
+                <a href="/" data-mobile-nav="home" class="mobile-nav-btn block w-full text-left py-2 text-neutral-300 hover:text-amber-400">Home</a>
+                <a href="/works/" data-mobile-nav="works" class="mobile-nav-btn block w-full text-left py-2 text-neutral-300 hover:text-amber-400">Works</a>
+                <a href="/works/#listen" data-mobile-nav="listen" class="mobile-nav-btn block w-full text-left py-2 text-neutral-300 hover:text-amber-400">Listen</a>
+                <a href="/works/#watch" data-mobile-nav="watch" class="mobile-nav-btn block w-full text-left py-2 text-neutral-300 hover:text-amber-400">Watch</a>
+                <a href="/biography/" data-mobile-nav="bio" class="mobile-nav-btn block w-full text-left py-2 text-neutral-300 hover:text-amber-400">Biography</a>
+                <a href="/writing/" data-mobile-nav="writing" class="mobile-nav-btn block w-full text-left py-2 text-neutral-300 hover:text-amber-400">Writing</a>
+                <a href="/contact/" data-mobile-nav="contact" class="mobile-nav-btn block w-full text-left py-2 text-neutral-300 hover:text-amber-400">Contact</a>
         </div>
     </header>
 
@@ -840,6 +844,7 @@
     </div>
     <div id="soundcloudPlayers" aria-hidden="true"></div>
 
+    <p id="navigationStatus" class="sr-only" role="status" aria-live="polite"></p>
     <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
 
         <!-- ================= HOME ================= -->
@@ -854,9 +859,9 @@
                     <h1 class="text-3xl sm:text-5xl font-serif font-light text-neutral-100 leading-tight">Samantha Fernando, <span class="block text-xl sm:text-3xl mt-1">British Composer</span></h1>
                     <p class="text-xl sm:text-3xl font-serif-italic font-light text-neutral-200 leading-tight">"Creating a space in sound that an audience can enter and inhabit."</p>
                     <div class="hero-actions py-1">
-                        <button type="button" aria-label="Listen" onclick="switchTab('listen')"><i class="hero-action-icon fa-solid fa-headphones" aria-hidden="true"></i><span>Listen</span><span class="hero-action-arrow" aria-hidden="true"><svg viewBox="0 0 32 16"><path d="M1 8h25M20 2l6 6-6 6"></path></svg></span></button>
-                        <button type="button" aria-label="Explore works" onclick="switchTab('works')"><i class="hero-action-icon fa-solid fa-music" aria-hidden="true"></i><span>Explore works</span><span class="hero-action-arrow" aria-hidden="true"><svg viewBox="0 0 32 16"><path d="M1 8h25M20 2l6 6-6 6"></path></svg></span></button>
-                        <button type="button" aria-label="Get in touch" onclick="switchTab('contact')"><i class="hero-action-icon fa-regular fa-envelope" aria-hidden="true"></i><span>Get in touch</span><span class="hero-action-arrow" aria-hidden="true"><svg viewBox="0 0 32 16"><path d="M1 8h25M20 2l6 6-6 6"></path></svg></span></button>
+                        <a href="/works/#listen" aria-label="Listen"><i class="hero-action-icon fa-solid fa-headphones" aria-hidden="true"></i><span>Listen</span><span class="hero-action-arrow" aria-hidden="true"><svg viewBox="0 0 32 16"><path d="M1 8h25M20 2l6 6-6 6"></path></svg></span></a>
+                        <a href="/works/" aria-label="Explore works"><i class="hero-action-icon fa-solid fa-music" aria-hidden="true"></i><span>Explore works</span><span class="hero-action-arrow" aria-hidden="true"><svg viewBox="0 0 32 16"><path d="M1 8h25M20 2l6 6-6 6"></path></svg></span></a>
+                        <a href="/contact/" aria-label="Get in touch"><i class="hero-action-icon fa-regular fa-envelope" aria-hidden="true"></i><span>Get in touch</span><span class="hero-action-arrow" aria-hidden="true"><svg viewBox="0 0 32 16"><path d="M1 8h25M20 2l6 6-6 6"></path></svg></span></a>
                     </div>
                     <p class="hero-introduction text-lg text-neutral-300 font-serif-italic font-light leading-relaxed">Samantha Fernando (b. 1984) is a British composer whose work is centred on an exploration of timbre, space, and the unfolding of sound. She is drawn to ideas of landscape, architecture, and place.</p>
                 </div>
@@ -947,7 +952,7 @@
                     <p>Samantha has worked with numerous world-leading ensembles including the <strong class="text-neutral-100">Philharmonia Orchestra</strong>, <strong class="text-neutral-100">London Sinfonietta</strong>, <strong class="text-neutral-100">BCMG</strong>, <strong class="text-neutral-100">Riot Ensemble</strong>, <strong class="text-neutral-100">The BBC Singers</strong>, <strong class="text-neutral-100">LOD Muziektheater (Ghent)</strong>, <strong class="text-neutral-100">Silbersee Vocal Ensemble (Amsterdam)</strong> and <strong class="text-neutral-100">The Crossing (USA)</strong>. Her music has been performed at major international festivals including Aldeburgh Music, Huddersfield Contemporary Music Festival, Sounds New, Gaudeamus Muziekweek, York Late Music and the Oxford Lieder Festival.</p>
                     <p>Samantha studied Composition at the Royal Academy of Music and the University of Oxford. She holds a PhD in Composition. She is an Honorary Research Fellow in Composition at Royal Holloway, University of London.</p>
                     <p>In 2021, Samantha saw the opening of <em class="text-amber-300">Current, Rising</em>, a world-first hyper-reality opera experience produced by the Royal Opera House and Figment Productions. Her chamber opera <em class="text-amber-300">glass human</em>, created in collaboration with Melanie Wilson, premiered at Glyndebourne in Autumn 2022. Recent commissions include <em class="text-amber-300">Sound Inhabitants</em> for the London Sinfonietta and <em class="text-amber-300">Wintering</em>, commissioned by Wigmore Hall and performed by Manchester Collective and The Marian Consort.</p>
-                    <button type="button" onclick="switchTab('contact')" class="bio-contact-cta">Discuss a commission or performance <span aria-hidden="true">→</span></button>
+                    <a href="/contact/" class="bio-contact-cta">Discuss a commission or performance <span aria-hidden="true">→</span></a>
                 </article>
 
                 <aside class="space-y-6">
@@ -1318,7 +1323,12 @@
         }
 
         function loadGoogleAnalytics() {
-            if (window.googleAnalyticsLoaded) return;
+            if (isMobilePreview) return;
+            if (window.googleAnalyticsLoaded) {
+                window[`ga-disable-${googleAnalyticsMeasurementId}`] = false;
+                recordPageView();
+                return;
+            }
             window[`ga-disable-${googleAnalyticsMeasurementId}`] = false;
             window.googleAnalyticsLoaded = true;
             window.dataLayer = window.dataLayer || [];
@@ -1326,7 +1336,8 @@
                 window.dataLayer.push(arguments);
             };
             window.gtag('js', new Date());
-            window.gtag('config', googleAnalyticsMeasurementId);
+            window.gtag('config', googleAnalyticsMeasurementId, { send_page_view: false });
+            recordPageView();
 
             const analyticsScript = document.createElement('script');
             analyticsScript.async = true;
@@ -1338,6 +1349,11 @@
             window[`ga-disable-${googleAnalyticsMeasurementId}`] = true;
             document.cookie = '_ga=; Max-Age=0; path=/';
             document.cookie = `_ga_${googleAnalyticsMeasurementId.slice(2)}=; Max-Age=0; path=/`;
+        }
+
+        function recordPageView() {
+            if (!window.googleAnalyticsLoaded || window[`ga-disable-${googleAnalyticsMeasurementId}`]) return;
+            window.gtag('event', 'page_view', { page_location: window.location.href, page_title: document.title });
         }
 
         function setAnalyticsConsent(choice) {
@@ -1380,27 +1396,9 @@
         }
 
         const catalogueData = JSON.parse(document.getElementById('catalogueData').textContent);
-        const worksData = catalogueData.works;
         const mediaCatalog = catalogueData.media;
         const catalogueSettings = catalogueData.settings;
         const defaultRecording = mediaCatalog.find(media => media.key === catalogueSettings.defaultRecording);
-        const escapeContent = value => String(value ?? '').replace(/[&<>"']/g, character => ({
-            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-        })[character]);
-        const relatedWorkFor = media => worksData.find(work => work.id === media.workId);
-        const mediaForWork = work => mediaCatalog.filter(media => media.workId === work.id)
-            .sort((a, b) => (a.actionOrder || 0) - (b.actionOrder || 0) || a.key.localeCompare(b.key));
-        document.getElementById('worksEyebrow').textContent = catalogueSettings.eyebrow;
-        document.getElementById('worksHeading').textContent = catalogueSettings.heading;
-        document.getElementById('recordingAvailabilityCopy').textContent = catalogueSettings.availability;
-
-        const workCategoryLabels = {
-            chamber: 'Solo & Chamber',
-            vocal: 'Vocal & Choral',
-            ensemble: 'Large Ensemble',
-            opera: 'Opera & Stage',
-            orchestral: 'Orchestral'
-        };
 
         let activeCategory = 'all';
         let activeWorksView = 'all';
@@ -1409,84 +1407,132 @@
         let projectModalTrigger = null;
         let videoModalTrigger = null;
 
-        // Tab Switching Handler
-        const tabAnchors = {
-            bio: 'bio',
-            works: 'works',
-            listen: 'listen',
-            watch: 'watch',
-            writing: 'writing',
-            contact: 'contact'
-        };
-
-        const anchorTabs = {
-            bio: 'bio',
-            works: 'works',
-            listen: 'listen',
-            watch: 'watch',
-            writing: 'writing',
-            contact: 'contact'
-        };
+        // Real HTML pages, enhanced without replacing the persistent media shell.
+        const pagePaths = { home: '/', bio: '/biography/', works: '/works/', listen: '/works/#listen', watch: '/works/#watch', writing: '/writing/', contact: '/contact/' };
+        let navigationRequest = 0;
+        let navigationController;
+        let renderedPath = window.location.pathname;
+        history.scrollRestoration = 'manual';
+        history.replaceState({ ...history.state, scroll: window.scrollY }, '', window.location.href);
 
         function updateNavigationHistory(anchor) {
-            const url = anchor
-                ? `${window.location.pathname}${window.location.search}#${anchor}`
-                : `${window.location.pathname}${window.location.search}`;
+            const url = `${window.location.pathname}${window.location.search}${['listen', 'watch'].includes(anchor) ? `#${anchor}` : ''}`;
             if (`${window.location.pathname}${window.location.search}${window.location.hash}` !== url) {
+                history.replaceState({ ...history.state, scroll: window.scrollY }, '', window.location.href);
                 history.pushState(null, '', url);
+                return true;
             }
+            return false;
         }
 
-        function switchTab(tabId, requestedWorksView, updateHistory = true) {
-            if (isPlaybackStopped) clearStoppedPlayback();
-            const isMediaView = tabId === 'listen' || tabId === 'watch';
-            const worksView = requestedWorksView || (isMediaView ? tabId : 'all');
-            const anchor = isMediaView ? worksView : tabAnchors[tabId];
-            if (updateHistory) updateNavigationHistory(anchor);
-            if (!document.getElementById('mobileMenu').classList.contains('hidden')) toggleMobileMenu();
-            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.remove('text-amber-400', 'border-amber-400');
-                btn.classList.add('text-neutral-400', 'border-transparent');
+        function switchTab(tabId) {
+            return navigatePage(new URL(pagePaths[tabId] || '/', window.location.origin));
+        }
+
+        function updateNavigation() {
+            const section = document.querySelector('main > section')?.id.replace('tab-', '') || 'home';
+            const tabId = section === 'works' && ['listen', 'watch'].includes(activeWorksView) ? activeWorksView : section;
+            document.querySelectorAll('.nav-btn, .mobile-nav-btn').forEach(link => {
+                const active = (link.id?.replace('nav-', '') || link.dataset.mobileNav) === tabId;
+                link.classList.toggle('text-amber-400', active);
+                link.classList.toggle('text-neutral-400', !active && link.classList.contains('nav-btn'));
+                link.classList.toggle('text-neutral-300', !active && link.classList.contains('mobile-nav-btn'));
+                link.classList.toggle('border-amber-400', active && link.classList.contains('nav-btn'));
+                link.classList.toggle('border-transparent', !active && link.classList.contains('nav-btn'));
+                if (active) link.setAttribute('aria-current', 'page');
+                else link.removeAttribute('aria-current');
             });
-
-            const targetTabId = isMediaView ? 'works' : tabId;
-            const targetTab = document.getElementById(`tab-${targetTabId}`);
-            if (targetTab) {
-                targetTab.classList.add('active');
-            }
-            if (targetTabId === 'works') setWorksView(worksView, false);
-
-            const activeNavBtn = document.getElementById(`nav-${tabId}`);
-            if (activeNavBtn) {
-                activeNavBtn.classList.remove('text-neutral-400', 'border-transparent');
-                activeNavBtn.classList.add('text-amber-400', 'border-amber-400');
-            }
-
-            document.querySelectorAll('.mobile-nav-btn').forEach(btn => {
-                const isActive = btn.dataset.mobileNav === tabId;
-                btn.classList.toggle('text-amber-400', isActive);
-                btn.classList.toggle('text-neutral-300', !isActive);
-            });
-
-            if (updateHistory) window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function mediaActionMarkup(media) {
-            const mediaIndex = mediaCatalog.indexOf(media);
-            if (media.type === 'listen') {
-                const dataAttribute = media.provider === 'spotify'
-                    ? `data-spotify-track="${escapeContent(media.id)}"`
-                    : `data-track="${escapeContent(media.id)}"`;
-                const actionLabel = media.provider === 'spotify' ? 'Preview' : 'Listen';
-                return `<button type="button" ${dataAttribute} data-media-index="${mediaIndex}" class="work-media-action"><i class="fa-solid fa-play text-[10px]" aria-hidden="true"></i> ${actionLabel}</button>`;
+        function initialisePage() {
+            if (document.getElementById('worksContainer')) {
+                activeCategory = 'all';
+                activeWorksView = 'all';
+                document.getElementById('worksEyebrow').textContent = catalogueSettings.eyebrow;
+                document.getElementById('worksHeading').textContent = catalogueSettings.heading;
+                document.getElementById('recordingAvailabilityCopy').textContent = catalogueSettings.availability;
+                setWorksView(['#listen', '#watch'].includes(location.hash) ? location.hash.slice(1) : 'all', false);
+                updatePlaybackIcons();
             }
-            const actionLabel = media.actionLabel || 'Watch';
-            return `<button type="button" aria-label="Watch ${escapeContent(media.title)}" data-media-index="${mediaIndex}" class="work-media-action"><i class="fa-solid fa-play text-[10px]" aria-hidden="true"></i> ${escapeContent(actionLabel)}</button>`;
+            updateNavigation();
         }
 
-        document.getElementById('worksContainer').addEventListener('click', event => {
-            const button = event.target.closest('[data-media-index]');
+        async function navigatePage(destination, { restore = false, scroll = 0 } = {}) {
+            const url = new URL(destination, window.location.href);
+            if (isMobilePreview) url.searchParams.set('mobilePreview', 'true');
+            const request = ++navigationRequest;
+            navigationController?.abort();
+            if (!restore && url.href === location.href && url.pathname === renderedPath) {
+                if (!document.getElementById('mobileMenu').classList.contains('hidden')) toggleMobileMenu();
+                return;
+            }
+            navigationController = new AbortController();
+            if (!restore) history.replaceState({ ...history.state, scroll: window.scrollY }, '', window.location.href);
+            try {
+                let next;
+                if (url.pathname !== renderedPath) {
+                    const response = await fetch(url.href, { signal: navigationController.signal });
+                    if (!response.ok) throw new Error('Page unavailable');
+                    next = new DOMParser().parseFromString(await response.text(), 'text/html');
+                    if (!next.querySelector('main > section') || !next.querySelector('link[rel="canonical"]')) throw new Error('Invalid page');
+                    // A deployment changed the catalogue: use a fresh document rather than mixing snapshots.
+                    if (next.getElementById('catalogueData').textContent !== document.getElementById('catalogueData').textContent) throw new Error('Content version changed');
+                }
+                if (request !== navigationRequest) return;
+                closeModal(false);
+                closeVideoModal(false);
+                if (!document.getElementById('mobileMenu').classList.contains('hidden')) toggleMobileMenu();
+                if (next) {
+                    document.querySelector('main').replaceChildren(...next.querySelector('main').childNodes);
+                    document.title = next.title;
+                    const selector = 'meta[name="description"], meta[name^="twitter:"], meta[property^="og:"], link[rel="canonical"], script[type="application/ld+json"], link[rel="preload"][as="image"]';
+                    document.head.querySelectorAll(selector).forEach(element => element.remove());
+                    next.head.querySelectorAll(selector).forEach(element => document.head.append(element.cloneNode(true)));
+                    renderedPath = url.pathname;
+                }
+                if (!restore && url.href !== window.location.href) history.pushState({ scroll: 0 }, '', url.href);
+                initialisePage();
+                if (isPlaybackStopped) clearStoppedPlayback();
+                const heading = document.querySelector('main h1');
+                if (!restore) {
+                    heading?.setAttribute('tabindex', '-1');
+                    heading?.focus({ preventScroll: true });
+                }
+                const anchor = url.hash && !['#listen', '#watch'].includes(url.hash) ? document.getElementById(decodeURIComponent(url.hash.slice(1))) : null;
+                if (restore) window.scrollTo({ top: scroll, behavior: 'instant' });
+                else if (anchor) anchor.scrollIntoView();
+                else window.scrollTo(0, 0);
+                document.getElementById('navigationStatus').textContent = document.title;
+                recordPageView();
+            } catch (error) {
+                if (request === navigationRequest && error.name !== 'AbortError') {
+                    if (restore) window.location.replace(url.href);
+                    else window.location.assign(url.href);
+                }
+            }
+        }
+
+        document.addEventListener('click', event => {
+            const link = event.target.closest('a[href]');
+            if (!link || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || link.hasAttribute('download') || (link.target && link.target !== '_self')) return;
+            const url = new URL(link.href);
+            if (url.origin !== location.origin || !Object.values(pagePaths).some(path => new URL(path, location.origin).pathname === url.pathname) && !url.pathname.startsWith('/writing/')) return;
+            if (url.pathname === location.pathname && url.hash && !['#listen', '#watch'].includes(url.hash)) return;
+            event.preventDefault();
+            navigatePage(url);
+        });
+
+        window.addEventListener('popstate', event => navigatePage(window.location.href, { restore: true, scroll: event.state?.scroll || 0 }));
+        window.addEventListener('hashchange', () => {
+            if (location.pathname === '/works/') {
+                setWorksView(['#listen', '#watch'].includes(location.hash) ? location.hash.slice(1) : 'all', false);
+                updateNavigation();
+            }
+        });
+
+        /* Page listeners are delegated once; departed content owns no listeners or timers. */
+        document.addEventListener('click', event => {
+            const button = event.target.closest('#worksContainer [data-media-index]');
             if (!button) return;
             const media = mediaCatalog[Number(button.dataset.mediaIndex)];
             if (media.type === 'watch') openVideoModal(media.url, media.title);
@@ -1494,125 +1540,25 @@
             else playTrack(media.title, media.detail, media.id);
         });
 
-        function renderMediaCatalog(searchVal) {
-            const filtered = mediaCatalog.filter(media => `${media.title} ${media.detail} ${relatedWorkFor(media)?.instrumentation || ''} ${relatedWorkFor(media)?.title || ''}`.toLowerCase().includes(searchVal))
-                .filter(media => media.type === activeWorksView)
-                .filter(media => activeCategory === 'all' || (relatedWorkFor(media)?.category || media.category) === activeCategory)
-                .sort((a, b) => (b.year || 0) - (a.year || 0) || a.title.localeCompare(b.title));
-
-            if (!filtered.length) {
-                return `<div class="glass-panel p-8 text-center text-neutral-500 font-mono text-xs rounded-2xl">No ${activeWorksView === 'listen' ? 'recordings' : 'films'} found matching your search query.</div>`;
-            }
-
-            if (activeWorksView === 'watch') {
-                return filtered.map(media => {
-                    const videoId = new URL(media.url).searchParams.get('v');
-                    return `
-                        <article class="glass-panel p-4 rounded-2xl border border-neutral-800 hover:border-amber-700/50 transition-all flex flex-col gap-4 group">
-                            <button type="button" data-media-index="${mediaCatalog.indexOf(media)}" aria-label="Watch ${escapeContent(media.title)}" class="relative aspect-video overflow-hidden rounded-xl bg-neutral-900 text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500">
-                                <img src="https://i.ytimg.com/vi/${videoId}/hqdefault.jpg" alt="" class="w-full h-full object-cover" loading="lazy">
-                                <span class="absolute inset-0 flex items-center justify-center bg-black/25 group-hover:bg-black/40 transition-colors"><span class="w-14 h-14 rounded-full bg-amber-600/90 text-white flex items-center justify-center text-xl shadow-xl transition-transform group-hover:scale-110"><i class="fa-solid fa-play ml-1" aria-hidden="true"></i></span></span>
-                            </button>
-                            <div class="space-y-1">
-                                <div class="flex items-center gap-3"><span class="text-xs font-mono text-amber-400">${escapeContent(media.year || 'Undated')}</span></div>
-                                <h3 class="text-xl font-serif text-neutral-100 group-hover:text-amber-300 transition-colors">${escapeContent(media.title)}</h3>
-                                <p class="text-xs text-neutral-400 leading-relaxed">${escapeContent(media.detail)}</p>
-                            </div>
-                        </article>`;
-                }).join('');
-            }
-
-            return filtered.map(media => {
-                const relatedWork = relatedWorkFor(media);
-                return `
-                <div class="glass-panel p-5 rounded-2xl border border-neutral-800 hover:border-amber-700/50 transition-all flex flex-col md:flex-row md:items-start justify-between gap-4 group">
-                    <div class="space-y-1">
-                        <div class="flex flex-wrap items-center gap-3"><span class="text-xs font-mono text-amber-400">${escapeContent(media.year || 'Undated')}</span>${relatedWork ? `<span class="px-2.5 py-0.5 rounded-full bg-neutral-800 text-neutral-300 text-[10px] font-mono">${workCategoryLabels[relatedWork.category]}</span>` : ''}${media.duration ? `<span class="text-xs font-mono text-neutral-500">${escapeContent(media.duration)}</span>` : ''}</div>
-                        <h3 class="text-lg font-serif text-neutral-100 group-hover:text-amber-300 transition-colors">${escapeContent(media.title)}</h3>
-                        <p class="text-xs text-neutral-400">${escapeContent(media.detail)}</p>
-                    </div>
-                    <div class="media-catalog-actions flex items-center gap-2 pt-2 md:pt-0 md:mt-auto">${mediaActionMarkup(media)}</div>
-                </div>
-            `;
-            }).join('');
-        }
-
         // The complete catalogue and media-only views share one renderer and search field.
         function renderWorks() {
             const container = document.getElementById('worksContainer');
+            if (!container) return;
             const searchVal = document.getElementById('worksSearchInput').value.toLowerCase();
             container.classList.toggle('watch-catalogue', activeWorksView === 'watch');
 
-            if (activeWorksView !== 'all') {
-                container.innerHTML = renderMediaCatalog(searchVal);
-                return;
-            }
-
-            const filtered = worksData.filter(w => {
-                const matchesCategory = activeCategory === 'all' || w.category === activeCategory;
-                const matchesSearch = w.title.toLowerCase().includes(searchVal) || 
-                                      w.instrumentation.toLowerCase().includes(searchVal) ||
-                                       workCategoryLabels[w.category].toLowerCase().includes(searchVal) ||
-                                       (w.commission || '').toLowerCase().includes(searchVal) ||
-                                       (w.premiere || '').toLowerCase().includes(searchVal) ||
-                                       (w.notes || '').toLowerCase().includes(searchVal);
-                return matchesCategory && matchesSearch;
-            }).sort((a, b) => b.year - a.year || a.title.localeCompare(b.title));
-
-            if (filtered.length === 0) {
-                container.innerHTML = `
-                    <div class="glass-panel p-8 text-center text-neutral-500 font-mono text-xs rounded-2xl">
-                        No compositions found matching your search query.
-                    </div>
-                `;
-                return;
-            }
-
-            container.innerHTML = filtered.map(w => `
-                 <div class="glass-panel p-5 rounded-2xl border border-neutral-800 hover:border-amber-700/50 transition-all flex flex-col md:flex-row md:items-start justify-between gap-4 group">
-                    <div class="space-y-1">
-                         <div class="flex items-center gap-3">
-                              <span class="text-xs font-mono text-amber-400">${escapeContent(w.year || 'Undated')}</span>
-                             <span class="px-2.5 py-0.5 rounded-full bg-neutral-800 text-neutral-300 text-[10px] font-mono">${workCategoryLabels[w.category]}</span>
-                              <span class="text-xs font-mono text-neutral-500">${escapeContent(w.duration)}</span>
-                         </div>
-                         <h3 class="text-lg font-serif text-neutral-100 group-hover:text-amber-300 transition-colors">${escapeContent(w.title)}</h3>
-                         <p class="text-xs text-neutral-400">${escapeContent(w.instrumentation)}</p>
-                         <div class="space-y-0.5 pt-1 text-xs text-neutral-500 font-serif-italic">
-                             ${w.commission ? `<p><span class="not-italic font-sans text-[10px] uppercase tracking-wider text-neutral-600">Commission</span> ${escapeContent(w.commission)}</p>` : ''}
-                             ${w.premiere ? `<p><span class="not-italic font-sans text-[10px] uppercase tracking-wider text-neutral-600">Premiere</span> ${escapeContent(w.premiere)}</p>` : ''}
-                             ${w.notes ? `<p><span class="not-italic font-sans text-[10px] uppercase tracking-wider text-neutral-600">Notes</span> ${escapeContent(w.notes)}</p>` : ''}
-                         </div>
-                    </div>
-
-                       <div class="work-media-actions ${mediaForWork(w).length > 1 ? 'work-media-actions--multiple' : ''} pt-2 md:pt-0 md:mt-auto">
-                          ${mediaForWork(w).map(mediaActionMarkup).join('')}
-                     </div>
-                </div>
-            `).join('');
+            container.innerHTML = renderCatalogueCards(catalogueData, activeWorksView, searchVal, activeCategory);
+            updatePlaybackIcons();
         }
 
         function setWorksView(view, updateUrl = true) {
+            if (!document.getElementById('worksContainer')) return;
             const viewChanged = activeWorksView !== view;
             activeWorksView = view;
             if (viewChanged) resetWorksFilters();
             const isAllWorks = view === 'all';
             if (updateUrl) {
-                const tabId = isAllWorks ? 'works' : view;
-                const anchor = isAllWorks ? 'works' : view;
-                updateNavigationHistory(anchor);
-                document.querySelectorAll('.nav-btn').forEach(button => {
-                    const active = button.id === `nav-${tabId}`;
-                    button.classList.toggle('text-amber-400', active);
-                    button.classList.toggle('border-amber-400', active);
-                    button.classList.toggle('text-neutral-400', !active);
-                    button.classList.toggle('border-transparent', !active);
-                });
-                document.querySelectorAll('.mobile-nav-btn').forEach(button => {
-                    const active = button.dataset.mobileNav === tabId;
-                    button.classList.toggle('text-amber-400', active);
-                    button.classList.toggle('text-neutral-300', !active);
-                });
+                if (updateNavigationHistory(isAllWorks ? 'works' : view)) recordPageView();
             }
             document.getElementById('worksViewDescription').textContent = isAllWorks
                 ? catalogueSettings.worksDescription
@@ -1628,6 +1574,7 @@
                 button.setAttribute('aria-pressed', String(active));
             });
             renderWorks();
+            updateNavigation();
         }
 
         function resetWorksFilters() {
@@ -1666,23 +1613,14 @@
         }
 
         function closeInstrumentationMenu() {
-            document.getElementById('worksInstrumentationMenu').classList.add('hidden');
-            document.getElementById('worksInstrumentationToggle').setAttribute('aria-expanded', 'false');
+            document.getElementById('worksInstrumentationMenu')?.classList.add('hidden');
+            document.getElementById('worksInstrumentationToggle')?.setAttribute('aria-expanded', 'false');
         }
 
         function filterWorks() {
             renderWorks();
         }
 
-        const initialAnchor = window.location.hash.slice(1);
-        const initialTab = anchorTabs[initialAnchor] || 'home';
-        switchTab(initialTab, initialAnchor === 'watch' ? 'watch' : undefined, false);
-
-        window.addEventListener('popstate', () => {
-            const anchor = window.location.hash.slice(1);
-            const tab = anchorTabs[anchor] || 'home';
-            switchTab(tab, anchor === 'watch' ? 'watch' : undefined, false);
-        });
 
         // SoundCloud playback for Samantha Fernando's published recordings.
         const defaultTrackId = defaultRecording?.id || null;
@@ -2101,8 +2039,10 @@
         function showTrackUnavailable() {
             setPlaybackState(false);
             const notice = document.getElementById('audioAvailabilityMessage');
-            notice.classList.remove('hidden');
-            notice.textContent = 'This recording is not currently available to embed from SoundCloud.';
+            if (notice) {
+                notice.classList.remove('hidden');
+                notice.textContent = 'This recording is not currently available to embed from SoundCloud.';
+            }
         }
 
         function playTrack(title, artist, id) {
@@ -2119,7 +2059,7 @@
                 return;
             }
 
-            notice.classList.add('hidden');
+            notice?.classList.add('hidden');
             pendingSpotifyTrack = null;
             if (isSpotifyPlaying && spotifyController) {
                 spotifyController.pause();
@@ -2135,7 +2075,7 @@
             trackDurationMs = 0;
             updateSoundbarProgress();
             document.getElementById('soundbarLabel').textContent = currentTrackName;
-            notice.classList.add('hidden');
+            notice?.classList.add('hidden');
             pauseSoundCloudPlayers(id);
             loadSoundCloudProgressMetadata(id);
             // A newly selected recording always starts from the beginning.
@@ -2241,19 +2181,19 @@
             overlay.querySelector('button').focus();
         }
 
-        function closeVideoModal() {
+        function closeVideoModal(restoreFocus = true) {
             const overlay = document.getElementById('videoModalOverlay');
             document.getElementById('videoFrame').src = '';
             overlay.classList.add('hidden');
             overlay.classList.remove('flex');
             const trigger = videoModalTrigger;
             videoModalTrigger = null;
-            window.setTimeout(() => trigger?.focus(), 0);
+            if (restoreFocus) window.setTimeout(() => trigger?.focus(), 0);
         }
 
-        function requestScore(title) {
+        async function requestScore(title) {
             closeModal(false);
-            switchTab('contact');
+            await switchTab('contact');
             const msgBox = document.querySelector('textarea');
             if (msgBox) {
                 msgBox.value = `Hello Samantha, I am interested in acquiring/renting score and performance materials for: ${title}.`;
@@ -2357,9 +2297,9 @@
             }
 
             const previewFrame = prepareMobilePreview();
-            if (previewFrame.contentWindow) {
-                // Reuse the loaded document, but mirror the parent's current route.
-                previewFrame.contentWindow.location.hash = window.location.hash;
+            if (previewFrame.contentWindow?.navigatePage) {
+                // Reuse the shell while mirroring the parent's full page URL.
+                previewFrame.contentWindow.navigatePage(window.location.href);
             }
             dialog.classList.remove('hidden');
             document.body.style.overflow = 'hidden';
@@ -2428,7 +2368,7 @@
             mobilePreviewButton.addEventListener('focus', prepareMobilePreview);
         }
         document.addEventListener('click', event => {
-            if (!document.getElementById('instrumentationControl').contains(event.target)) closeInstrumentationMenu();
+            if (!document.getElementById('instrumentationControl')?.contains(event.target)) closeInstrumentationMenu();
         });
         document.addEventListener('keydown', event => {
             const openDialog = [...document.querySelectorAll('[role="dialog"]')]
@@ -2448,7 +2388,7 @@
                     }
                 }
             }
-            if (event.key === 'Escape' && !document.getElementById('worksInstrumentationMenu').classList.contains('hidden')) {
+            if (event.key === 'Escape' && document.getElementById('worksInstrumentationMenu') && !document.getElementById('worksInstrumentationMenu').classList.contains('hidden')) {
                 closeInstrumentationMenu();
                 document.getElementById('worksInstrumentationToggle').focus();
             } else if (document.activeElement?.classList.contains('instrumentation-option')) {
@@ -2479,9 +2419,12 @@
             }
         });
 
+        // Route state and controls must not wait for external resources or providers.
+        initialisePage();
+        updateThemeToggle();
+        initialiseAnalyticsConsent();
+
         window.onload = function() {
-            updateThemeToggle();
-            initialiseAnalyticsConsent();
             restoreMobilePreview();
             if (!isMobilePreview) {
                 const initialiseWhenIdle = () => initialiseSoundCloudPlayers().catch(() => {});

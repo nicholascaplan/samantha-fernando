@@ -4,11 +4,15 @@ import {resolve} from 'node:path'
 import {createClient} from '@sanity/client'
 import {renderBiography, replaceRegion, validateBiography} from './lib/biography.mjs'
 import {buildCatalogue, CATALOGUE_QUERY} from './lib/catalogue.mjs'
+import {renderPages} from './lib/pages.mjs'
+import {assertPublicOutput} from './lib/public-output.mjs'
 
 const PROJECT_ID = '9a66iw1t'
 const DATASET = 'production'
 const root = resolve(import.meta.dirname, '..')
 const outDir = resolve(root, process.argv[2] ?? '_site')
+const useFallback = process.argv.includes('--fallback')
+if (outDir === root || !outDir.startsWith(`${root}/_site`)) throw new Error('Build output must be a project _site directory')
 
 const QUERY = `*[_id == "biographyPage"][0]{
   eyebrow, heading, body, contactCtaLabel, milestonesHeading, milestones[]{year, title, detail},
@@ -48,18 +52,25 @@ async function buildBiography(html) {
 
 await mkdir(resolve(outDir, 'assets'), {recursive: true})
 await cp(resolve(root, 'assets'), resolve(outDir, 'assets'), {recursive: true})
-for (const file of ['CNAME', 'robots.txt', 'sitemap.xml']) {
+for (const file of ['CNAME', 'robots.txt']) {
   await cp(resolve(root, file), resolve(outDir, file))
 }
 
 let html = await readFile(resolve(root, 'index.html'), 'utf8')
 try {
+  if (useFallback) throw new Error('Deterministic fallback build requested')
   html = await buildBiography(html)
   console.log('Biography rendered from Sanity.')
 } catch (error) {
   console.warn(`::warning::Sanity content unavailable, using committed Biography fallback. ${error.message}`)
 }
-const catalogue = await buildCatalogue(html, () => client.fetch(CATALOGUE_QUERY))
-await writeFile(resolve(outDir, 'index.html'), catalogue.html)
+const catalogue = useFallback ? {html, usedFallback: true} : await buildCatalogue(html, () => client.fetch(CATALOGUE_QUERY))
+const pages = renderPages(catalogue.html)
+for (const [filename, content] of pages) {
+  const destination = resolve(outDir, filename)
+  await mkdir(resolve(destination, '..'), {recursive: true})
+  await writeFile(destination, content)
+}
+await assertPublicOutput(outDir)
 if (!catalogue.usedFallback) console.log('Works & Media rendered from Sanity.')
 console.log(`Public site written to ${outDir}`)
