@@ -1501,7 +1501,7 @@
                 const anchor = url.hash && !['#listen', '#watch'].includes(url.hash) ? document.getElementById(decodeURIComponent(url.hash.slice(1))) : null;
                 if (restore) window.scrollTo({ top: scroll, behavior: 'instant' });
                 else if (anchor) anchor.scrollIntoView();
-                else window.scrollTo(0, 0);
+                else window.scrollTo({ top: 0, behavior: 'instant' });
                 document.getElementById('navigationStatus').textContent = document.title;
                 recordPageView();
             } catch (error) {

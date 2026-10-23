@@ -102,12 +102,15 @@ test('failed enhancement falls back to a normal document navigation', async ({pa
 
 test('browser Back restores the previous page scroll position', async ({page}) => {
   await page.goto('/');
+  await page.evaluate(() => document.fonts.ready);
   await page.getByRole('button', {name: 'Reject', exact: true}).click();
   await page.evaluate(() => window.scrollTo({top: 400, behavior: 'instant'}));
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(400);
   // Avoid Playwright scrolling the fixed header link into view before activation.
   await page.locator('#nav-bio').evaluate(link => link.click());
   await expect(page.locator('#tab-bio')).toBeVisible();
+  // Navigation must not leave a smooth scroll running when Back restores its entry.
+  expect(await page.evaluate(() => window.scrollY)).toBe(0);
   await page.goBack();
   await expect(page.locator('#tab-home')).toBeVisible();
   // Font/image layout settling can move the restored document by a few pixels.
