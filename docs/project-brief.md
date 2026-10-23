@@ -1,8 +1,12 @@
-# Decisions
+# Project Brief
+
+This repository builds and hosts the website of composer Samantha Fernando: a static GitHub Pages site at https://www.samanthafernando.com/, served from a single hash-routed `index.html`, with content managed in Sanity and rendered into static HTML at build time.
+
+## Decisions
 
 Record only decisions that constrain future work. Implementation history and completed tasks do not belong here.
 
-## Architecture
+### Architecture
 
 - Keep a single `index.html` with hash routes until a planned architecture split is approved. Separate pages would duplicate navigation, theme and playback behaviour.
 - Push browser-history entries for deliberate section and Works & Media view changes. Restore the matching state on `popstate`.
@@ -11,7 +15,7 @@ Record only decisions that constrain future work. Implementation history and com
 - Keep one canonical public URL for the single-page site. Represent the client-rendered compositions as static `MusicComposition` structured data until an approved multi-page architecture split. The essay is already static HTML; recordings and films retain links to their authoritative provider pages rather than duplicating third-party metadata in structured data.
 - Keep the enquiry form as the sole public contact route. Do not expose Samantha's email address in rendered content, links or structured data; use Formspree's hidden `_gotcha` honeypot to filter basic automated submissions.
 
-## Content Management
+### Content Management
 
 - Manage site content in Sanity (project `9a66iw1t`, public `production` dataset) and render it into static HTML at build time. Do not fetch Sanity content in the browser; the site must render without JavaScript calls to a CMS.
 - Keep the Studio standalone in `studio/` with its own `package.json`. It is never part of the published artifact. It is hosted by Sanity; see `docs/sanity.md` for URLs and administration.
@@ -25,7 +29,7 @@ Record only decisions that constrain future work. Implementation history and com
 - Let editors order media actions within each Work using non-negative order numbers shared across recordings and films. Keep all three catalogue views newest first, then alphabetical.
 - Keep source import keys separate from Sanity-generated document IDs. Catalogue imports create missing records but never overwrite existing published records or drafts.
 
-## Content And Navigation
+### Content And Navigation
 
 - Keep Biography at `#bio`. The root route remains the quote-led homepage with Spotlight Works.
 - Use one Works & Media catalogue. Works opens All Works, Listen opens recordings and Watch opens films.
@@ -35,7 +39,7 @@ Record only decisions that constrain future work. Implementation history and com
 - Use a category pill only for the controlled work category. Keep venues, ensembles, awards and recording details in the appropriate metadata field.
 - Do not use horizontal separators beneath primary page-intro copy; title, description and section spacing provide the transition. Retain dividers only where they structure content within a component.
 
-## Media And Interaction
+### Media And Interaction
 
 - Keep the light theme as the default and persist an explicit visitor theme selection locally. Every new or changed visual surface, including transient menus, hover, focus, selected and disabled states, must define dark defaults and light-mode overrides.
 - Render compact Works and Listen cards. Render Watch as thumbnail-led YouTube cards that open the in-page modal.
@@ -47,7 +51,7 @@ Record only decisions that constrain future work. Implementation history and com
 - Use a neutral treatment for availability and missing-metadata notices unless an actual error occurred.
 - Use role-based colour tokens and a shared visible focus treatment for interactive controls. Preserve the current amber focus colour in dark mode and the darker amber focus colour in light mode.
 
-## Responsive And Performance
+### Responsive And Performance
 
 - Use the real page in a `430px` iframe for desktop mobile preview. Do not create preview-only responsive CSS.
 - Keep compact mobile layout rules in the page's narrow-screen media queries, including the 3.5rem header, icon-only narrow-phone sound control, persistent top-right menu close control and 13rem hero portrait.
@@ -55,10 +59,11 @@ Record only decisions that constrain future work. Implementation history and com
 - Preload `assets/sam-1-1200.webp` for the homepage hero. Load the smaller `assets/sam-6-800.webp` contact portrait eagerly at low priority.
 - Load the visible Writing portrait (`assets/sam-3.webp`) eagerly at high priority; keep below-the-fold catalogue and video thumbnails lazy-loaded.
 
-## Testing And Deployment
+### Testing And Deployment
 
 - Pull requests targeting `main` must pass all unit tests and the complete configured Playwright matrix before merging. Enforce this with required GitHub status checks, not only post-merge deployment tests.
 - Test provider integrations through mocked browser APIs, not live providers.
 - Test the deployed-host mapping locally to ensure the public site loads without host-specific behaviour.
 - For theme-dependent interactive surfaces, Playwright coverage must exercise the visible state in both light and dark modes.
 - Load GA4 only after a visitor explicitly accepts analytics cookies. Persist accept or reject choices locally and provide a footer control to revisit the choice.
+- Scan npm dependencies for known vulnerabilities with Google's open-source OSV-Scanner (`.github/workflows/osv-scanner.yml`). Pull requests fail only when they introduce a new vulnerability; pushes to `main`, manual runs and the weekly scan report all findings to Security > Code scanning and fail while any remain. Both the root and `studio/` lockfiles are scanned; unresolved findings stay tracked in `docs/next-steps.md`. The scan is not a required branch-protection check unless the repository owner adds it in settings.

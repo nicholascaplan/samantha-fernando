@@ -1,9 +1,10 @@
 # Next Steps
 
-Use this file to track unresolved implementation, product and maintenance work. Completed work belongs in `docs/decisions.md`; questions requiring Samantha's input belong in `docs/questions-for-sam.md`.
+Use this file to track unresolved implementation, product and maintenance work. Remove completed work; durable decisions belong in `docs/project-brief.md` and questions requiring Samantha's input belong in `docs/questions-for-sam.md`.
 
 ## Verification And Accessibility
 
+- [ ] **Resolve the remaining `braces` dependency advisory.** Both the root and Studio dependency trees include `braces` 3.0.3, affected by high-severity stack-exhaustion denial of service (GHSA-vfj7-8cjw-p6xm). No patched `braces` release is currently available. Monitor upstream fixes and assess compatible dependency-chain updates separately; do not apply breaking `npm audit fix --force` changes. OSV push and weekly full scans remain red while this finding remains; see `docs/test-strategy.md` for scanning behaviour.
 - [ ] **Restore local Firefox and WebKit execution.** The local harness fails during Firefox page creation and stalls launching WebKit. Use the full PR-check browser matrix for cross-browser verification until local execution is repaired.
 - [ ] **Plan the GitHub Actions runner upgrade.** The Pages test and deploy jobs are pinned to `ubuntu-24.04`; test them on `ubuntu-26.04` and update both jobs deliberately after confirming the workflow passes.
 - [ ] **HIGH PRIORITY: Manually verify third-party media on the deployed site.** Check SoundCloud playback events, Spotify and SoundCloud mutual exclusion, soundbar restart and stop controls, soundbar visibility during navigation, and YouTube thumbnail/modal behaviour. Use widget events, not the soundbar alone, to establish that audio is playing.
@@ -16,7 +17,6 @@ Use this file to track unresolved implementation, product and maintenance work. 
 - [ ] **Renew the Sanity publish-webhook token by 5 January 2027.** The GitHub token has a 90-day expiry and an expired token silently stops deploys. Follow the renewal steps in `docs/sanity.md` and update the expiry date there.
 - [ ] **Confirm Samantha can sign in to the Studio and publish.** She was invited as an Editor on 7 October 2026. Check her first edit appears on the live site.
 - [ ] **Verify normal catalogue editing in production.** Studio schemas and initial 48-document import are complete, the site is deployed and the webhook dispatch was verified with a temporary non-rendered marker. During routine content work, verify a Recording add/edit/unpublish and both default-recording providers. Live-site propagation remains unverified from BoxedCode; confirm outside the sandbox.
-- [ ] **Review Studio dependency audit findings.** Dependency installation reports 9 moderate and 9 high vulnerabilities. Assess affected dependencies and safe updates separately; do not apply breaking `npm audit fix --force` updates as part of the catalogue migration.
 - [ ] **Migrate the remaining sections to Sanity, one at a time.** Remaining scope: Writing essay, Events, site metadata and hero, homepage Spotlight Works, Contact. Reuse `scripts/lib/` and the marker pattern in `index.html`.
 - [ ] **Decide whether to add the 2013 RPS Composition Prize to the Biography milestones.** It is in the content record but not on the page; see `docs/questions-for-sam.md`.
 - [ ] **Add a draft preview route.** Studio cannot preview a static build; consider a local `build:content` against drafts or a separate preview deploy.
