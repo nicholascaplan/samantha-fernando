@@ -1,6 +1,6 @@
 # Next Steps
 
-Use this file to track unresolved implementation, product and maintenance work. Completed work belongs in `docs/decisions.md`; questions requiring Samantha's input belong in `docs/questions-for-sam.md`.
+Use this file to track unresolved implementation, product and maintenance work. Completed work belongs in `docs/project-brief.md`; questions requiring Samantha's input belong in `docs/questions-for-sam.md`.
 
 ## Verification And Accessibility
 
