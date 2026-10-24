@@ -167,6 +167,8 @@ test('persists a rejected analytics choice and exposes cookie preferences', asyn
   await expect(page.locator('#cookieConsentBanner')).toBeHidden();
   expect(analyticsRequests).toEqual([]);
 
+  await page.getByRole('link', { name: 'Privacy', exact: true }).click();
+  await expect(page).toHaveURL(/\/privacy\/$/);
   await page.getByRole('button', { name: 'Cookie preferences' }).click();
   await expect(page.getByRole('dialog', { name: 'Analytics and privacy' })).toBeVisible();
   await page.keyboard.press('Escape');
