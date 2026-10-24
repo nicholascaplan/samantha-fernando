@@ -273,13 +273,13 @@ The `/writing/` page shows the Writing introduction, complete Wintering essay, p
 
 ## Footer Links
 
-- Privacy: /privacy/#cookie-settings (jumps directly to analytics cookie settings)
+- Privacy: /privacy/ (also the route back to analytics cookie settings)
 - SoundCloud: https://on.soundcloud.com/Ohbj2UPBnWa5Scw8AB
 - Instagram: https://www.instagram.com/_samfernando_/
 - Linktree: https://linktr.ee/samanthafernando
 - Spotify: https://open.spotify.com/artist/1AOLNCJ11mI6ewx8CZ8gvM
 - NMC Profile: https://www.nmcrec.co.uk/composers/samantha-fernando
-- Copyright line: © year Samantha Fernando, followed on its own line by the credit: Made with ♥ by Nick (https://nicholascaplan.github.io/profile/)
+- Copyright line: © year Samantha Fernando, followed on its own line by the credit: Made with ♥ by Nick (https://nickcaplan.github.io/websites-by-nick/)
 
 ## Visual References
 
@@ -287,3 +287,4 @@ The `/writing/` page shows the Writing introduction, complete Wintering essay, p
 - Gavin Higgins: https://www.gavinhiggins.com/
 - Manchester Collective: https://manchestercollective.co.uk/
 - Tonia Ko: https://toniako.com/
+
