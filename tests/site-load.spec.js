@@ -286,6 +286,8 @@ test('restores site sections with browser Back and Forward', async ({ page }) =>
   await page.goto('/');
 
   await page.locator('#nav-works').click();
+  await expect(page).toHaveURL(/\/works\/$/);
+  await expect(page.locator('#tab-works')).toBeVisible();
   await page.getByRole('link', { name: 'Writing' }).click();
   await expect(page).toHaveURL(/\/writing\/$/);
 
