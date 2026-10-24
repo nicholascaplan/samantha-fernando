@@ -167,6 +167,8 @@ test('persists a rejected analytics choice and exposes cookie preferences', asyn
   await expect(page.locator('#cookieConsentBanner')).toBeHidden();
   expect(analyticsRequests).toEqual([]);
 
+  await page.getByRole('link', { name: 'Privacy', exact: true }).click();
+  await expect(page).toHaveURL(/\/privacy\/#cookie-settings$/);
   await page.getByRole('button', { name: 'Cookie preferences' }).click();
   await expect(page.getByRole('dialog', { name: 'Analytics and privacy' })).toBeVisible();
   await page.keyboard.press('Escape');
@@ -486,9 +488,9 @@ test('restores mobile preview after refresh', async ({ page }) => {
   await expect(page.frameLocator('#mobilePreviewFrame').locator('#mobileMenuToggle')).toBeVisible();
 });
 
-test('gates the mobile preview tool on the production hostname', async ({ page, browserName }) => {
+test('gates the mobile preview tool on the production hostname', async ({ page, browserName, baseURL }) => {
   test.skip(browserName !== 'chromium', 'Chromium maps the production hostname to the local server.');
-  await page.goto('http://www.samanthafernando.com:8010/');
+  await page.goto(`http://www.samanthafernando.com:${new URL(baseURL).port}/`);
 
   await expect(page.locator('#mobilePreviewBtn')).toBeHidden();
   await page.evaluate(() => window.toggleMobilePreview());
@@ -947,9 +949,9 @@ test('retired Works view fragments land on the Listen and Watch pages', async ({
   await expect(page.locator('#works-view-watch')).toHaveAttribute('aria-pressed', 'true');
 });
 
-test('deployed hostname is publicly accessible', async ({ page, browserName }) => {
+test('deployed hostname is publicly accessible', async ({ page, browserName, baseURL }) => {
   test.skip(browserName !== 'chromium', 'Chromium maps the production hostname to the local server.');
-  await page.goto('http://www.samanthafernando.com:8010/');
+  await page.goto(`http://www.samanthafernando.com:${new URL(baseURL).port}/`);
 
   await expect(page.getByRole('navigation')).toBeVisible();
   await expect(page.getByRole('dialog', { name: 'Private site' })).toHaveCount(0);
@@ -1040,4 +1042,3 @@ test('has no serious or critical accessibility violations across interactive sta
   await page.locator('#mobileMenuToggle').click();
   await expectNoSeriousAxeViolations(page);
 });
-

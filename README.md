@@ -1,6 +1,6 @@
 # Samantha Fernando Website
 
-Static multi-page portfolio for composer Samantha Fernando. Biography, Works & Media, Listen, Watch, Writing and Contact have directly loadable HTML pages. Writing shows the complete Wintering essay directly.
+Static multi-page portfolio for composer Samantha Fernando. Biography, Works & Media, Listen, Watch, Writing, Contact and Privacy have directly loadable HTML pages. Writing shows the complete Wintering essay directly.
 
 ## Technical Overview
 
@@ -34,7 +34,7 @@ npm run build:test     # deterministic committed content; use build:content for 
 npm run serve
 ```
 
-Open <http://localhost:8000>. Serve `_site/`, not the repository root or `file://`. Rebuild after source changes. Generated pages live at `/`, `/biography/`, `/works/`, `/listen/`, `/watch/`, `/writing/` and `/contact/`. The retired `/works/#listen` and `/works/#watch` views redirect to the new pages; old root-fragment bookmarks are not mapped.
+Open <http://localhost:8000>. Serve `_site/`, not the repository root or `file://`. Rebuild after source changes. Generated pages live at `/`, `/biography/`, `/works/`, `/listen/`, `/watch/`, `/writing/`, `/contact/` and `/privacy/`. The retired `/works/#listen` and `/works/#watch` views redirect to the new pages; old root-fragment bookmarks are not mapped.
 
 ## Tests
 
