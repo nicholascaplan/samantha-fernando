@@ -532,6 +532,9 @@ test('keeps Samantha email address out of public contact content', async ({ page
 });
 
 test('shows a contact error when Formspree rejects the submission', async ({ page }) => {
+  // handleContactSubmit is defined in a later inline script block; submitting before it
+  // parses is a known pre-existing limitation with a separate fix planned, so this test
+  // covers ready-state behaviour.
   await page.goto('/contact/');
   await page.waitForFunction(() => typeof window.handleContactSubmit === 'function');
   await page.route('https://formspree.io/f/mlgqqjen', async route => {
