@@ -2,18 +2,17 @@
 
 ## Current Decision
 
-No. Keep the single-page site until a concrete need outweighs the maintenance cost.
+Generate separate static pages for substantial sections, using one shared source template rather than duplicated hand-maintained documents. The approved constraints are in [project-brief.md](project-brief.md); build and local-server commands are in [README.md](../README.md).
 
-## Reconsider When
+## Rationale
 
-- Individual pages need search visibility, social previews or polished shareable URLs.
-- The works, writing or project content grows beyond the current catalogue model.
-- Route-specific loading would provide a measurable benefit.
+- Individual pages need search visibility, social previews and directly loadable URLs.
+- Each page ships only its primary section, not the entire site's inactive tabs.
 
 ## Trade-Off
 
-Separate documents would interrupt audio playback and require duplicated navigation, theme and shared-player behaviour without a build system.
+Full document navigation interrupts audio. Ordinary page links are therefore progressively enhanced to retain the media shell, while direct loads and fallback navigation remain functional. Shared templates avoid duplicated navigation, theme and player code.
 
-## If Approved
+## Deferred
 
-Start with `/works/` and `/writing/`. Keep Listen and Watch as filters within Works & Media. Preserve `/` for the homepage and Biography, and keep Contact as either an in-page route or a simple dedicated page.
+Individual composition pages require a content review before adding routes. Listen and Watch remain filters within Works & Media, not standalone search pages.

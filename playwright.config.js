@@ -6,13 +6,13 @@ module.exports = defineConfig({
   forbidOnly: !!process.env.CI,
   workers: process.env.CI ? 2 : undefined,
   use: {
-    baseURL: 'http://127.0.0.1:8000',
+    baseURL: 'http://127.0.0.1:8010',
     trace: 'on-first-retry',
   },
   webServer: {
-    command: 'exec python3 -m http.server 8000',
-    url: 'http://127.0.0.1:8000',
-    reuseExistingServer: !process.env.CI,
+    command: 'npm run build:test && exec python3 -m http.server 8010 --directory _site',
+    url: 'http://127.0.0.1:8010',
+    reuseExistingServer: false,
   },
   projects: [
     {

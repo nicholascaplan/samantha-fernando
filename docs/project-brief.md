@@ -1,6 +1,6 @@
 # Project Brief
 
-This repository builds and hosts the website of composer Samantha Fernando: a static GitHub Pages site at https://www.samanthafernando.com/, served from a single hash-routed `index.html`, with content managed in Sanity and rendered into static HTML at build time.
+This repository builds and hosts the website of composer Samantha Fernando: a static GitHub Pages site at https://www.samanthafernando.com/, with generated pages, shared navigation and playback, and content managed in Sanity and rendered into static HTML at build time.
 
 ## Decisions
 
@@ -8,11 +8,11 @@ Record only decisions that constrain future work. Implementation history and com
 
 ### Architecture
 
-- Keep a single `index.html` with hash routes until a planned architecture split is approved. Separate pages would duplicate navigation, theme and playback behaviour.
-- Push browser-history entries for deliberate section and Works & Media view changes. Restore the matching state on `popstate`.
-- Keep the homepage URL free of a redundant `#bio` fragment.
+- Generate real static HTML pages for Home, Biography, Works & Media, Writing and Contact. Keep shared shell and page sources in `index.html` and generate route-specific output with `scripts/lib/pages.mjs`; do not maintain separate editable copies of the shared UI.
+- Use ordinary navigation links, progressively enhanced to preserve the shared audio shell while replacing primary content and page metadata. Direct loads and failed enhancements use normal document navigation. Push browser-history entries for deliberate page and catalogue-view changes; restore matching content and scroll on `popstate`.
+- Use stable lowercase trailing-slash page paths. Do not map retired root hash routes; legacy bookmark support is deliberately out of scope.
 - Keep local design experiments in Git-ignored `design/`; do not publish them.
-- Keep one canonical public URL for the single-page site. Represent the client-rendered compositions as static `MusicComposition` structured data until an approved multi-page architecture split. The essay is already static HTML; recordings and films retain links to their authoritative provider pages rather than duplicating third-party metadata in structured data.
+- Give each substantive page a self-referencing canonical URL, unique search/social metadata and initial HTML content. Generate the sitemap from the route registry, excluding catalogue fragments and preview modes. Keep composition structured data on Works and Article data on the full essay; recordings and films retain authoritative provider links rather than duplicated third-party structured metadata.
 - Keep the enquiry form as the sole public contact route. Do not expose Samantha's email address in rendered content, links or structured data; use Formspree's hidden `_gotcha` honeypot to filter basic automated submissions.
 
 ### Content Management
@@ -31,9 +31,10 @@ Record only decisions that constrain future work. Implementation history and com
 
 ### Content And Navigation
 
-- Keep Biography at `#bio`. The root route remains the quote-led homepage with Spotlight Works.
+- Keep Biography at `/biography/`. The root route remains the quote-led homepage with Spotlight Works.
 - Use one Works & Media catalogue. Works opens All Works, Listen opens recordings and Watch opens films.
-- Treat Listen and Watch as filters, not standalone public pages.
+- Treat Listen and Watch as `/works/#listen` and `/works/#watch` filters, not standalone public pages. Canonicalise both to `/works/`.
+- Show the full Wintering essay, portrait and related video directly at `/writing/`, preserving the original reading experience without an extra click. Do not generate a separate essay page while there is only one essay. Defer composition-detail pages until sufficient work-specific content is agreed.
 - Keep event records newest first in the content source. Events are not currently rendered on the public homepage.
 - Use a consistent Works card order: year, category, duration, title, instrumentation, commission, premiere and optional notes.
 - Use a category pill only for the controlled work category. Keep venues, ensembles, awards and recording details in the appropriate metadata field.
@@ -47,7 +48,7 @@ Record only decisions that constrain future work. Implementation history and com
 - Use `Preview` for Spotify and `Listen` for SoundCloud actions. Show a related-work category and duration when known.
 - Keep audio playback and the soundbar active during in-page navigation. SoundCloud players initialise after page load and queue early requests.
 - Use the custom playback rows rather than provider-native embeds. Native embeds add uncontrollable UI and inconsistent mobile sizing.
-- Use a shared media-action width on desktop; stack multiple actions there and use equal-width paired actions on mobile. Left-align single mobile media actions.
+- Use a shared media-action width on desktop; stack multiple actions there and use equal-width paired actions on mobile, wrapping when more than two actions are present. Left-align single mobile media actions.
 - Use a neutral treatment for availability and missing-metadata notices unless an actual error occurred.
 - Use role-based colour tokens and a shared visible focus treatment for interactive controls. Preserve the current amber focus colour in dark mode and the darker amber focus colour in light mode.
 
@@ -67,3 +68,5 @@ Record only decisions that constrain future work. Implementation history and com
 - For theme-dependent interactive surfaces, Playwright coverage must exercise the visible state in both light and dark modes.
 - Load GA4 only after a visitor explicitly accepts analytics cookies. Persist accept or reject choices locally and provide a footer control to revisit the choice.
 - Scan npm dependencies for known vulnerabilities with Google's open-source OSV-Scanner (`.github/workflows/osv-scanner.yml`). Pull requests fail only when they introduce a new vulnerability; pushes to `main`, manual runs and the weekly scan report all findings to Security > Code scanning and fail while any remain. Both the root and `studio/` lockfiles are scanned; unresolved findings stay tracked in `docs/next-steps.md`. The scan is not a required branch-protection check unless the repository owner adds it in settings.
+- Send explicit consented page views after completed enhanced navigation; keep GA4's automatic history-based page measurement disabled in the data stream to avoid duplicate events. Do not initialise analytics in the local mobile-preview iframe.
+- Test generated output before publishing. Audit the artifact against the explicit page/asset allowlist and fail on unexpected or stale files; never upload source templates or maintainer content.

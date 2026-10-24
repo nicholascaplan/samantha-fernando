@@ -12,7 +12,7 @@ The site is live. No Squarespace cutover steps remain to perform.
 
 ## Deployment
 
-Pushes to `main`, Sanity publish webhooks, manual dispatch and the daily schedule run the Pages workflow. It runs unit and browser smoke tests, builds the stylesheet, renders published Sanity content and uploads `_site/` for deployment. A failed test prevents deployment.
+Pushes to `main`, Sanity publish webhooks, manual dispatch and the daily schedule run the Pages workflow. It runs unit and browser tests against deterministic generated pages, builds the stylesheet, renders published Sanity content and tests that production artifact with `playwright.built.config.js` before uploading `_site/`. A failed test or artifact audit prevents deployment.
 
 To rebuild the current `main` without a code change:
 
@@ -24,7 +24,7 @@ gh run watch <run-id> --repo nicholascaplan/samantha-fernando --exit-status
 
 Confirm both the test and deploy jobs succeed. Check the content-build logs for fallback warnings if a Sanity edit is missing. Builds use current published content, not drafts; fallback behaviour is documented in [Sanity operations](sanity.md).
 
-The published artifact must contain only public website files: `index.html` and `assets/`. Never add documentation, Studio files, tests, package files, repository metadata or maintainer notes to it.
+The published artifact contains root `index.html`, the exact generated page directories in `scripts/lib/pages.mjs`, `CNAME`, `robots.txt`, `sitemap.xml` and public `assets/`. `scripts/lib/public-output.mjs` rejects unexpected files, symlinks and stale routes rather than publishing them. Never add documentation, Studio files, tests, package files, repository metadata, source templates or maintainer notes. If a removed route causes an audit failure locally, inspect and remove only that obsolete generated file before rebuilding; CI starts from a clean checkout.
 
 ## Domain And DNS Precautions
 
@@ -51,6 +51,9 @@ After a deployment or hosting change, check in a browser:
 - `https://www.samanthafernando.com/` loads without a certificate warning.
 - `https://samanthafernando.com/` redirects to the canonical `www` URL.
 - Works filters, SoundCloud/Spotify controls, YouTube modals, theme control and desktop/mobile navigation work.
+- Direct loads and refreshes at `/biography/`, `/works/`, `/writing/` and `/contact/` return their own content and metadata. Writing includes the complete essay directly. Unknown paths return 404. Old root hash bookmarks are intentionally unsupported.
+- Audio continues through ordinary enhanced page navigation; full reloads or opening another tab create independent players. Check real provider playback rather than the soundbar alone.
+- The sitemap lists the canonical page URLs. Submit it in Search Console if owner access is available and monitor indexing after launch.
 - The enquiry form works; confirm delivery when testing submission, without including sensitive information.
 
 After DNS changes, also verify normal inbound and outbound email. Restore the saved mail records if they were accidentally changed.
