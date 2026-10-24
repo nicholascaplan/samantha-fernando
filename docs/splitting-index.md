@@ -15,4 +15,5 @@ Full document navigation interrupts audio. Ordinary page links are therefore pro
 
 ## Deferred
 
-Individual composition pages require a content review before adding routes. Listen and Watch remain filters within Works & Media, not standalone search pages.
+Individual composition pages require a content review before adding routes. Listen and Watch are standalone pages sharing the Works & Media catalogue, each with its own URL, metadata and preselected view.
+
