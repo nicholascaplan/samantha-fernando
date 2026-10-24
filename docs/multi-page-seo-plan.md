@@ -15,18 +15,20 @@ Separate pages create clearer search landing pages; they do not guarantee improv
 | `/` | Existing quote-led homepage and Spotlight Works | First release |
 | `/biography/` | Full biography | First release |
 | `/works/` | Works & Media catalogue | First release |
+| `/listen/` | Recording catalogue, Listen view preselected | Added 24 October 2026 |
+| `/watch/` | Film catalogue, Watch view preselected | Added 24 October 2026 |
 | `/writing/` | Writing introduction and complete existing essay, portrait and video | First release |
 | `/contact/` | Enquiry form | First release |
 | `/works/<work-slug>/` | Individual composition detail | Later, after content review |
 
-- Keep Works, Listen and Watch as navigation entry points into the same catalogue. Use `/works/`, `/works/#listen` and `/works/#watch`; the fragments select views, not separate indexable pages.
-- Canonicalise catalogue views to `/works/`. Do not put filters, search results or preview modes in the sitemap.
+- Keep Works, Listen and Watch as navigation entry points into the same catalogue. Use `/works/`, `/listen/` and `/watch/`; Listen and Watch are standalone indexable pages rendered from the shared catalogue template with their view preselected, each with its own title, description and social metadata.
+- Do not put search results or preview modes in the sitemap. The retired `/works/#listen` and `/works/#watch` fragment views redirect to the new pages.
 - Use lowercase, stable, hyphenated slugs and trailing-slash page URLs. Do not silently change a published slug when a title changes.
 - With only one essay, preserve the complete reading experience directly at `/writing/`; do not introduce a summary-only overview or an extra detail route.
 
 ## 1. Confirm Scope And Capture The Baseline
 
-- Approve the URL map, keeping Listen and Watch as filters rather than separate pages.
+- Approve the URL map. Listen and Watch were promoted from catalogue filters to standalone pages on 24 October 2026 after the first release.
 - Preserve continuous playback through enhanced navigation; normal full-page loads may reset playback. Do not attempt autoplay or playback restoration after a reload.
 - Record existing routes, desktop/mobile navigation, score-request links, modal behaviour, theme, analytics consent and iframe-preview behaviour as migration acceptance cases.
 - Capture the current automated-test result and representative light/dark desktop/mobile screenshots. Record any existing cross-browser blockers separately from migration regressions.
@@ -76,7 +78,7 @@ Exit: normal in-site page changes preserve playing audio, while direct loads and
 
 ## 5. Safe Hosting Behaviour
 
-- Do not add redirects or compatibility handlers for old root fragments. Existing-bookmark support was explicitly removed from scope.
+- Do not add redirects or compatibility handlers for old root fragments; existing-bookmark support for them was explicitly removed from scope. The retired `/works/#listen` and `/works/#watch` fragment views redirect to `/listen/` and `/watch/`.
 - Keep the root homepage as the canonical root. Unknown paths must return a genuine not-found response rather than displaying the homepage with a successful status.
 - Update internal links, structured-data URLs and the sitemap together. Do not change DNS or the custom domain for this migration.
 - Maintain the explicit publication allowlist for the enumerated page directories, required hosting/SEO files and public assets; reject unexpected or stale output rather than silently broadening the artifact.
@@ -112,4 +114,5 @@ Exit: generated-site checks pass, remaining verification limits are documented a
 
 Review composition content before adding routes. Publish only pages with useful work-specific information such as instrumentation, duration, programme notes, commission/premiere details, available recordings and a score-enquiry link. Do not generate thin duplicates merely to increase the page count.
 
-If approved, add stable work slugs, dedicated templates, contextual catalogue links, page-specific metadata/structured data and sitemap entries. Keep the existing Work/Recording/Film references and do not turn media filters into competing pages. Handle future slug changes deliberately; true HTTP redirects would require a hosting capability beyond plain GitHub Pages.
+If approved, add stable work slugs, dedicated templates, contextual catalogue links, page-specific metadata/structured data and sitemap entries. Keep the existing Work/Recording/Film references; the Listen and Watch pages remain views of the shared catalogue, not separate content sets. Handle future slug changes deliberately; true HTTP redirects would require a hosting capability beyond plain GitHub Pages.
+
