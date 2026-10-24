@@ -50,6 +50,7 @@ Record only decisions that constrain future work. Implementation history and com
 - Use a shared media-action width on desktop; stack multiple actions there and use equal-width paired actions on mobile, wrapping when more than two actions are present. Left-align single mobile media actions.
 - Use a neutral treatment for availability and missing-metadata notices unless an actual error occurred.
 - Use role-based colour tokens and a shared visible focus treatment for interactive controls. Preserve the current amber focus colour in dark mode and the darker amber focus colour in light mode.
+- Known limitation: the contact form's inline submit handler is defined in a later script block, so on very slow connections a visitor can submit before it parses; the browser then falls back to a plain form post and leaves the site for Formspree's response page. A dedicated fix that holds early submissions until the handler is ready is planned as a separate change. Until then the contact-form test scopes itself to ready-state behaviour.
 
 ### Responsive And Performance
 
