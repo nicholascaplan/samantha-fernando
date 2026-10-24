@@ -10,9 +10,11 @@ for (const theme of ['light', 'dark']) {
 
     for (const view of ['all', 'listen']) {
       await page.locator(`#works-view-${view}`).click();
+      await expect(page).toHaveURL(view === 'all' ? /\/works\/$/ : /\/listen\/$/);
+      await expect(page.locator('#worksContainer .work-media-action').first()).toBeVisible();
       for (const width of [768, 820, 1024, 1280]) {
         await page.setViewportSize({ width, height: 1000 });
-        const actions = await page.locator('#worksContainer .work-media-action').evaluateAll(buttons => {
+        const actions = await page.locator('#worksContainer .work-media-action:visible').evaluateAll(buttons => {
           const expectedWidth = 10.5 * parseFloat(getComputedStyle(document.documentElement).fontSize);
           return buttons.map(button => ({
             label: button.textContent.trim(),
