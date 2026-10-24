@@ -123,7 +123,7 @@ test('Privacy page carries the full notice and every page footer links to it', (
   assert.match(privacy, /on the <span class="text-neutral-100">Privacy page<\/span>, linked in the footer/)
   for (const route of routes) {
     const html = output.get(pageFile(route))
-    assert.match(html, /href="\/privacy\/" class="[^"]*">Privacy<\/a>/)
+    assert.match(html, /href="\/privacy\/#cookie-settings" class="[^"]*">Privacy<\/a>/)
     assert.doesNotMatch(html, /All rights reserved/)
     assert.match(html, /Made with <span class="text-red-600 text-lg leading-none">\u2665<\/span> by/)
     const main = html.match(/<main[^>]*>([\s\S]*?)<\/main>/)[1]

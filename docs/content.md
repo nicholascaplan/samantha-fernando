@@ -273,7 +273,7 @@ The `/writing/` page shows the Writing introduction, complete Wintering essay, p
 
 ## Footer Links
 
-- Privacy: /privacy/ (also the route back to analytics cookie settings)
+- Privacy: /privacy/#cookie-settings (jumps directly to analytics cookie settings)
 - SoundCloud: https://on.soundcloud.com/Ohbj2UPBnWa5Scw8AB
 - Instagram: https://www.instagram.com/_samfernando_/
 - Linktree: https://linktr.ee/samanthafernando
@@ -287,4 +287,3 @@ The `/writing/` page shows the Writing introduction, complete Wintering essay, p
 - Gavin Higgins: https://www.gavinhiggins.com/
 - Manchester Collective: https://manchestercollective.co.uk/
 - Tonia Ko: https://toniako.com/
-

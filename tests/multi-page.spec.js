@@ -152,7 +152,7 @@ test('consented analytics sends one page view per navigation and stops after rej
   await expect.poll(views).toHaveLength(2);
   expect((await views())[1].page_title).toBe('Biography | Samantha Fernando');
   await page.getByRole('link', {name: 'Privacy', exact: true}).click();
-  await expect(page).toHaveURL(/\/privacy\/$/);
+  await expect(page).toHaveURL(/\/privacy\/#cookie-settings$/);
   await expect.poll(views).toHaveLength(3);
   await page.getByRole('button', {name: 'Cookie preferences'}).click();
   await page.keyboard.press('Escape');
@@ -162,4 +162,3 @@ test('consented analytics sends one page view per navigation and stops after rej
   await expect(page.locator('#tab-works')).toBeVisible();
   expect(await views()).toHaveLength(viewsBeforeWorks);
 });
-
