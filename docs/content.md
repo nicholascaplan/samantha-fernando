@@ -279,7 +279,7 @@ The `/writing/` page shows the Writing introduction, complete Wintering essay, p
 - Linktree: https://linktr.ee/samanthafernando
 - Spotify: https://open.spotify.com/artist/1AOLNCJ11mI6ewx8CZ8gvM
 - NMC Profile: https://www.nmcrec.co.uk/composers/samantha-fernando
-- Copyright line: © year Samantha Fernando, followed on its own line by the credit: Made with ♥ by Nick (https://nicholascaplan.github.io/profile/)
+- Copyright line: © year Samantha Fernando, followed on its own line by the credit: Made with ♥ by Nick (https://nickcaplan.github.io/websites-by-nick/)
 
 ## Visual References
 
