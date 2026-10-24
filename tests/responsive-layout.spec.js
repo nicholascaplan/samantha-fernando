@@ -22,6 +22,8 @@ for (const theme of ['light', 'dark']) {
             expectedWidth,
           }));
         });
+        const totalActions = await page.locator('#worksContainer .work-media-action').count();
+        expect(actions.length, `${view} at ${width}px: :visible filter must not drop actions (${actions.length} of ${totalActions})`).toBe(totalActions);
         expect(actions.length).toBeGreaterThan(0);
         for (const action of actions) {
           expect(action.width, `${view} at ${width}px: ${JSON.stringify(action)}`).toBeCloseTo(action.expectedWidth, 0);
