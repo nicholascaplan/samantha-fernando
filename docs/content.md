@@ -261,13 +261,25 @@ The `/writing/` page shows the Writing introduction, complete Wintering essay, p
 - Error message: Unable to send your message. Please try again shortly.
 - Delivery: The form submits its name, email, inquiry type and message fields to Formspree at `https://formspree.io/f/mlgqqjen` without leaving the site.
 
+## Privacy Page
+
+- Page heading: Privacy - How this website handles information.
+- About this notice: This is the personal website of Samantha Fernando, composer. This notice explains the limited information the site handles and the choices you have. For questions about this notice or the website, use the contact form.
+- Enquiries: If you send a message through the contact form, the details you enter (your name, email address, inquiry type and message) are sent directly from your browser to Formspree, the service that delivers them, so your enquiry can be read and answered. Read Formspree's privacy policy (opens in a new tab). Please do not include unnecessary sensitive information in a message.
+- Cookie settings: Use Cookie preferences to accept, reject or change analytics cookies at any time. You can return to these settings from the Privacy link in the footer of any page. The panel notes that analytics cookies stay off without JavaScript.
+- Analytics cookies: With your permission, this site uses Google Analytics to understand which pages are useful. It is optional and does not load unless you accept. If you accept, Google Analytics helps Samantha understand aggregate visits, pages viewed, referral sources, device and browser categories, and approximate location. It may set cookies or use similar storage after you accept. If you reject, Google Analytics is not loaded. Your choice is saved in your browser's local storage so that you are not asked again. If you later reject after accepting, analytics is turned off and its cookies are deleted. You can change your choice at any time using the Cookie preferences button above. Google Analytics is provided by Google. Read Google's privacy policy (opens in a new tab).
+- Display preference: If you use the theme button in the site header, your choice (light or dark) is saved in your browser's local storage so that the site looks the same next time you visit. This choice stays on your device, is not sent to anyone, and is not used for analytics or tracking. You can remove it at any time by clearing this site's data in your browser.
+- Your choices: You can accept, reject or change analytics cookies at any time using Cookie preferences above. For questions about information connected to an enquiry, use the contact form.
+
 ## Footer Links
 
+- Privacy: /privacy/ (also the route back to analytics cookie settings)
 - SoundCloud: https://on.soundcloud.com/Ohbj2UPBnWa5Scw8AB
 - Instagram: https://www.instagram.com/_samfernando_/
 - Linktree: https://linktr.ee/samanthafernando
 - Spotify: https://open.spotify.com/artist/1AOLNCJ11mI6ewx8CZ8gvM
 - NMC Profile: https://www.nmcrec.co.uk/composers/samantha-fernando
+- Copyright line: © year Samantha Fernando, followed on its own line by the credit: Made with ♥ by Nick (https://nicholascaplan.github.io/profile/)
 
 ## Visual References
 
