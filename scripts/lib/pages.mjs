@@ -11,6 +11,7 @@ export const routes = [
   {path: '/watch/', tab: 'works', view: 'watch', nav: 'watch', title: 'Watch | Samantha Fernando', description: 'Performance films and composer features by Samantha Fernando.'},
   {path: '/writing/', tab: 'writing', title: 'Writing | Samantha Fernando', description: 'Essays by composer Samantha Fernando on creative process, composition and artistic philosophy.'},
   {path: '/contact/', tab: 'contact', title: 'Contact & Score Hire | Samantha Fernando', description: 'Contact Samantha Fernando about commissions, score hire, performance materials, performance notifications and academic enquiries.'},
+  {path: '/privacy/', tab: 'privacy', title: 'Privacy | Samantha Fernando', description: 'How this website handles information: enquiries through the contact form, optional analytics cookies and display preferences.'},
 ]
 const escape = value => value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
