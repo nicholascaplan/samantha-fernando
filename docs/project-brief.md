@@ -8,11 +8,11 @@ Record only decisions that constrain future work. Implementation history and com
 
 ### Architecture
 
-- Generate real static HTML pages for Home, Biography, Works & Media, Writing and Contact. Keep shared shell and page sources in `index.html` and generate route-specific output with `scripts/lib/pages.mjs`; do not maintain separate editable copies of the shared UI.
+- Generate real static HTML pages for Home, Biography, Works & Media, Listen, Watch, Writing and Contact. Keep shared shell and page sources in `index.html` and generate route-specific output with `scripts/lib/pages.mjs`; do not maintain separate editable copies of the shared UI.
 - Use ordinary navigation links, progressively enhanced to preserve the shared audio shell while replacing primary content and page metadata. Direct loads and failed enhancements use normal document navigation. Push browser-history entries for deliberate page and catalogue-view changes; restore matching content and scroll on `popstate`.
 - Use stable lowercase trailing-slash page paths. Do not map retired root hash routes; legacy bookmark support is deliberately out of scope.
 - Keep local design experiments in Git-ignored `design/`; do not publish them.
-- Give each substantive page a self-referencing canonical URL, unique search/social metadata and initial HTML content. Generate the sitemap from the route registry, excluding catalogue fragments and preview modes. Keep composition structured data on Works and Article data on the full essay; recordings and films retain authoritative provider links rather than duplicated third-party structured metadata.
+- Give each substantive page a self-referencing canonical URL, unique search/social metadata and initial HTML content. Generate the sitemap from the route registry, excluding preview modes. Keep composition structured data on Works and Article data on the full essay; recordings and films retain authoritative provider links rather than duplicated third-party structured metadata.
 - Keep the enquiry form as the sole public contact route. Do not expose Samantha's email address in rendered content, links or structured data; use Formspree's hidden `_gotcha` honeypot to filter basic automated submissions.
 - The enquiry form must be safe to submit while the page is still loading. A gate script at the start of `<body>` owns the form's `onsubmit`; before `assets/site.js` has loaded it holds the submission (button disabled, typed values kept, no duplicate sends) and replays it once the real handler exists. If the handler has not appeared after 15 seconds it shows the existing error message instead of posting off-site. Without JavaScript the form still posts to Formspree natively.
 
@@ -33,8 +33,7 @@ Record only decisions that constrain future work. Implementation history and com
 ### Content And Navigation
 
 - Keep Biography at `/biography/`. The root route remains the quote-led homepage with Spotlight Works.
-- Use one Works & Media catalogue. Works opens All Works, Listen opens recordings and Watch opens films.
-- Treat Listen and Watch as `/works/#listen` and `/works/#watch` filters, not standalone public pages. Canonicalise both to `/works/`.
+- Use one Works & Media catalogue rendered from one shared template. Works opens All Works at `/works/`, Listen opens recordings at `/listen/` and Watch opens films at `/watch/`; each is a standalone indexable page with its own title, description, social preview and preselected catalogue view. The retired `/works/#listen` and `/works/#watch` fragments redirect to `/listen/` and `/watch/`.
 - Show the full Wintering essay, portrait and related video directly at `/writing/`, preserving the original reading experience without an extra click. Do not generate a separate essay page while there is only one essay. Defer composition-detail pages until sufficient work-specific content is agreed.
 - Keep event records newest first in the content source. Events are not currently rendered on the public homepage.
 - Use a consistent Works card order: year, category, duration, title, instrumentation, commission, premiere and optional notes.
@@ -71,3 +70,4 @@ Record only decisions that constrain future work. Implementation history and com
 - Scan npm dependencies for known vulnerabilities with Google's open-source OSV-Scanner (`.github/workflows/osv-scanner.yml`). Pull requests fail only when they introduce a new vulnerability; pushes to `main`, manual runs and the weekly scan report all findings to Security > Code scanning and fail while any remain. Both the root and `studio/` lockfiles are scanned; unresolved findings stay tracked in `docs/next-steps.md`. The scan is not a required branch-protection check unless the repository owner adds it in settings.
 - Send explicit consented page views after completed enhanced navigation; keep GA4's automatic history-based page measurement disabled in the data stream to avoid duplicate events. Do not initialise analytics in the local mobile-preview iframe.
 - Test generated output before publishing. Audit the artifact against the explicit page/asset allowlist and fail on unexpected or stale files; never upload source templates or maintainer content.
+

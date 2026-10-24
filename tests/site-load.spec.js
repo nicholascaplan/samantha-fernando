@@ -121,11 +121,11 @@ test('navigation opens the Listen and Watch catalogue views', async ({ page }) =
   await page.goto('/');
 
   await page.getByRole('link', { name: 'Listen', exact: true }).first().click();
-  await expect(page).toHaveURL(/\/works\/#listen$/);
+  await expect(page).toHaveURL(/\/listen\/$/);
   await expect(page.locator('#works-view-listen')).toHaveAttribute('aria-pressed', 'true');
 
   await page.getByRole('link', { name: 'Watch', exact: true }).first().click();
-  await expect(page).toHaveURL(/\/works\/#watch$/);
+  await expect(page).toHaveURL(/\/watch\/$/);
   await expect(page.locator('#works-view-watch')).toHaveAttribute('aria-pressed', 'true');
 });
 
@@ -286,6 +286,8 @@ test('restores site sections with browser Back and Forward', async ({ page }) =>
   await page.goto('/');
 
   await page.locator('#nav-works').click();
+  await expect(page).toHaveURL(/\/works\/$/);
+  await expect(page.locator('#tab-works')).toBeVisible();
   await page.getByRole('link', { name: 'Writing' }).click();
   await expect(page).toHaveURL(/\/writing\/$/);
 
@@ -307,11 +309,12 @@ test('restores Listen and Watch views with browser Back', async ({ page }) => {
   await page.goto('/works/');
 
   await page.locator('#works-view-listen').click();
+  await expect(page).toHaveURL(/\/listen\/$/);
   await page.locator('#works-view-watch').click();
-  await expect(page).toHaveURL(/\/works\/#watch$/);
+  await expect(page).toHaveURL(/\/watch\/$/);
 
   await page.evaluate(() => history.back());
-  await expect(page).toHaveURL(/\/works\/#listen$/);
+  await expect(page).toHaveURL(/\/listen\/$/);
   await expect(page.locator('#works-view-listen')).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('#worksContainer .work-media-action').first()).toBeVisible();
 });
@@ -448,6 +451,8 @@ test('aligns Works and Listen CTAs with card content on mobile @mobile', async (
   expect((await worksAction.boundingBox()).x).toBe((await worksContent.boundingBox()).x);
 
   await page.locator('#works-view-listen').click();
+  await expect(page).toHaveURL(/\/listen\/$/);
+  await expect(page.locator('#worksContainer .work-media-action').first()).toBeVisible();
   const listenAction = page.locator('#worksContainer .work-media-action').first();
   const listenCard = page.locator('#worksContainer > div').first();
   const listenContent = listenCard.locator('div').first();
@@ -578,14 +583,14 @@ test('lists TRAPPIST-1e as an orchestral work with both premieres', async ({ pag
 });
 
 test('shows the TRAPPIST-1e introduction in Watch', async ({ page }) => {
-  await page.goto('/works/#watch');
+  await page.goto('/watch/');
 
   await expect(page.locator('#worksContainer')).toContainText('The Exoplanets: Samantha Fernando introduces TRAPPIST-1e');
   await expect(page.locator('#worksContainer').getByRole('button', { name: 'Watch The Exoplanets: Samantha Fernando introduces TRAPPIST-1e' })).toBeVisible();
 });
 
 test('excludes removed films from Watch', async ({ page }) => {
-  await page.goto('/works/#watch');
+  await page.goto('/watch/');
 
   const works = page.locator('#worksContainer');
   await expect(works).not.toContainText('Today the Letter Must Come');
@@ -618,7 +623,7 @@ test('includes Samantha\'s PhD in the biography', async ({ page }) => {
 });
 
 test('resets filters when switching between Works, Listen and Watch views', async ({ page }) => {
-  await page.goto('/works/#listen');
+  await page.goto('/listen/');
   const search = page.locator('#worksSearchInput');
 
   await search.fill('Vocal');
@@ -626,7 +631,7 @@ test('resets filters when switching between Works, Listen and Watch views', asyn
   await page.getByRole('option', { name: 'Vocal & Choral', exact: true }).click();
 
   await page.locator('#works-view-watch').click();
-  await expect(page).toHaveURL(/\/works\/#watch$/);
+  await expect(page).toHaveURL(/\/watch\/$/);
   await expect(page.locator('#works-view-watch')).toHaveAttribute('aria-pressed', 'true');
   await expect(search).toHaveValue('');
   await expect(page.locator('#worksInstrumentationLabel')).toHaveText('Instrumentation: All');
@@ -666,7 +671,7 @@ test('soundbar starts with the default track name', async ({ page }) => {
 
 test('exposes catalogue audio actions as keyboard-operable buttons', async ({ page }) => {
   await mockPlaybackProviders(page);
-  await page.goto('/works/#listen');
+  await page.goto('/listen/');
 
   const action = page.locator('#worksContainer [data-track="illuminations"]');
   await expect(action).toHaveRole('button');
@@ -675,7 +680,7 @@ test('exposes catalogue audio actions as keyboard-operable buttons', async ({ pa
 });
 
 test('lists confirmed Listen metadata without placeholder details', async ({ page }) => {
-  await page.goto('/works/#listen');
+  await page.goto('/listen/');
 
   const works = page.locator('#worksContainer');
   await expect(works).toContainText('The Journey Between Us - Reflection 1');
@@ -691,7 +696,7 @@ test('lists confirmed Listen metadata without placeholder details', async ({ pag
 });
 
 test('keeps Works view controls legible in light mode', async ({ page }) => {
-  await page.goto('/works/#listen');
+  await page.goto('/listen/');
 
   await expect(page.locator('#works-view-listen')).toHaveCSS('background-color', 'rgb(111, 53, 8)');
   await expect(page.locator('#works-view-listen')).toHaveCSS('color', 'rgb(255, 255, 255)');
@@ -800,7 +805,7 @@ test('soundbar stays visible while navigating between pages', async ({ page }) =
 for (const provider of ['soundcloud', 'spotify']) {
   test(`${provider} controllers and playback survive repeated real-page navigation`, async ({page}) => {
     await mockPlaybackProviders(page);
-    await page.goto('/works/#listen');
+    await page.goto('/listen/');
     await rejectAnalyticsCookies(page);
     if (provider === 'soundcloud') {
       await page.locator('#worksContainer [data-track="look-up"]').click();
@@ -919,17 +924,27 @@ test('announces catalogue result changes and exposes mutually exclusive views', 
 });
 
 test('Listen and Watch views expose their selected state and deep links', async ({ page }) => {
-  await page.goto('/works/#listen');
+  await page.goto('/listen/');
 
   await expect(page.locator('#works-view-listen')).toHaveAttribute('aria-pressed', 'true');
   await page.locator('#works-view-watch').click();
-  await expect(page).toHaveURL(/\/works\/#watch$/);
+  await expect(page).toHaveURL(/\/watch\/$/);
   await expect(page.locator('#works-view-watch')).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('#works-view-listen')).toHaveAttribute('aria-pressed', 'false');
 
   await page.getByLabel('Works and media view').getByRole('button', { name: 'Works', exact: true }).click();
   await expect(page).toHaveURL(/\/works\/$/);
   await expect(page.locator('#works-view-all')).toHaveAttribute('aria-pressed', 'true');
+});
+
+test('retired Works view fragments land on the Listen and Watch pages', async ({ page }) => {
+  await page.goto('/works/#listen');
+  await expect(page).toHaveURL(/\/listen\/$/);
+  await expect(page.locator('#works-view-listen')).toHaveAttribute('aria-pressed', 'true');
+
+  await page.goto('/works/#watch');
+  await expect(page).toHaveURL(/\/watch\/$/);
+  await expect(page.locator('#works-view-watch')).toHaveAttribute('aria-pressed', 'true');
 });
 
 test('deployed hostname is publicly accessible', async ({ page, browserName }) => {
@@ -968,12 +983,12 @@ test('mobile navigation opens Listen and Watch directly @mobile', async ({ page 
 
   await page.locator('#mobileMenuToggle').click();
   await page.locator('#mobileMenu').getByRole('link', { name: 'Listen', exact: true }).click();
-  await expect(page).toHaveURL(/\/works\/#listen$/);
+  await expect(page).toHaveURL(/\/listen\/$/);
   await expect(page.locator('#works-view-listen')).toHaveAttribute('aria-pressed', 'true');
 
   await page.locator('#mobileMenuToggle').click();
   await page.locator('#mobileMenu').getByRole('link', { name: 'Watch', exact: true }).click();
-  await expect(page).toHaveURL(/\/works\/#watch$/);
+  await expect(page).toHaveURL(/\/watch\/$/);
   await expect(page.locator('#works-view-watch')).toHaveAttribute('aria-pressed', 'true');
 });
 
@@ -986,7 +1001,7 @@ test('mobile navigation opens Listen and Watch directly @mobile', async ({ page 
   ['contact', '#tab-contact'],
 ].forEach(([anchor, sectionSelector]) => {
   test(`opens the ${anchor} deep link`, async ({ page }) => {
-    const path = { bio: '/biography/', works: '/works/', listen: '/works/#listen', watch: '/works/#watch', writing: '/writing/', contact: '/contact/' }[anchor];
+    const path = { bio: '/biography/', works: '/works/', listen: '/listen/', watch: '/watch/', writing: '/writing/', contact: '/contact/' }[anchor];
     await page.goto(path, { waitUntil: 'domcontentloaded' });
 
     await expect(page).toHaveURL(new RegExp(`${path}$`));
@@ -1025,3 +1040,4 @@ test('has no serious or critical accessibility violations across interactive sta
   await page.locator('#mobileMenuToggle').click();
   await expectNoSeriousAxeViolations(page);
 });
+

@@ -813,8 +813,8 @@
             <nav class="hidden lg:flex flex-wrap items-center gap-x-6 gap-y-2 text-xs font-medium tracking-wider">
                 <a href="/" id="nav-home" class="nav-btn py-1.5 text-neutral-400 hover:text-neutral-100 border-b-2 border-transparent transition-all">Home</a>
                 <a href="/works/" id="nav-works" class="nav-btn py-1.5 text-neutral-400 hover:text-neutral-100 border-b-2 border-transparent transition-all">Works</a>
-                <a href="/works/#listen" id="nav-listen" class="nav-btn py-1.5 text-neutral-400 hover:text-neutral-100 border-b-2 border-transparent transition-all">Listen</a>
-                <a href="/works/#watch" id="nav-watch" class="nav-btn py-1.5 text-neutral-400 hover:text-neutral-100 border-b-2 border-transparent transition-all">Watch</a>
+                <a href="/listen/" id="nav-listen" class="nav-btn py-1.5 text-neutral-400 hover:text-neutral-100 border-b-2 border-transparent transition-all">Listen</a>
+                <a href="/watch/" id="nav-watch" class="nav-btn py-1.5 text-neutral-400 hover:text-neutral-100 border-b-2 border-transparent transition-all">Watch</a>
                 <a href="/biography/" id="nav-bio" class="nav-btn py-1.5 text-neutral-400 hover:text-neutral-100 border-b-2 border-transparent transition-all">Biography</a>
                 <a href="/writing/" id="nav-writing" class="nav-btn py-1.5 text-neutral-400 hover:text-neutral-100 border-b-2 border-transparent transition-all">Writing</a>
                 <a href="/contact/" id="nav-contact" class="nav-btn py-1.5 text-neutral-400 hover:text-neutral-100 border-b-2 border-transparent transition-all">Contact</a>
@@ -852,8 +852,8 @@
         <div id="mobileMenu" class="hidden lg:hidden border-t border-neutral-800 bg-neutral-950/95 px-6 py-5 space-y-3 font-mono text-xs tracking-wider">
                 <a href="/" data-mobile-nav="home" class="mobile-nav-btn block w-full text-left py-2 text-neutral-300 hover:text-amber-400">Home</a>
                 <a href="/works/" data-mobile-nav="works" class="mobile-nav-btn block w-full text-left py-2 text-neutral-300 hover:text-amber-400">Works</a>
-                <a href="/works/#listen" data-mobile-nav="listen" class="mobile-nav-btn block w-full text-left py-2 text-neutral-300 hover:text-amber-400">Listen</a>
-                <a href="/works/#watch" data-mobile-nav="watch" class="mobile-nav-btn block w-full text-left py-2 text-neutral-300 hover:text-amber-400">Watch</a>
+                <a href="/listen/" data-mobile-nav="listen" class="mobile-nav-btn block w-full text-left py-2 text-neutral-300 hover:text-amber-400">Listen</a>
+                <a href="/watch/" data-mobile-nav="watch" class="mobile-nav-btn block w-full text-left py-2 text-neutral-300 hover:text-amber-400">Watch</a>
                 <a href="/biography/" data-mobile-nav="bio" class="mobile-nav-btn block w-full text-left py-2 text-neutral-300 hover:text-amber-400">Biography</a>
                 <a href="/writing/" data-mobile-nav="writing" class="mobile-nav-btn block w-full text-left py-2 text-neutral-300 hover:text-amber-400">Writing</a>
                 <a href="/contact/" data-mobile-nav="contact" class="mobile-nav-btn block w-full text-left py-2 text-neutral-300 hover:text-amber-400">Contact</a>
@@ -900,7 +900,7 @@
                     <h1 class="text-3xl sm:text-5xl font-serif font-light text-neutral-100 leading-tight">Samantha Fernando, <span class="block text-xl sm:text-3xl mt-1">British Composer</span></h1>
                     <p class="text-xl sm:text-3xl font-serif-italic font-light text-neutral-200 leading-tight">"Creating a space in sound that an audience can enter and inhabit."</p>
                     <div class="hero-actions py-1">
-                        <a href="/works/#listen" aria-label="Listen"><i class="hero-action-icon fa-solid fa-headphones" aria-hidden="true"></i><span>Listen</span><span class="hero-action-arrow" aria-hidden="true"><svg viewBox="0 0 32 16"><path d="M1 8h25M20 2l6 6-6 6"></path></svg></span></a>
+                        <a href="/listen/" aria-label="Listen"><i class="hero-action-icon fa-solid fa-headphones" aria-hidden="true"></i><span>Listen</span><span class="hero-action-arrow" aria-hidden="true"><svg viewBox="0 0 32 16"><path d="M1 8h25M20 2l6 6-6 6"></path></svg></span></a>
                         <a href="/works/" aria-label="Explore works"><i class="hero-action-icon fa-solid fa-music" aria-hidden="true"></i><span>Explore works</span><span class="hero-action-arrow" aria-hidden="true"><svg viewBox="0 0 32 16"><path d="M1 8h25M20 2l6 6-6 6"></path></svg></span></a>
                         <a href="/contact/" aria-label="Get in touch"><i class="hero-action-icon fa-regular fa-envelope" aria-hidden="true"></i><span>Get in touch</span><span class="hero-action-arrow" aria-hidden="true"><svg viewBox="0 0 32 16"><path d="M1 8h25M20 2l6 6-6 6"></path></svg></span></a>
                     </div>
@@ -1449,22 +1449,12 @@
         let videoModalTrigger = null;
 
         // Real HTML pages, enhanced without replacing the persistent media shell.
-        const pagePaths = { home: '/', bio: '/biography/', works: '/works/', listen: '/works/#listen', watch: '/works/#watch', writing: '/writing/', contact: '/contact/' };
+        const pagePaths = { home: '/', bio: '/biography/', works: '/works/', listen: '/listen/', watch: '/watch/', writing: '/writing/', contact: '/contact/' };
         let navigationRequest = 0;
         let navigationController;
         let renderedPath = window.location.pathname;
         history.scrollRestoration = 'manual';
         history.replaceState({ ...history.state, scroll: window.scrollY }, '', window.location.href);
-
-        function updateNavigationHistory(anchor) {
-            const url = `${window.location.pathname}${window.location.search}${['listen', 'watch'].includes(anchor) ? `#${anchor}` : ''}`;
-            if (`${window.location.pathname}${window.location.search}${window.location.hash}` !== url) {
-                history.replaceState({ ...history.state, scroll: window.scrollY }, '', window.location.href);
-                history.pushState(null, '', url);
-                return true;
-            }
-            return false;
-        }
 
         function switchTab(tabId) {
             return navigatePage(new URL(pagePaths[tabId] || '/', window.location.origin));
@@ -1487,12 +1477,18 @@
 
         function initialisePage() {
             if (document.getElementById('worksContainer')) {
+                // Retired view fragments land on their catalogue pages.
+                if (window.location.pathname === '/works/' && ['#listen', '#watch'].includes(window.location.hash)) {
+                    window.location.replace(`/${window.location.hash.slice(1)}/`);
+                    return;
+                }
                 activeCategory = 'all';
                 activeWorksView = 'all';
+                const initialWorksView = { '/listen/': 'listen', '/watch/': 'watch' }[window.location.pathname] || 'all';
                 document.getElementById('worksEyebrow').textContent = catalogueSettings.eyebrow;
-                document.getElementById('worksHeading').textContent = catalogueSettings.heading;
+                if (initialWorksView === 'all') document.getElementById('worksHeading').textContent = catalogueSettings.heading;
                 document.getElementById('recordingAvailabilityCopy').textContent = catalogueSettings.availability;
-                setWorksView(['#listen', '#watch'].includes(location.hash) ? location.hash.slice(1) : 'all', false);
+                setWorksView(initialWorksView, false);
                 updatePlaybackIcons();
             }
             updateNavigation();
@@ -1539,7 +1535,7 @@
                     heading?.setAttribute('tabindex', '-1');
                     heading?.focus({ preventScroll: true });
                 }
-                const anchor = url.hash && !['#listen', '#watch'].includes(url.hash) ? document.getElementById(decodeURIComponent(url.hash.slice(1))) : null;
+                const anchor = url.hash ? document.getElementById(decodeURIComponent(url.hash.slice(1))) : null;
                 if (restore) window.scrollTo({ top: scroll, behavior: 'instant' });
                 else if (anchor) anchor.scrollIntoView();
                 else window.scrollTo({ top: 0, behavior: 'instant' });
@@ -1558,16 +1554,15 @@
             if (!link || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || link.hasAttribute('download') || (link.target && link.target !== '_self')) return;
             const url = new URL(link.href);
             if (url.origin !== location.origin || !Object.values(pagePaths).some(path => new URL(path, location.origin).pathname === url.pathname) && !url.pathname.startsWith('/writing/')) return;
-            if (url.pathname === location.pathname && url.hash && !['#listen', '#watch'].includes(url.hash)) return;
+            if (url.pathname === location.pathname && url.hash) return;
             event.preventDefault();
             navigatePage(url);
         });
 
         window.addEventListener('popstate', event => navigatePage(window.location.href, { restore: true, scroll: event.state?.scroll || 0 }));
         window.addEventListener('hashchange', () => {
-            if (location.pathname === '/works/') {
-                setWorksView(['#listen', '#watch'].includes(location.hash) ? location.hash.slice(1) : 'all', false);
-                updateNavigation();
+            if (location.pathname === '/works/' && ['#listen', '#watch'].includes(location.hash)) {
+                location.replace(`/${location.hash.slice(1)}/`);
             }
         });
 
@@ -1594,13 +1589,15 @@
 
         function setWorksView(view, updateUrl = true) {
             if (!document.getElementById('worksContainer')) return;
+            const destination = view === 'all' ? '/works/' : `/${view}/`;
+            if (updateUrl && window.location.pathname !== destination) {
+                navigatePage(new URL(destination, window.location.origin));
+                return;
+            }
             const viewChanged = activeWorksView !== view;
             activeWorksView = view;
             if (viewChanged) resetWorksFilters();
             const isAllWorks = view === 'all';
-            if (updateUrl) {
-                if (updateNavigationHistory(isAllWorks ? 'works' : view)) recordPageView();
-            }
             document.getElementById('worksViewDescription').textContent = isAllWorks
                 ? catalogueSettings.worksDescription
                 : view === 'listen' ? catalogueSettings.listenDescription : catalogueSettings.watchDescription;
@@ -2486,3 +2483,4 @@
     </script>
 </body>
 </html>
+

@@ -10,9 +10,11 @@ for (const theme of ['light', 'dark']) {
 
     for (const view of ['all', 'listen']) {
       await page.locator(`#works-view-${view}`).click();
+      await expect(page).toHaveURL(view === 'all' ? /\/works\/$/ : /\/listen\/$/);
+      await expect(page.locator('#worksContainer .work-media-action').first()).toBeVisible();
       for (const width of [768, 820, 1024, 1280]) {
         await page.setViewportSize({ width, height: 1000 });
-        const actions = await page.locator('#worksContainer .work-media-action').evaluateAll(buttons => {
+        const actions = await page.locator('#worksContainer .work-media-action:visible').evaluateAll(buttons => {
           const expectedWidth = 10.5 * parseFloat(getComputedStyle(document.documentElement).fontSize);
           return buttons.map(button => ({
             label: button.textContent.trim(),
@@ -20,6 +22,8 @@ for (const theme of ['light', 'dark']) {
             expectedWidth,
           }));
         });
+        const totalActions = await page.locator('#worksContainer .work-media-action').count();
+        expect(actions.length, `${view} at ${width}px: :visible filter must not drop actions (${actions.length} of ${totalActions})`).toBe(totalActions);
         expect(actions.length).toBeGreaterThan(0);
         for (const action of actions) {
           expect(action.width, `${view} at ${width}px: ${JSON.stringify(action)}`).toBeCloseTo(action.expectedWidth, 0);
@@ -86,7 +90,7 @@ for (const width of [390, 768, 820, 1024, 1280]) {
             await expect(link).toBeFocused({ timeout: 500 });
           }).toPass({ timeout: 5000 });
           await page.keyboard.press('Enter');
-          await expect(page).toHaveURL(new RegExp(`${({home: '/', works: '/works/', listen: '/works/#listen', watch: '/works/#watch', bio: '/biography/', writing: '/writing/', contact: '/contact/'})[destination]}$`));
+          await expect(page).toHaveURL(new RegExp(`${({home: '/', works: '/works/', listen: '/listen/', watch: '/watch/', bio: '/biography/', writing: '/writing/', contact: '/contact/'})[destination]}$`));
           await expect(page.locator(`#tab-${['listen', 'watch'].includes(destination) ? 'works' : destination}`)).toBeVisible();
           await expect(page.locator('#mobileMenu')).toBeHidden();
           await expectWithinViewport(page);
@@ -97,3 +101,4 @@ for (const width of [390, 768, 820, 1024, 1280]) {
     }
   }
 }
+

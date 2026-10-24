@@ -6,7 +6,9 @@ export const ORIGIN = 'https://www.samanthafernando.com'
 export const routes = [
   {path: '/', tab: 'home', title: 'Samantha Fernando - Composer', description: 'Official website of British composer Samantha Fernando. Explore her compositions, recordings, films, writing and score-hire information.'},
   {path: '/biography/', tab: 'bio', title: 'Biography | Samantha Fernando', description: 'About British composer Samantha Fernando: her artistic practice, collaborations, selected milestones, education and fellowship.'},
-  {path: '/works/', tab: 'works', title: 'Works & Media | Samantha Fernando', description: 'Explore compositions by Samantha Fernando, with instrumentation, commissions, premiere details, recordings and performance films.'},
+  {path: '/works/', tab: 'works', view: 'all', title: 'Works & Media | Samantha Fernando', description: 'Explore compositions by Samantha Fernando, with instrumentation, commissions, premiere details, recordings and performance films.'},
+  {path: '/listen/', tab: 'works', view: 'listen', nav: 'listen', title: 'Listen | Samantha Fernando', description: 'Listen to recordings of compositions by Samantha Fernando, published across SoundCloud and Spotify.'},
+  {path: '/watch/', tab: 'works', view: 'watch', nav: 'watch', title: 'Watch | Samantha Fernando', description: 'Performance films and composer features by Samantha Fernando.'},
   {path: '/writing/', tab: 'writing', title: 'Writing | Samantha Fernando', description: 'Essays by composer Samantha Fernando on creative process, composition and artistic philosophy.'},
   {path: '/contact/', tab: 'contact', title: 'Contact & Score Hire | Samantha Fernando', description: 'Contact Samantha Fernando about commissions, score hire, performance materials, performance notifications and academic enquiries.'},
 ]
@@ -29,13 +31,32 @@ export function renderPages(source) {
     let body = pageBody(source, route.tab)
     if (route.tab !== 'home') body = body.replace(/<h2\b([^>]*)>([\s\S]*?)<\/h2>/, '<h1$1>$2</h1>')
     if (route.tab === 'works') {
-      body = body.replace(/(<div id="worksContainer"[^>]*>)[\s\S]*?<\/div>/, (_, opening) => `${opening}${renderCatalogueCards(data)}</div>`)
+      const view = route.view
+      const viewHeading = view === 'all' ? data.settings.heading : view === 'listen' ? 'Listen' : 'Watch'
+      const viewDescription = view === 'all' ? data.settings.worksDescription : view === 'listen' ? data.settings.listenDescription : data.settings.watchDescription
+      body = body.replace(/(<div id="worksContainer"[^>]*>)[\s\S]*?<\/div>/, (_, opening) => `${opening}${renderCatalogueCards(data, view)}</div>`)
         .replace(/(<span id="worksEyebrow"[^>]*>)[\s\S]*?<\/span>/, (_, opening) => `${opening}${escape(data.settings.eyebrow)}</span>`)
-        .replace(/(<h1 id="worksHeading"[^>]*>)[\s\S]*?<\/h1>/, (_, opening) => `${opening}${escape(data.settings.heading)}</h1>`)
-        .replace(/(<p id="worksViewDescription"[^>]*>)[\s\S]*?<\/p>/, (_, opening) => `${opening}${escape(data.settings.worksDescription)}</p>`)
-      body += '<noscript><p>Filters and in-page playback require JavaScript. Recordings and films are also available on <a href="https://on.soundcloud.com/Ohbj2UPBnWa5Scw8AB">SoundCloud</a>, <a href="https://open.spotify.com/artist/1AOLNCJ11mI6ewx8CZ8gvM">Spotify</a> and the provider links below.</p>' + data.media.map(item => `<p><a href="${escape(item.url)}">${escape(item.title)}</a></p>`).join('') + '</noscript>'
+        .replace(/(<h1 id="worksHeading"[^>]*>)[\s\S]*?<\/h1>/, (_, opening) => `${opening}${escape(viewHeading)}</h1>`)
+        .replace(/(<p id="worksViewDescription"[^>]*>)[\s\S]*?<\/p>/, (_, opening) => `${opening}${escape(viewDescription)}</p>`)
+      if (view === 'watch') body = body.replace(/(<div id="worksContainer" class="works-catalogue)("[^>]*>)/, '$1 watch-catalogue$2')
+      const activeViewButton = 'works-view-btn px-4 py-2 rounded-xl bg-amber-700 text-white font-medium transition-all'
+      const inactiveViewButton = 'works-view-btn px-4 py-2 rounded-xl bg-neutral-900 text-neutral-400 hover:text-neutral-100 border border-neutral-800 transition-all'
+      for (const name of ['all', 'listen', 'watch']) {
+        const active = name === view
+        body = body.replace(new RegExp(`(id="works-view-${name}" class=")[^"]*(" aria-pressed=")(?:true|false)`), `$1${active ? activeViewButton : inactiveViewButton}$2${active}`)
+      }
+      body = body.replace(/(<p id="recordingAvailabilityCopy" class=")(?:hidden )?([^"]*">)[\s\S]*?<\/p>/, (_, classes, rest) => view === 'listen'
+        ? `${classes}${rest}${escape(data.settings.availability)}</p>`
+        : `${classes}hidden ${rest}</p>`)
+      const noscriptMedia = view === 'all' ? data.media : data.media.filter(item => item.type === view)
+      const noscriptLead = view === 'watch'
+        ? 'Filters and in-page playback require JavaScript. Films are also available on the provider links below.'
+        : view === 'listen'
+          ? 'Filters and in-page playback require JavaScript. Recordings are also available on <a href="https://on.soundcloud.com/Ohbj2UPBnWa5Scw8AB">SoundCloud</a>, <a href="https://open.spotify.com/artist/1AOLNCJ11mI6ewx8CZ8gvM">Spotify</a> and the provider links below.'
+          : 'Filters and in-page playback require JavaScript. Recordings and films are also available on <a href="https://on.soundcloud.com/Ohbj2UPBnWa5Scw8AB">SoundCloud</a>, <a href="https://open.spotify.com/artist/1AOLNCJ11mI6ewx8CZ8gvM">Spotify</a> and the provider links below.'
+      body += `<noscript><p>${noscriptLead}</p>` + noscriptMedia.map(item => `<p><a href="${escape(item.url)}">${escape(item.title)}</a></p>`).join('') + '</noscript>'
     }
-    const graph = baseGraph.filter(item => item['@type'] === 'Person' || (route.tab === 'works' && item['@type'] === 'ItemList')).map(item => structuredClone(item))
+    const graph = baseGraph.filter(item => item['@type'] === 'Person' || (route.path === '/works/' && item['@type'] === 'ItemList')).map(item => structuredClone(item))
     const list = graph.find(item => item['@type'] === 'ItemList')
     if (list) list['@id'] = `${ORIGIN}/works/#compositions`
     graph.push({'@type': route.tab === 'bio' ? 'AboutPage' : route.tab === 'contact' ? 'ContactPage' : 'WebPage', '@id': `${ORIGIN}${route.path}#page`, url: `${ORIGIN}${route.path}`, name: route.title, description: route.description, about: {'@id': `${ORIGIN}/#samantha-fernando`}})
@@ -54,7 +75,7 @@ export function renderPages(source) {
     // Mark the active destination even before the browser enhancement runs.
     html = html.replace(/<a\b[^>]*(?:id="nav-[^"]+"|data-mobile-nav="[^"]+")[^>]*>/g, opening => {
       const tab = opening.match(/(?:id="nav-|data-mobile-nav=")([a-z]+)/)[1]
-      const active = tab === route.tab
+      const active = tab === (route.nav || route.tab)
       return active ? opening.replace('text-neutral-400', 'text-amber-400').replace('text-neutral-300', 'text-amber-400').replace('border-transparent', 'border-amber-400').replace('<a', '<a aria-current="page"') : opening
     })
     files.set(route.path === '/' ? 'index.html' : `${route.path.slice(1)}index.html`, html)
@@ -62,3 +83,4 @@ export function renderPages(source) {
   files.set('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${routes.map(route => `  <url><loc>${ORIGIN}${route.path}</loc></url>`).join('\n')}\n</urlset>\n`)
   return files
 }
+

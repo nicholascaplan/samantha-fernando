@@ -4,11 +4,14 @@ const pages = [
   ['/', 'Samantha Fernando - Composer', 'home'],
   ['/biography/', 'Biography | Samantha Fernando', 'bio'],
   ['/works/', 'Works & Media | Samantha Fernando', 'works'],
+  ['/listen/', 'Listen | Samantha Fernando', 'listen'],
+  ['/watch/', 'Watch | Samantha Fernando', 'watch'],
   ['/writing/', 'Writing | Samantha Fernando', 'writing'],
   ['/contact/', 'Contact & Score Hire | Samantha Fernando', 'contact'],
 ];
 
 for (const [path, title, section] of pages) {
+  const tab = ['listen', 'watch'].includes(section) ? 'works' : section;
   test(`direct load and reload: ${path}`, async ({page}) => {
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
@@ -17,11 +20,11 @@ for (const [path, title, section] of pages) {
     await expect(page).toHaveTitle(title);
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', `https://www.samanthafernando.com${path}`);
     await expect(page.locator('meta[property="og:url"]')).toHaveAttribute('content', `https://www.samanthafernando.com${path}`);
-    await expect(page.locator(`main #tab-${section}`)).toBeVisible();
+    await expect(page.locator(`main #tab-${tab}`)).toBeVisible();
     await expect(page.locator('main h1')).toHaveCount(1);
     await expect(page.locator('main > section')).toHaveCount(1);
     await page.reload();
-    await expect(page.locator(`main #tab-${section}`)).toBeVisible();
+    await expect(page.locator(`main #tab-${tab}`)).toBeVisible();
     expect(errors).toEqual([]);
   });
 
@@ -34,9 +37,13 @@ for (const [path, title, section] of pages) {
       await expect(page.locator('#nav-bio')).toHaveAttribute('href', '/biography/');
       if (section === 'bio') await expect(page.locator('#nav-bio')).toHaveAttribute('aria-current', 'page');
       else await expect(page.locator('#nav-bio')).not.toHaveAttribute('aria-current', 'page');
-      if (section === 'works') {
+      if (['works', 'listen', 'watch'].includes(section)) {
         const snapshot = JSON.parse(await page.locator('#catalogueData').textContent());
-        await expect(page.locator('#worksContainer h3')).toHaveCount(snapshot.works.length);
+        const cardCount = section === 'works' ? snapshot.works.length : snapshot.media.filter(item => item.type === section).length;
+        await expect(page.locator('#worksContainer h3')).toHaveCount(cardCount);
+        await expect(page.locator(`#nav-${section}`)).toHaveAttribute('aria-current', 'page');
+        await expect(page.locator('#nav-listen')).toHaveAttribute('href', '/listen/');
+        await expect(page.locator('#nav-watch')).toHaveAttribute('href', '/watch/');
       }
       if (section === 'writing') await expect(page.locator('main')).toContainText('Why do I write?');
       await page.locator('#nav-bio').click();
@@ -150,3 +157,4 @@ test('consented analytics sends one page view per navigation and stops after rej
   await expect(page.locator('#tab-works')).toBeVisible();
   expect(await views()).toHaveLength(2);
 });
+
