@@ -86,7 +86,7 @@ for (const width of [390, 768, 820, 1024, 1280]) {
             await expect(link).toBeFocused({ timeout: 500 });
           }).toPass({ timeout: 5000 });
           await page.keyboard.press('Enter');
-          await expect(page).toHaveURL(new RegExp(`${({home: '/', works: '/works/', listen: '/works/#listen', watch: '/works/#watch', bio: '/biography/', writing: '/writing/', contact: '/contact/'})[destination]}$`));
+          await expect(page).toHaveURL(new RegExp(`${({home: '/', works: '/works/', listen: '/listen/', watch: '/watch/', bio: '/biography/', writing: '/writing/', contact: '/contact/'})[destination]}$`));
           await expect(page.locator(`#tab-${['listen', 'watch'].includes(destination) ? 'works' : destination}`)).toBeVisible();
           await expect(page.locator('#mobileMenu')).toBeHidden();
           await expectWithinViewport(page);
@@ -97,3 +97,4 @@ for (const width of [390, 768, 820, 1024, 1280]) {
     }
   }
 }
+
