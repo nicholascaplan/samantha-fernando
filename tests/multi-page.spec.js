@@ -8,6 +8,7 @@ const pages = [
   ['/watch/', 'Watch | Samantha Fernando', 'watch'],
   ['/writing/', 'Writing | Samantha Fernando', 'writing'],
   ['/contact/', 'Contact & Score Hire | Samantha Fernando', 'contact'],
+  ['/privacy/', 'Privacy | Samantha Fernando', 'privacy'],
 ];
 
 for (const [path, title, section] of pages) {
@@ -150,11 +151,15 @@ test('consented analytics sends one page view per navigation and stops after rej
   await page.locator('#nav-bio').click();
   await expect.poll(views).toHaveLength(2);
   expect((await views())[1].page_title).toBe('Biography | Samantha Fernando');
+  await page.getByRole('link', {name: 'Privacy', exact: true}).click();
+  await expect(page).toHaveURL(/\/privacy\/$/);
+  await expect.poll(views).toHaveLength(3);
   await page.getByRole('button', {name: 'Cookie preferences'}).click();
   await page.keyboard.press('Escape');
   await page.getByRole('button', {name: 'Reject', exact: true}).click();
+  const viewsBeforeWorks = (await views()).length;
   await page.locator('#nav-works').click();
   await expect(page.locator('#tab-works')).toBeVisible();
-  expect(await views()).toHaveLength(2);
+  expect(await views()).toHaveLength(viewsBeforeWorks);
 });
 
