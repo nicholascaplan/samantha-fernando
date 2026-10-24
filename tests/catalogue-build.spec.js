@@ -112,7 +112,7 @@ test('CMS quotes and markup render as text, with functional media actions in bot
     film.title = maliciousTitle;
     film.detail = '<script>window.__injected=true</script>';
   });
-  await page.goto('/works/#watch');
+  await page.goto('/watch/');
   for (const theme of ['light', 'dark']) {
     if (theme === 'dark') await page.locator('#themeToggleBtn').click();
     await page.locator('#worksSearchInput').fill('quoted');
@@ -136,7 +136,7 @@ test('empty published catalogue stays empty and header Listen opens the catalogu
   await page.goto('/works/');
   await expect(page.locator('#worksContainer')).toContainText('No compositions found');
   await page.locator('#ambientSoundBtn').click();
-  await expect(page).toHaveURL(/\/works\/#listen$/);
+  await expect(page).toHaveURL(/\/listen\/$/);
   await expect(page.locator('#worksContainer')).toContainText('No recordings found');
   await expect(page.locator('#soundbar')).toBeHidden();
   await page.locator('#nav-watch').click();
@@ -147,14 +147,16 @@ test('unrelated recordings remain playable and films need no composition relatio
   await serveSnapshot(page, data => {
     data.media.find(media => media.type === 'watch').workId = null;
   });
-  await page.goto('/works/#listen');
+  await page.goto('/listen/');
   await page.locator('#worksSearchInput').fill('Recollections');
   await expect(page.locator('#worksContainer h3')).toHaveText('Recollections');
   await page.locator('#worksContainer [data-track="recollections"]').click();
   await expect.poll(() => page.evaluate(() => window.__calls)).toContainEqual(['soundcloud', 'soundcloudPlayerRecollections']);
   await page.locator('#nav-watch').click();
+  await expect(page).toHaveURL(/\/watch\/$/);
   await page.locator('#worksSearchInput').fill('TRAPPIST');
   await page.locator('#worksContainer button').click();
   await expect(page.locator('#videoFrame')).toHaveAttribute('src', /PtuinjIcJD0/);
   await expect(page.locator('#soundbar')).toBeHidden();
 });
+
