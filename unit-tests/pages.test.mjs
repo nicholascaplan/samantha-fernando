@@ -13,7 +13,7 @@ const pageFile = route => route.path === '/' ? 'index.html' : `${route.path.slic
 const escapeRegExp = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
 test('each canonical route has distinct, complete static content and metadata', () => {
-  assert.equal(routes.length, 7)
+  assert.equal(routes.length, 8)
   const titles = new Set()
   for (const route of routes) {
     const html = output.get(pageFile(route))
@@ -112,3 +112,31 @@ test('artifact audit rejects private files and stale routes rather than silently
   }
 })
 
+test('Privacy page carries the full notice and every page footer links to it', () => {
+  const privacy = output.get('privacy/index.html')
+  assert.match(privacy, /<h1[^>]*>Privacy<\/h1>/)
+  for (const heading of ['About this notice', 'Enquiries', 'Cookie settings', 'Analytics cookies', 'Display preference', 'Your choices']) {
+    assert.match(privacy, new RegExp(heading))
+  }
+  assert.match(privacy, /formspree\.io\/legal\/privacy-policy/)
+  assert.match(privacy, /policies\.google\.com\/privacy/)
+  assert.match(privacy, /on the <span class="text-neutral-100">Privacy page<\/span>, linked in the footer/)
+  for (const route of routes) {
+    const html = output.get(pageFile(route))
+    assert.match(html, /href="\/privacy\/" class="[^"]*">Privacy<\/a>/)
+    assert.doesNotMatch(html, /All rights reserved/)
+    assert.match(html, /Made with <span class="text-red-600">\u2665<\/span> by/)
+    const main = html.match(/<main[^>]*>([\s\S]*?)<\/main>/)[1]
+    // The Cookie preferences control lives only in the Privacy page's Cookie settings panel.
+    assert.equal((main.match(/id="manageAnalyticsCookies"/g) || []).length, route.path === '/privacy/' ? 1 : 0)
+  }
+})
+
+test('trailing arrows stay glued to the final word of their link label', () => {
+  for (const route of routes) {
+    const html = output.get(pageFile(route))
+    for (const match of html.matchAll(/<a\b[^>]*>([\s\S]*?)<\/a>/g)) {
+      if (match[1].includes('\u2197')) assert.match(match[1], /(?:\u00a0|&nbsp;)\u2197/)
+    }
+  }
+})
