@@ -24,6 +24,7 @@ npm test
 - Real page routes, browser history, the Works/Listen/Watch catalogue views and search. Old root-fragment routes have no compatibility redirects; the retired `/works/#listen` and `/works/#watch` views redirect to the new pages.
 - Persisted theme switching and mobile preview state, the Instrumentation menu's selected state in both themes, and mobile-navigation menus. Theme-dependent interactive states are exercised in both light and dark modes.
 - Works and YouTube modal semantics, focus restoration, score-request flow and contact-form success/failure states. Enhanced page navigation leaves an inactive video iframe untouched; closing an active video disposes of the player without adding iframe history entries.
+- Contact-form readiness (`tests/contact-form-timing.spec.js`): a local server streams `/contact/` up to the form and holds the scripts back, then checks that an early submission is held and sent exactly once after load, keeps typed values when rejected, and shows the existing error (with no request and no navigation) if the scripts never load. Formspree is always mocked.
 - Keyboard-operable audio rows, catalogue view state, result announcements and Instrumentation-menu keyboard navigation.
 - Mocked Spotify and SoundCloud playback state, including provider hand-off and controller/playback preservation through repeated page changes.
 - Public accessibility on the deployed hostname mapped to the local server.

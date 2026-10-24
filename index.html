@@ -699,6 +699,45 @@
 </head>
 <body class="light-mode min-h-screen flex flex-col selection:bg-amber-800/30 selection:text-amber-200">
     <script>
+        // Runs before the contact form exists, so a visitor on a slow connection
+        // can never submit it before this gate is defined. Submissions made before
+        // the main script has loaded wait here and are replayed once it is ready.
+        const contactReadyTimeoutMs = 15000;
+
+        function submitContactForm(event) {
+            event.preventDefault();
+            if (typeof window.handleContactSubmit === 'function') {
+                window.handleContactSubmit(event);
+                return false;
+            }
+            const form = event.currentTarget;
+            if (form.dataset.contactPending === 'true') return false;
+            const submit = form.querySelector('#contactSubmit');
+            form.dataset.contactPending = 'true';
+            form.setAttribute('aria-busy', 'true');
+            if (submit) submit.disabled = true;
+            window.setTimeout(() => {
+                if (form.dataset.contactPending !== 'true') return;
+                delete form.dataset.contactPending;
+                form.removeAttribute('aria-busy');
+                if (submit) submit.disabled = false;
+                form.querySelector('#contactError')?.classList.remove('hidden');
+            }, contactReadyTimeoutMs);
+            return false;
+        }
+
+        function resumePendingContactSubmit() {
+            const form = document.getElementById('contactForm');
+            if (!form || form.dataset.contactPending !== 'true') return;
+            if (typeof window.handleContactSubmit !== 'function') return;
+            delete form.dataset.contactPending;
+            form.removeAttribute('aria-busy');
+            const submit = form.querySelector('#contactSubmit');
+            if (submit) submit.disabled = false;
+            form.requestSubmit();
+        }
+    </script>
+    <script>
         const themeStorageKey = 'theme';
         const mobilePreviewStorageKey = 'mobilePreviewOpen';
         const isMobilePreview = new URLSearchParams(window.location.search).has('mobilePreview');
@@ -1160,7 +1199,7 @@
 
                 <!-- Contact Form -->
                 <div class="lg:col-span-7">
-                    <form id="contactForm" action="https://formspree.io/f/mlgqqjen" method="POST" onsubmit="handleContactSubmit(event)" class="glass-panel p-6 sm:p-8 rounded-3xl border border-neutral-800 space-y-6">
+                    <form id="contactForm" action="https://formspree.io/f/mlgqqjen" method="POST" onsubmit="return submitContactForm(event)" class="glass-panel p-6 sm:p-8 rounded-3xl border border-neutral-800 space-y-6">
                         <h3 class="text-xl font-serif text-neutral-100">Send a Message</h3>
 
                         <!-- Formspree discards submissions that fill this bot-only field. -->
@@ -2438,6 +2477,9 @@
                 else window.setTimeout(initialiseWhenIdle, 0);
             }
         };
+    </script>
+    <script>
+        resumePendingContactSubmit();
     </script>
 </body>
 </html>
