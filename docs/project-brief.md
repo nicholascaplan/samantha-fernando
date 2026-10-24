@@ -63,6 +63,7 @@ Record only decisions that constrain future work. Implementation history and com
 ### Testing And Deployment
 
 - Pull requests targeting `main` must pass all unit tests and the complete configured Playwright matrix before merging. Enforce this with required GitHub status checks, not only post-merge deployment tests.
+- Keep keyboard-navigation coverage honest: assert the single-activation visitor outcome (one key press reaches the destination) rather than retrying a failed activation until it passes, and track genuine focus or behaviour losses in `docs/next-steps.md` instead of encoding them as expected in tests.
 - Test provider integrations through mocked browser APIs, not live providers.
 - Test the deployed-host mapping locally to ensure the public site loads without host-specific behaviour.
 - For theme-dependent interactive surfaces, Playwright coverage must exercise the visible state in both light and dark modes.
@@ -70,4 +71,3 @@ Record only decisions that constrain future work. Implementation history and com
 - Scan npm dependencies for known vulnerabilities with Google's open-source OSV-Scanner (`.github/workflows/osv-scanner.yml`). Pull requests fail only when they introduce a new vulnerability; pushes to `main`, manual runs and the weekly scan report all findings to Security > Code scanning and fail while any remain. Both the root and `studio/` lockfiles are scanned; unresolved findings stay tracked in `docs/next-steps.md`. The scan is not a required branch-protection check unless the repository owner adds it in settings.
 - Send explicit consented page views after completed enhanced navigation; keep GA4's automatic history-based page measurement disabled in the data stream to avoid duplicate events. Do not initialise analytics in the local mobile-preview iframe.
 - Test generated output before publishing. Audit the artifact against the explicit page/asset allowlist and fail on unexpected or stale files; never upload source templates or maintainer content.
-
