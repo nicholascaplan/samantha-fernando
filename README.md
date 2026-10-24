@@ -1,6 +1,6 @@
 # Samantha Fernando Website
 
-Static multi-page portfolio for composer Samantha Fernando. Biography, Works & Media, Listen, Watch, Writing and Contact have directly loadable HTML pages. Writing shows the complete Wintering essay directly.
+Static multi-page portfolio for composer Samantha Fernando. Biography, Works & Media, Listen, Watch, Writing, Contact and Privacy have directly loadable HTML pages. Writing shows the complete Wintering essay directly.
 
 ## Technical Overview
 
@@ -34,7 +34,7 @@ npm run build:test     # deterministic committed content; use build:content for 
 npm run serve
 ```
 
-Open <http://localhost:8000>. Serve `_site/`, not the repository root or `file://`. Rebuild after source changes. Generated pages live at `/`, `/biography/`, `/works/`, `/listen/`, `/watch/`, `/writing/` and `/contact/`. The retired `/works/#listen` and `/works/#watch` views redirect to the new pages; old root-fragment bookmarks are not mapped.
+Open <http://localhost:8000>. Serve `_site/`, not the repository root or `file://`. Rebuild after source changes. Generated pages live at `/`, `/biography/`, `/works/`, `/listen/`, `/watch/`, `/writing/`, `/contact/` and `/privacy/`. The retired `/works/#listen` and `/works/#watch` views redirect to the new pages; old root-fragment bookmarks are not mapped.
 
 ## Tests
 
@@ -47,4 +47,3 @@ PR checks run unit tests and all four Playwright projects (Chromium, Firefox, We
 - Hosting, DNS precautions, deployment verification and recovery: [hosting guide](docs/hosting.md).
 - Production domain: <https://www.samanthafernando.com/>
 - The Pages workflow runs on pushes to `main`, Sanity publish webhooks, manual dispatch and daily at 8am UK time (`Europe/London`, following GMT/BST). See `docs/sanity.md` for scheduling limitations.
-
