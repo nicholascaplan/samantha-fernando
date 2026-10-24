@@ -1,8 +1,8 @@
 import {readdir} from 'node:fs/promises'
 import {resolve} from 'node:path'
-import {routes} from './pages.mjs'
+import {routes, notFoundPage} from './pages.mjs'
 
-export const publicPages = routes.map(route => route.path === '/' ? 'index.html' : `${route.path.slice(1)}index.html`)
+export const publicPages = [...routes.map(route => route.path === '/' ? 'index.html' : `${route.path.slice(1)}index.html`), notFoundPage.path.slice(1)]
 export async function assertPublicOutput(directory) {
   const allowed = new Set([...publicPages, 'CNAME', 'robots.txt', 'sitemap.xml'])
   async function inspect(relative = '') {

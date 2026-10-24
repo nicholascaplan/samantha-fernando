@@ -3,6 +3,6 @@ module.exports = {
   ...config,
   webServer: {
     ...config.webServer,
-    command: 'exec python3 -m http.server 8010 --directory _site',
+    command: 'exec python3 scripts/serve.py --port 8010 --directory _site',
   },
 };

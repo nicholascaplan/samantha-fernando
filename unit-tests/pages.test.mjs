@@ -80,7 +80,24 @@ test('sitemap includes only canonical public pages, without filters or invented 
   const sitemap = output.get('sitemap.xml')
   assert.equal((sitemap.match(/<loc>/g) || []).length, routes.length)
   for (const route of routes) assert.ok(sitemap.includes(`<loc>${ORIGIN}${route.path}</loc>`))
-  assert.doesNotMatch(sitemap, /#|mobilePreview|lastmod/)
+  assert.doesNotMatch(sitemap, /#|mobilePreview|lastmod|404/)
+})
+
+test('custom 404 uses the shared shell, root-relative recovery links and no indexing metadata', () => {
+  const html = output.get('404.html')
+  assert.ok(html)
+  assert.match(html, /<title>Page not found \| Samantha Fernando<\/title>/)
+  assert.match(html, /<meta name="robots" content="noindex, follow">/)
+  assert.doesNotMatch(html, /rel="canonical"|property="og:url"|application\/ld\+json|rel="preload"/)
+  const main = html.match(/<main[^>]*>([\s\S]*?)<\/main>/)[1]
+  assert.equal((main.match(/<h1\b/g) || []).length, 1)
+  assert.match(main, /tab-content active not-found-page/)
+  assert.match(main, /An unexpected pause\./)
+  assert.match(main, /href="\/">Back to home/)
+  assert.match(main, /href="\/listen\/">Explore recordings/)
+  assert.match(html, /id="themeToggleBtn" onclick="toggleTheme\(\)"/)
+  assert.match(html, /src="\/assets\/site.js"/)
+  assert.doesNotMatch(html, /(?:src|href)="assets\//)
 })
 
 test('failed CMS builds and intentionally empty catalogues still generate complete route sets', async () => {
@@ -100,6 +117,7 @@ test('artifact audit rejects private files and stale routes rather than silently
   try {
     await mkdir(join(directory, 'assets'))
     await writeFile(join(directory, 'index.html'), 'public')
+    await writeFile(join(directory, '404.html'), 'public error page')
     await writeFile(join(directory, 'assets/site.js'), 'public')
     await assertPublicOutput(directory)
     await writeFile(join(directory, 'README.md'), 'not public')

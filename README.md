@@ -6,7 +6,7 @@ Static multi-page portfolio for composer Samantha Fernando. Biography, Works & M
 
 - Shared HTML/CSS/JavaScript source and committed content fallbacks in `index.html`; `scripts/lib/pages.mjs` generates distinct pages and a shared `assets/site.js` runtime into `_site/`.
 - Ordinary navigation links are progressively enhanced to preserve audio controllers while replacing page content and metadata. Full loads work without the enhancement; reloading resets playback.
-- Page-specific titles, descriptions, canonical/social metadata and structured data, plus a sitemap generated from the canonical route registry. The Works catalogue is pre-rendered using `assets/catalogue-renderer.js`, shared with browser filtering.
+- Page-specific titles, descriptions, canonical/social metadata and structured data, plus a sitemap generated from the canonical route registry. A compact custom `404.html` uses the shared shell and is excluded from indexing and the sitemap. The Works catalogue is pre-rendered using `assets/catalogue-renderer.js`, shared with browser filtering.
 - Compiled Tailwind CSS in `assets/tailwind.min.css`; Font Awesome and Google Fonts loaded from CDNs.
 - SoundCloud Widget API for verified SoundCloud recordings.
 - Spotify track playback through the Spotify IFrame API.
@@ -34,7 +34,7 @@ npm run build:test     # deterministic committed content; use build:content for 
 npm run serve
 ```
 
-Open <http://localhost:8000>. Serve `_site/`, not the repository root or `file://`. Rebuild after source changes. Generated pages live at `/`, `/biography/`, `/works/`, `/listen/`, `/watch/`, `/writing/`, `/contact/` and `/privacy/`. The retired `/works/#listen` and `/works/#watch` views redirect to the new pages; old root-fragment bookmarks are not mapped.
+Open <http://localhost:8000>. Serve `_site/`, not the repository root or `file://`. Rebuild after source changes. Generated pages live at `/`, `/biography/`, `/works/`, `/listen/`, `/watch/`, `/writing/`, `/contact/` and `/privacy/`. The retired `/works/#listen` and `/works/#watch` views redirect to the new pages; old root-fragment bookmarks are not mapped. `npm run serve` uses `scripts/serve.py` so missing URLs, such as `/missing-page/`, show the custom error page with HTTP 404, matching GitHub Pages behaviour. `/404.html` also opens the design directly.
 
 ## Tests
 
@@ -47,4 +47,3 @@ PR checks run unit tests and all four Playwright projects (Chromium, Firefox, We
 - Hosting, DNS precautions, deployment verification and recovery: [hosting guide](docs/hosting.md).
 - Production domain: <https://www.samanthafernando.com/>
 - The Pages workflow runs on pushes to `main`, Sanity publish webhooks, manual dispatch and daily at 8am UK time (`Europe/London`, following GMT/BST). See `docs/sanity.md` for scheduling limitations.
-
