@@ -14,6 +14,7 @@ Record only decisions that constrain future work. Implementation history and com
 - Keep local design experiments in Git-ignored `design/`; do not publish them.
 - Give each substantive page a self-referencing canonical URL, unique search/social metadata and initial HTML content. Generate the sitemap from the route registry, excluding catalogue fragments and preview modes. Keep composition structured data on Works and Article data on the full essay; recordings and films retain authoritative provider links rather than duplicated third-party structured metadata.
 - Keep the enquiry form as the sole public contact route. Do not expose Samantha's email address in rendered content, links or structured data; use Formspree's hidden `_gotcha` honeypot to filter basic automated submissions.
+- The enquiry form must be safe to submit while the page is still loading. A gate script at the start of `<body>` owns the form's `onsubmit`; before `assets/site.js` has loaded it holds the submission (button disabled, typed values kept, no duplicate sends) and replays it once the real handler exists. If the handler has not appeared after 15 seconds it shows the existing error message instead of posting off-site. Without JavaScript the form still posts to Formspree natively.
 
 ### Content Management
 
