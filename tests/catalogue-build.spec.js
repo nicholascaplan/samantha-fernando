@@ -72,6 +72,7 @@ test('generated catalogue keeps renamed Work relationships and editorial action 
   await actions.first().click();
   await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Resume playback');
   await page.locator('#nav-listen').click();
+  await expect(page.locator('#works-view-listen')).toHaveAttribute('aria-pressed', 'true');
   await page.locator('#worksSearchInput').fill('Renamed song cycle');
   await expect(page.locator('#worksContainer h3')).toHaveCount(3);
 });
