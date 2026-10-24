@@ -38,6 +38,19 @@ All page paths use `https://www.samanthafernando.com` as their canonical origin 
 
 Listen and Watch are standalone pages at `/listen/` and `/watch/` sharing the Works & Media catalogue with the recording or film view preselected. Search and instrumentation filters do not create separate pages.
 
+### Page Not Found
+
+- Output: `/404.html`, served for unknown URLs with HTTP 404 by GitHub Pages and the local preview server. Excluded from the sitemap, with `noindex, follow` and no canonical URL or structured data.
+- Title: Page not found | Samantha Fernando
+- Meta description: The page you’re looking for isn’t here. Return home or explore recordings by Samantha Fernando.
+- Label: 404 · Page not found
+- Heading: An unexpected pause.
+- Copy: The page you’re looking for isn’t here. There’s still plenty to discover.
+- Illustration: a whole rest hanging beneath the fourth line of a continuous five-line stave; decorative, not announced by screen readers.
+- Primary link: Back to home → `/`
+- Secondary link: Explore recordings → `/listen/`
+- Uses the existing site header, theme toggle, navigation, audio shell, cookie controls and footer.
+
 ## Biography Page
 
 **Source of truth: Sanity.** The Biography is managed in the `biographyPage` singleton in Sanity project `9a66iw1t` (dataset `production`) and rendered into `/biography/` at build time using the shared source template in `index.html`. The copy below is the seeded content and the committed fallback; after the first edit in Sanity, the Studio is canonical and this section should be kept in step with it.

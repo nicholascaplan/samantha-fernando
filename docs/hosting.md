@@ -51,7 +51,7 @@ After a deployment or hosting change, check in a browser:
 - `https://www.samanthafernando.com/` loads without a certificate warning.
 - `https://samanthafernando.com/` redirects to the canonical `www` URL.
 - Works filters, SoundCloud/Spotify controls, YouTube modals, theme control and desktop/mobile navigation work.
-- Direct loads and refreshes at `/biography/`, `/works/`, `/writing/` and `/contact/` return their own content and metadata. Writing includes the complete essay directly. Unknown paths return 404. Old root hash bookmarks are intentionally unsupported.
+- Direct loads and refreshes at `/biography/`, `/works/`, `/writing/` and `/contact/` return their own content and metadata. Writing includes the complete essay directly. Unknown paths return HTTP 404 with the “An unexpected pause” custom page, keeping the requested URL and working Home/recordings links even on deeply nested paths. `npm run serve` reproduces this locally through `scripts/serve.py`. Old root hash bookmarks are intentionally unsupported.
 - Audio continues through ordinary enhanced page navigation; full reloads or opening another tab create independent players. Check real provider playback rather than the soundbar alone.
 - The sitemap lists the canonical page URLs. Submit it in Search Console if owner access is available and monitor indexing after launch.
 - The enquiry form works; confirm delivery when testing submission, without including sensitive information.

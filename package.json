@@ -7,7 +7,7 @@
     "test:all": "playwright test",
     "build:content": "node scripts/build-content.mjs _site",
     "build:test": "node scripts/build-content.mjs _site --fallback",
-    "serve": "python3 -m http.server 8000 --directory _site",
+    "serve": "python3 scripts/serve.py --port 8000 --directory _site",
     "test:unit": "node --test \"unit-tests/*.test.mjs\""
   },
   "devDependencies": {

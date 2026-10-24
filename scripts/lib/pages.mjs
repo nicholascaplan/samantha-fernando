@@ -13,6 +13,7 @@ export const routes = [
   {path: '/contact/', tab: 'contact', title: 'Contact & Score Hire | Samantha Fernando', description: 'Contact Samantha Fernando about commissions, score hire, performance materials, performance notifications and academic enquiries.'},
   {path: '/privacy/', tab: 'privacy', title: 'Privacy | Samantha Fernando', description: 'How this website handles information: enquiries through the contact form, optional analytics cookies and display preferences.'},
 ]
+export const notFoundPage = {path: '/404.html', tab: 'not-found', title: 'Page not found | Samantha Fernando', description: 'The page you’re looking for isn’t here. Return home or explore recordings by Samantha Fernando.'}
 const escape = value => value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
 function pageBody(source, tab) {
@@ -28,7 +29,7 @@ export function renderPages(source) {
   const runtime = scriptMatch[0].replace(/^\s*<script>/, '').replace(/<\/script>$/, '')
   const baseGraph = JSON.parse(source.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)[1])['@graph']
   const files = new Map([['assets/site.js', runtime]])
-  for (const route of routes) {
+  for (const route of [...routes, notFoundPage]) {
     let body = pageBody(source, route.tab)
     if (route.tab !== 'home') body = body.replace(/<h2\b([^>]*)>([\s\S]*?)<\/h2>/, '<h1$1>$2</h1>')
     if (route.tab === 'works') {
@@ -73,13 +74,19 @@ export function renderPages(source) {
       .replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/, () => `<script type="application/ld+json">${safeJson({'@context': 'https://schema.org', '@graph': graph})}</script>`)
       .replace(/\b(src|href)="assets\//g, '$1="/assets/')
     if (route.tab !== 'home') html = html.replace(/\s*<link rel="preload" as="image"[^>]*>/, '')
+    if (route === notFoundPage) {
+      html = html.replace(/\s*<link rel="canonical"[^>]*>/, '')
+        .replace(/\s*<meta property="og:url"[^>]*>/, '')
+        .replace(/\s*<script type="application\/ld\+json">[\s\S]*?<\/script>/, '')
+        .replace('</head>', '    <meta name="robots" content="noindex, follow">\n</head>')
+    }
     // Mark the active destination even before the browser enhancement runs.
     html = html.replace(/<a\b[^>]*(?:id="nav-[^"]+"|data-mobile-nav="[^"]+")[^>]*>/g, opening => {
       const tab = opening.match(/(?:id="nav-|data-mobile-nav=")([a-z]+)/)[1]
       const active = tab === (route.nav || route.tab)
       return active ? opening.replace('text-neutral-400', 'text-amber-400').replace('text-neutral-300', 'text-amber-400').replace('border-transparent', 'border-amber-400').replace('<a', '<a aria-current="page"') : opening
     })
-    files.set(route.path === '/' ? 'index.html' : `${route.path.slice(1)}index.html`, html)
+    files.set(route === notFoundPage ? '404.html' : route.path === '/' ? 'index.html' : `${route.path.slice(1)}index.html`, html)
   }
   files.set('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${routes.map(route => `  <url><loc>${ORIGIN}${route.path}</loc></url>`).join('\n')}\n</urlset>\n`)
   return files

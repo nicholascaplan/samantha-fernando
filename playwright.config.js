@@ -10,7 +10,7 @@ module.exports = defineConfig({
     trace: 'on-first-retry',
   },
   webServer: {
-    command: 'npm run build:test && exec python3 -m http.server 8010 --directory _site',
+    command: 'npm run build:test && exec python3 scripts/serve.py --port 8010 --directory _site',
     url: 'http://127.0.0.1:8010',
     reuseExistingServer: false,
   },

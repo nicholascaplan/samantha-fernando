@@ -144,6 +144,43 @@
             font-style: italic;
         }
 
+        /* Keep recovery actions high while the footer sits at the viewport bottom. */
+        body:has(#tab-not-found) > main { flex-grow: 0; padding-top: 2rem; padding-bottom: 3rem; }
+        body:not(.light-mode):has(#tab-not-found) > footer .text-neutral-500 { color: #aaa59c; }
+        body.light-mode:has(#tab-not-found) > footer :is(a, button):hover { color: #944900; }
+        .not-found-page {
+            --error-accent: #d6a55f;
+            --error-muted: #aaa59c;
+            --error-hover: #302f2d;
+            text-align: center;
+        }
+        .light-mode .not-found-page {
+            --error-accent: #944900;
+            --error-muted: #5d655f;
+            --error-hover: #e8e1d5;
+        }
+        .not-found-art { width: 10rem; margin: 0 auto 1.125rem; color: var(--error-accent); }
+        .not-found-art svg { display: block; width: 100%; height: auto; }
+        .not-found-art .stave { stroke: var(--color-border); stroke-width: 1; }
+        .not-found-eyebrow { margin: 0 0 1rem; color: var(--error-accent); font-size: .6875rem; font-weight: 500; letter-spacing: .19em; text-transform: uppercase; }
+        .not-found-page h1 { margin: 0 0 1.125rem; font-family: Newsreader, Georgia, serif; font-size: clamp(2.75rem, 5vw, 4rem); font-weight: 300; line-height: 1.03; letter-spacing: -.035em; }
+        .not-found-copy { max-width: 25rem; margin: 0 auto; color: var(--error-muted); font-size: .9375rem; line-height: 1.85; }
+        .not-found-actions { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 1.5rem; margin-top: 1.5rem; }
+        .not-found-actions a { display: inline-flex; justify-content: center; align-items: center; min-height: 3.125rem; font-size: .75rem; }
+        .not-found-home { gap: 1.625rem; padding: 1rem 1.4375rem; border: 1px solid var(--color-text); border-radius: .3125rem; background: var(--color-text); color: var(--color-page); }
+        .not-found-home:hover { background: var(--error-accent); border-color: var(--error-accent); }
+        .not-found-recordings { gap: .25rem; padding: .875rem .25rem; border-radius: .3125rem; }
+        .not-found-recordings:hover { color: var(--error-accent); background: var(--error-hover); text-decoration: underline; text-underline-offset: .3rem; }
+        @media (max-width: 767px) {
+            body:has(#tab-not-found) > main { padding-top: 1.5rem; padding-bottom: 2.25rem; }
+            .not-found-art { width: 8.75rem; margin-bottom: 1rem; }
+            .not-found-eyebrow { margin-bottom: .875rem; }
+            .not-found-page h1 { font-size: 2.75rem; }
+            .not-found-copy { font-size: .875rem; }
+            .not-found-actions { gap: .75rem; margin-top: 1.25rem; }
+            .not-found-home { gap: 1.125rem; padding: .9375rem 1.125rem; }
+        }
+
         /* Opaque panels avoid scroll-time backdrop compositing and remain readable. */
         .glass-panel {
             background: var(--color-surface);
@@ -1304,6 +1341,22 @@
             </section>
         </section>
 
+        <!-- ================= NOT FOUND ================= -->
+        <section id="tab-not-found" class="tab-content not-found-page">
+            <div class="not-found-art" aria-hidden="true">
+                <svg viewBox="0 0 230 120" fill="none">
+                    <path class="stave" d="M0 32h230M0 46h230M0 60h230M0 74h230M0 88h230"/>
+                    <rect x="103" y="46" width="24" height="7" fill="currentColor"/>
+                </svg>
+            </div>
+            <p class="not-found-eyebrow">404 · Page not found</p>
+            <h2>An unexpected pause.</h2>
+            <p class="not-found-copy">The page you’re looking for isn’t here.<br>There’s still plenty to discover.</p>
+            <div class="not-found-actions">
+                <a class="not-found-home" href="/">Back to home <span aria-hidden="true">↗</span></a>
+                <a class="not-found-recordings" href="/listen/">Explore recordings <span aria-hidden="true">→</span></a>
+            </div>
+        </section>
     </main>
 
     <!-- Project Details Modal Overlay -->
@@ -1596,7 +1649,7 @@
                 if (next) {
                     document.querySelector('main').replaceChildren(...next.querySelector('main').childNodes);
                     document.title = next.title;
-                    const selector = 'meta[name="description"], meta[name^="twitter:"], meta[property^="og:"], link[rel="canonical"], script[type="application/ld+json"], link[rel="preload"][as="image"]';
+                    const selector = 'meta[name="description"], meta[name="robots"], meta[name^="twitter:"], meta[property^="og:"], link[rel="canonical"], script[type="application/ld+json"], link[rel="preload"][as="image"]';
                     document.head.querySelectorAll(selector).forEach(element => element.remove());
                     next.head.querySelectorAll(selector).forEach(element => document.head.append(element.cloneNode(true)));
                     renderedPath = url.pathname;
