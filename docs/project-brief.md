@@ -8,7 +8,7 @@ Record only decisions that constrain future work. Implementation history and com
 
 ### Architecture
 
-- Generate real static HTML pages for Home, Biography, Works & Media, Listen, Watch, Writing and Contact. Keep shared shell and page sources in `index.html` and generate route-specific output with `scripts/lib/pages.mjs`; do not maintain separate editable copies of the shared UI.
+- Generate real static HTML pages for Home, Biography, Works & Media, Listen, Watch, Writing, Contact and Privacy. Keep shared shell and page sources in `index.html` and generate route-specific output with `scripts/lib/pages.mjs`; do not maintain separate editable copies of the shared UI.
 - Use ordinary navigation links, progressively enhanced to preserve the shared audio shell while replacing primary content and page metadata. Direct loads and failed enhancements use normal document navigation. Push browser-history entries for deliberate page and catalogue-view changes; restore matching content and scroll on `popstate`.
 - Use stable lowercase trailing-slash page paths. Do not map retired root hash routes; legacy bookmark support is deliberately out of scope.
 - Keep local design experiments in Git-ignored `design/`; do not publish them.
@@ -37,6 +37,7 @@ Record only decisions that constrain future work. Implementation history and com
 - Show the full Wintering essay, portrait and related video directly at `/writing/`, preserving the original reading experience without an extra click. Do not generate a separate essay page while there is only one essay. Defer composition-detail pages until sufficient work-specific content is agreed.
 - Keep event records newest first in the content source. Events are not currently rendered on the public homepage.
 - Use a consistent Works card order: year, category, duration, title, instrumentation, commission, premiere and optional notes.
+- Glue a trailing external-link arrow to the final word of its label (non-breaking space) so the arrow never wraps onto its own line, at any width or text size.
 - Use a category pill only for the controlled work category. Keep venues, ensembles, awards and recording details in the appropriate metadata field.
 - Do not use horizontal separators beneath primary page-intro copy; title, description and section spacing provide the transition. Retain dividers only where they structure content within a component.
 
@@ -66,7 +67,7 @@ Record only decisions that constrain future work. Implementation history and com
 - Test provider integrations through mocked browser APIs, not live providers.
 - Test the deployed-host mapping locally to ensure the public site loads without host-specific behaviour.
 - For theme-dependent interactive surfaces, Playwright coverage must exercise the visible state in both light and dark modes.
-- Load GA4 only after a visitor explicitly accepts analytics cookies. Persist accept or reject choices locally and provide a footer control to revisit the choice.
+- Load GA4 only after a visitor explicitly accepts analytics cookies. Persist accept or reject choices locally. The footer links every page to the Privacy page, whose Cookie settings panel reopens the choice, so withdrawing consent stays as easy as giving it.
 - Scan npm dependencies for known vulnerabilities with Google's open-source OSV-Scanner (`.github/workflows/osv-scanner.yml`). Pull requests fail only when they introduce a new vulnerability; pushes to `main`, manual runs and the weekly scan report all findings to Security > Code scanning and fail while any remain. Both the root and `studio/` lockfiles are scanned; unresolved findings stay tracked in `docs/next-steps.md`. The scan is not a required branch-protection check unless the repository owner adds it in settings.
 - Send explicit consented page views after completed enhanced navigation; keep GA4's automatic history-based page measurement disabled in the data stream to avoid duplicate events. Do not initialise analytics in the local mobile-preview iframe.
 - Test generated output before publishing. Audit the artifact against the explicit page/asset allowlist and fail on unexpected or stale files; never upload source templates or maintainer content.
