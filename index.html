@@ -780,7 +780,7 @@
             <div class="mt-5 space-y-4 text-sm leading-relaxed text-neutral-300">
                 <p>If you accept analytics, this site loads Google Analytics. It helps Samantha understand aggregate visits, pages viewed, referral sources, device and browser categories, and approximate location.</p>
                 <p>Google Analytics may set cookies or use similar storage after you accept. The site does not load Google Analytics before you accept. Do not submit personally identifiable information through the site for analytics purposes.</p>
-                <p>You can change this choice at any time with the <span class="text-neutral-100">Cookie preferences</span> link in the footer. For questions about the website, use the contact form.</p>
+                <p>You can change this choice at any time on the <span class="text-neutral-100">Privacy page</span>, linked in the footer. For questions about the website, use the contact form.</p>
             </div>
         </div>
     </div>
@@ -1246,6 +1246,64 @@
             </div>
         </section>
 
+        <!-- ================= PRIVACY ================= -->
+        <section id="tab-privacy" class="tab-content space-y-12">
+            <div>
+                <p class="text-sm font-mono uppercase tracking-widest text-amber-400">Website</p>
+                <h2 class="text-3xl font-display uppercase tracking-wider text-neutral-100 mt-1">Privacy</h2>
+                <p class="text-neutral-400 mt-3 text-base font-light">How this website handles information.</p>
+            </div>
+
+            <section class="max-w-3xl space-y-4">
+                <h3 class="text-sm font-mono uppercase tracking-widest text-amber-400 border-b border-neutral-800 pb-3">About this notice</h3>
+                <div class="space-y-6 text-neutral-300 leading-relaxed font-light text-base">
+                    <p>This is the personal website of Samantha Fernando, composer. This notice explains the limited information the site handles and the choices you have. For questions about this notice or the website, use the <a href="/contact/" class="underline decoration-[rgb(120,120,120)] underline-offset-2">contact form</a>.</p>
+                </div>
+            </section>
+
+            <section class="max-w-3xl space-y-4">
+                <h3 class="text-sm font-mono uppercase tracking-widest text-amber-400 border-b border-neutral-800 pb-3">Enquiries</h3>
+                <div class="space-y-6 text-neutral-300 leading-relaxed font-light text-base">
+                    <p>If you send a message through the contact form, the details you enter (your name, email address, inquiry type and message) are sent directly from your browser to Formspree, the service that delivers them, so your enquiry can be read and answered. <a href="https://formspree.io/legal/privacy-policy" target="_blank" rel="noopener" class="underline decoration-[rgb(120,120,120)] underline-offset-2">Read Formspree&#8217;s privacy policy&nbsp;&#8599;</a> (opens in a new tab). Please do not include unnecessary sensitive information in a message.</p>
+                </div>
+            </section>
+
+            <section class="max-w-3xl space-y-4" id="cookie-settings">
+                <h3 class="text-sm font-mono uppercase tracking-widest text-amber-400 border-b border-neutral-800 pb-3">Cookie settings</h3>
+                <div class="space-y-6 text-neutral-300 leading-relaxed font-light text-base">
+                    <div class="glass-panel p-6 rounded-2xl border border-neutral-800 space-y-4">
+                        <p>Use Cookie preferences to accept, reject or change analytics cookies at any time. You can return to these settings from the Privacy link in the footer of any page.</p>
+                        <div><button id="manageAnalyticsCookies" type="button" class="min-h-10 rounded-lg bg-amber-700 px-4 text-xs font-semibold text-white hover:bg-amber-600">Cookie preferences</button></div>
+                        <p class="text-neutral-500 text-sm">Analytics cookies stay off without JavaScript. Enable JavaScript to use the cookie preferences panel.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="max-w-3xl space-y-4">
+                <h3 class="text-sm font-mono uppercase tracking-widest text-amber-400 border-b border-neutral-800 pb-3">Analytics cookies</h3>
+                <div class="space-y-6 text-neutral-300 leading-relaxed font-light text-base">
+                    <p>With your permission, this site uses Google Analytics to understand which pages are useful. It is optional and does not load unless you accept.</p>
+                    <p>If you accept, Google Analytics helps Samantha understand aggregate visits, pages viewed, referral sources, device and browser categories, and approximate location. It may set cookies or use similar storage after you accept.</p>
+                    <p>If you reject, Google Analytics is not loaded. Your choice is saved in your browser&#8217;s local storage so that you are not asked again. If you later reject after accepting, analytics is turned off and its cookies are deleted. You can change your choice at any time using the Cookie preferences button above.</p>
+                    <p>Google Analytics is provided by Google. <a href="https://policies.google.com/privacy" target="_blank" rel="noopener" class="underline decoration-[rgb(120,120,120)] underline-offset-2">Read Google&#8217;s privacy policy&nbsp;&#8599;</a> (opens in a new tab).</p>
+                </div>
+            </section>
+
+            <section class="max-w-3xl space-y-4">
+                <h3 class="text-sm font-mono uppercase tracking-widest text-amber-400 border-b border-neutral-800 pb-3">Display preference</h3>
+                <div class="space-y-6 text-neutral-300 leading-relaxed font-light text-base">
+                    <p>If you use the theme button in the site header, your choice (light or dark) is saved in your browser&#8217;s local storage so that the site looks the same next time you visit. This choice stays on your device, is not sent to anyone, and is not used for analytics or tracking. You can remove it at any time by clearing this site&#8217;s data in your browser.</p>
+                </div>
+            </section>
+
+            <section class="max-w-3xl space-y-4">
+                <h3 class="text-sm font-mono uppercase tracking-widest text-amber-400 border-b border-neutral-800 pb-3">Your choices</h3>
+                <div class="space-y-6 text-neutral-300 leading-relaxed font-light text-base">
+                    <p>You can accept, reject or change analytics cookies at any time using Cookie preferences above. For questions about information connected to an enquiry, use the <a href="/contact/" class="underline decoration-[rgb(120,120,120)] underline-offset-2">contact form</a>.</p>
+                </div>
+            </section>
+        </section>
+
     </main>
 
     <!-- Project Details Modal Overlay -->
@@ -1272,19 +1330,24 @@
 
     <!-- Global Footer -->
     <footer class="border-t border-neutral-800/80 bg-neutral-950/80 py-10 text-xs text-neutral-500 font-mono mt-auto">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-x-6 gap-y-4">
             <div>
                 <p class="text-neutral-300 font-medium font-display tracking-wider uppercase text-sm">Samantha Fernando</p>
-                <p class="text-neutral-500 mt-1">© <span id="currentYear"></span> Samantha Fernando. All rights reserved.</p>
+                <p class="text-neutral-500 mt-1">© <span id="currentYear"></span> Samantha Fernando</p>
+                <p class="text-neutral-500 mt-1.5">Made with <span class="text-red-600">♥</span> by <a href="https://nicholascaplan.github.io/profile/" target="_blank" rel="noopener"><u>Nick</u>&nbsp;↗</a></p>
             </div>
 
-            <div class="flex items-center gap-6 text-neutral-400">
-                <button id="manageAnalyticsCookies" type="button" class="hover:text-amber-400 transition-colors font-sans text-xs uppercase font-semibold">Cookie preferences</button>
-                <a href="https://on.soundcloud.com/Ohbj2UPBnWa5Scw8AB" target="_blank" rel="noopener" aria-label="Samantha Fernando on SoundCloud" class="hover:text-amber-400 transition-colors"><i class="fa-brands fa-soundcloud text-base"></i></a>
-                <a href="https://open.spotify.com/artist/1AOLNCJ11mI6ewx8CZ8gvM?si=-nnE1u-AQnypJGW2RpvPMg" target="_blank" rel="noopener" aria-label="Samantha Fernando on Spotify" class="hover:text-amber-400 transition-colors"><i class="fa-brands fa-spotify text-base"></i></a>
-                <a href="https://www.instagram.com/_samfernando_/" target="_blank" rel="noopener" aria-label="Samantha Fernando on Instagram" class="hover:text-amber-400 transition-colors"><i class="fa-brands fa-instagram text-base"></i></a>
-                <a href="https://linktr.ee/samanthafernando" target="_blank" rel="noopener" aria-label="Samantha Fernando on Linktree" class="hover:text-amber-400 transition-colors font-sans text-xs uppercase font-semibold">Linktree</a>
-                <a href="https://www.nmcrec.co.uk/composers/samantha-fernando" target="_blank" rel="noopener" class="hover:text-amber-400 transition-colors font-sans text-xs uppercase font-semibold">NMC Profile</a>
+            <div class="flex flex-col items-center gap-y-3.5 text-neutral-400 w-full md:w-auto">
+                <div class="flex flex-wrap justify-center gap-x-6 gap-y-3">
+                    <a href="/privacy/" class="hover:text-amber-400 transition-colors font-sans text-xs uppercase font-semibold">Privacy</a>
+                    <a href="https://linktr.ee/samanthafernando" target="_blank" rel="noopener" aria-label="Samantha Fernando on Linktree" class="hover:text-amber-400 transition-colors font-sans text-xs uppercase font-semibold">Linktree</a>
+                    <a href="https://www.nmcrec.co.uk/composers/samantha-fernando" target="_blank" rel="noopener" class="hover:text-amber-400 transition-colors font-sans text-xs uppercase font-semibold">NMC Profile</a>
+                </div>
+                <div class="flex justify-center gap-5">
+                    <a href="https://on.soundcloud.com/Ohbj2UPBnWa5Scw8AB" target="_blank" rel="noopener" aria-label="Samantha Fernando on SoundCloud" class="hover:text-amber-400 transition-colors"><i class="fa-brands fa-soundcloud text-base"></i></a>
+                    <a href="https://open.spotify.com/artist/1AOLNCJ11mI6ewx8CZ8gvM?si=-nnE1u-AQnypJGW2RpvPMg" target="_blank" rel="noopener" aria-label="Samantha Fernando on Spotify" class="hover:text-amber-400 transition-colors"><i class="fa-brands fa-spotify text-base"></i></a>
+                    <a href="https://www.instagram.com/_samfernando_/" target="_blank" rel="noopener" aria-label="Samantha Fernando on Instagram" class="hover:text-amber-400 transition-colors"><i class="fa-brands fa-instagram text-base"></i></a>
+                </div>
             </div>
         </div>
     </footer>
@@ -1449,7 +1512,7 @@
         let videoModalTrigger = null;
 
         // Real HTML pages, enhanced without replacing the persistent media shell.
-        const pagePaths = { home: '/', bio: '/biography/', works: '/works/', listen: '/listen/', watch: '/watch/', writing: '/writing/', contact: '/contact/' };
+        const pagePaths = { home: '/', bio: '/biography/', works: '/works/', listen: '/listen/', watch: '/watch/', writing: '/writing/', contact: '/contact/', privacy: '/privacy/' };
         let navigationRequest = 0;
         let navigationController;
         let renderedPath = window.location.pathname;
@@ -2397,9 +2460,13 @@
         document.getElementById('acceptAnalyticsCookies').addEventListener('click', () => setAnalyticsConsent('accepted'));
         document.getElementById('rejectAnalyticsCookies').addEventListener('click', () => setAnalyticsConsent('rejected'));
         document.getElementById('openPrivacyNotice').addEventListener('click', event => openPrivacyNotice(event.currentTarget));
-        document.getElementById('manageAnalyticsCookies').addEventListener('click', event => {
+        // The Cookie preferences button lives in the Privacy page's Cookie settings
+        // panel; delegate so enhanced navigation hands it the same behaviour.
+        document.addEventListener('click', event => {
+            const cookiePreferencesButton = event.target.closest('#manageAnalyticsCookies');
+            if (!cookiePreferencesButton) return;
             document.getElementById('cookieConsentBanner').classList.remove('hidden');
-            openPrivacyNotice(event.currentTarget);
+            openPrivacyNotice(cookiePreferencesButton);
         });
         document.getElementById('closePrivacyNotice').addEventListener('click', closePrivacyNotice);
         document.getElementById('privacyNoticeDialog').addEventListener('click', event => {
