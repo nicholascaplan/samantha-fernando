@@ -10,6 +10,7 @@ Use this file to track unresolved implementation, product and maintenance work. 
 - [ ] **Plan the GitHub Actions runner upgrade.** The Pages test and deploy jobs are pinned to `ubuntu-24.04`; test them on `ubuntu-26.04` and update both jobs deliberately after confirming the workflow passes.
 - [ ] **HIGH PRIORITY: Manually verify third-party media on the deployed site.** Check SoundCloud playback events, Spotify and SoundCloud mutual exclusion, soundbar restart and stop controls, soundbar visibility during navigation, and YouTube thumbnail/modal behaviour. Use widget events, not the soundbar alone, to establish that audio is playing.
 - [ ] **HIGH PRIORITY: Configure and verify Formspree delivery controls.** Confirm server-side spam protection, recipient notifications and the intended recipient inbox in Formspree; submit a non-sensitive deployed-site test and confirm delivery.
+- [ ] **Keep keyboard focus across the 1024px navigation-mode swap.** When a resize carries the CSS viewport across the desktop breakpoint, the focused navigation link hides and browsers drop focus to the document body (measured by `tests/nav-breakpoint.spec.js`). Decide whether the site should move focus to the equivalent control in the new mode; do not mask the loss in tests.
 - [ ] **Align responsive breakpoints.** Reconcile the documented and implemented mobile thresholds, then test desktop, phone landscape, narrow mobile and iframe preview layouts.
 - [ ] **Standardise notice and reduced-motion behaviour.** Distinguish informational availability or metadata gaps from errors, and provide reduced-motion alternatives for transitions, playback animation and media hover scaling.
 
@@ -44,4 +45,3 @@ Use this file to track unresolved implementation, product and maintenance work. 
 - Tailwind is compiled locally to `assets/tailwind.min.css`. Run `npm run build:css` after changing `tailwind.css` or Tailwind utility usage.
 - Build with `npm run build:test` (committed fallbacks) or `npm run build:content` (Sanity), then serve the generated site over HTTP with `npm run serve`, not the source tree or `file://`.
 - Run `npm test` before deployment. Use `npm run test:all` for the full Chromium, Firefox, WebKit and tagged-mobile matrix.
-
