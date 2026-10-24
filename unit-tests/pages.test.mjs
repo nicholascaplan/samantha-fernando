@@ -125,7 +125,7 @@ test('Privacy page carries the full notice and every page footer links to it', (
     const html = output.get(pageFile(route))
     assert.match(html, /href="\/privacy\/" class="[^"]*">Privacy<\/a>/)
     assert.doesNotMatch(html, /All rights reserved/)
-    assert.match(html, /Made with <span class="text-red-600">\u2665<\/span> by/)
+    assert.match(html, /Made with <span class="text-red-600 text-lg leading-none">\u2665<\/span> by/)
     const main = html.match(/<main[^>]*>([\s\S]*?)<\/main>/)[1]
     // The Cookie preferences control lives only in the Privacy page's Cookie settings panel.
     assert.equal((main.match(/id="manageAnalyticsCookies"/g) || []).length, route.path === '/privacy/' ? 1 : 0)
