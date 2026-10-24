@@ -1,6 +1,14 @@
 const {test, expect} = require('@playwright/test');
 const AxeBuilder = require('@axe-core/playwright').default;
 
+test.beforeEach(async ({page}) => {
+  // These tests exercise recovery, not playback. Keep live provider scripts and
+  // hidden players from introducing third-party failures into the error check.
+  await page.route('https://w.soundcloud.com/player/?**', route => route.fulfill({contentType:'text/html', body:''}));
+  await page.route('https://w.soundcloud.com/player/api.js', route => route.abort());
+  await page.route('https://open.spotify.com/embed/iframe-api/v1', route => route.abort());
+});
+
 test('unknown paths return the branded 404 for GET and HEAD without a redirect', async ({request}) => {
   for (const path of ['/missing-page/', '/nested/missing/page.html']) {
     const response = await request.get(path);
