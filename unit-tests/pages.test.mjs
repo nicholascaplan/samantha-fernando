@@ -10,9 +10,10 @@ import {buildCatalogue, readCatalogueFallback, renderCatalogue} from '../scripts
 const source = await readFile(new URL('../index.html', import.meta.url), 'utf8')
 const output = renderPages(source)
 const pageFile = route => route.path === '/' ? 'index.html' : `${route.path.slice(1)}index.html`
+const escapeRegExp = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
 test('each canonical route has distinct, complete static content and metadata', () => {
-  assert.equal(routes.length, 5)
+  assert.equal(routes.length, 7)
   const titles = new Set()
   for (const route of routes) {
     const html = output.get(pageFile(route))
@@ -26,7 +27,9 @@ test('each canonical route has distinct, complete static content and metadata', 
     assert.doesNotMatch(html, /(?:src|href)="assets\//)
     assert.doesNotMatch(html, /onclick="switchTab\(/)
     assert.match(html, /href="\/biography\/"/)
-    assert.match(html, /href="\/works\/#listen"/)
+    assert.match(html, /href="\/listen\/"/)
+    assert.match(html, /href="\/watch\/"/)
+    assert.doesNotMatch(html, /works\/#(?:listen|watch)/)
     assert.doesNotMatch(html, /href="#(?:bio|home|works|writing|contact)"/)
   }
   assert.equal(titles.size, routes.length)
@@ -53,6 +56,24 @@ test('Writing contains the full essay, portrait and video without an extra detai
   assert.match(writing, /"@type": "Article"/)
   assert.equal(output.has('writing/on-my-creative-process-wintering/index.html'), false)
   assert.doesNotMatch(writing, /Read the essay|All writing/)
+})
+
+test('Listen and Watch are distinct catalogue pages with their own metadata and view', () => {
+  const data = readCatalogueFallback(source)
+  const listen = output.get('listen/index.html')
+  const watch = output.get('watch/index.html')
+  assert.match(listen, /<h1 id="worksHeading"[^>]*>Listen<\/h1>/)
+  assert.match(listen, new RegExp(escapeRegExp(data.settings.listenDescription)))
+  assert.match(listen, /id="works-view-listen" class="[^"]*bg-amber-700[^"]*" aria-pressed="true"/)
+  assert.match(listen, /<p id="recordingAvailabilityCopy" class="text-sm text-neutral-400">[^<]+<\/p>/)
+  assert.equal((listen.match(/<h3\b/g) || []).length, data.media.filter(item => item.type === 'listen').length)
+  assert.doesNotMatch(listen, /"@type": "ItemList"/)
+  assert.match(watch, /<h1 id="worksHeading"[^>]*>Watch<\/h1>/)
+  assert.match(watch, new RegExp(escapeRegExp(data.settings.watchDescription)))
+  assert.match(watch, /id="works-view-watch" class="[^"]*bg-amber-700[^"]*" aria-pressed="true"/)
+  assert.match(watch, /id="worksContainer" class="works-catalogue watch-catalogue"/)
+  assert.equal((watch.match(/<h3\b/g) || []).length, data.media.filter(item => item.type === 'watch').length)
+  assert.doesNotMatch(watch, /"@type": "ItemList"/)
 })
 
 test('sitemap includes only canonical public pages, without filters or invented timestamps', () => {
@@ -90,3 +111,4 @@ test('artifact audit rejects private files and stale routes rather than silently
     await rm(directory, {recursive: true})
   }
 })
+
