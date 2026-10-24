@@ -5,7 +5,7 @@ Use this file to track unresolved implementation, product and maintenance work. 
 ## Verification And Accessibility
 
 - [ ] **Restore local Firefox and WebKit execution.** The local harness fails during Firefox page creation (`browserContext.newPage`, undefined `_page`) and stalls launching WebKit. Use the full PR-check browser matrix to verify multi-page navigation and responsive behaviour until local execution is repaired.
-- [ ] **Release the multi-page site after explicit deployment approval.** Verify direct nested URLs and refreshes, page metadata, contact delivery and uninterrupted real-provider playback outside BoxedCode. Submit the generated sitemap in Search Console if owner access is available and monitor page indexing after launch. Old hash bookmarks are intentionally unsupported.
+- [ ] **Release the multi-page site after explicit deployment approval.** Verify direct nested URLs and refreshes, page metadata, contact delivery and uninterrupted real-provider playback outside BoxedCode. Submit the generated sitemap in Search Console if owner access is available and monitor page indexing after launch. Old root-hash bookmarks are intentionally unsupported.
 - [ ] **Disable automatic GA4 history-based page views before releasing enhanced navigation.** Follow [analytics setup](google-analytics-setup.md); the site now sends explicit consented page views. Verify the data-stream setting and Realtime reporting externally to rule out duplicates.
 - [ ] **Plan the GitHub Actions runner upgrade.** The Pages test and deploy jobs are pinned to `ubuntu-24.04`; test them on `ubuntu-26.04` and update both jobs deliberately after confirming the workflow passes.
 - [ ] **HIGH PRIORITY: Manually verify third-party media on the deployed site.** Check SoundCloud playback events, Spotify and SoundCloud mutual exclusion, soundbar restart and stop controls, soundbar visibility during navigation, and YouTube thumbnail/modal behaviour. Use widget events, not the soundbar alone, to establish that audio is playing.
@@ -44,3 +44,4 @@ Use this file to track unresolved implementation, product and maintenance work. 
 - Tailwind is compiled locally to `assets/tailwind.min.css`. Run `npm run build:css` after changing `tailwind.css` or Tailwind utility usage.
 - Build with `npm run build:test` (committed fallbacks) or `npm run build:content` (Sanity), then serve the generated site over HTTP with `npm run serve`, not the source tree or `file://`.
 - Run `npm test` before deployment. Use `npm run test:all` for the full Chromium, Firefox, WebKit and tagged-mobile matrix.
+
