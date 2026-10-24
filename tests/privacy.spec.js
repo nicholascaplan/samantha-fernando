@@ -10,6 +10,7 @@ test('footer Privacy link reaches the Privacy page through enhanced navigation',
   await expect(page.locator('#tab-privacy')).toBeVisible();
   await expect(page.locator('main h1')).toHaveText('Privacy');
   await expect(page.locator('main h1')).toBeFocused();
+  expect(await page.locator('#cookie-settings').innerText()).not.toContain('Analytics cookies stay off without JavaScript');
   expect(await page.evaluate(() => Boolean(window.__documentMarker))).toBe(true);
   await page.evaluate(() => history.back());
   await expect(page).toHaveURL(/\/contact\/$/);
@@ -41,7 +42,9 @@ test('Cookie settings panel explains the no-JavaScript behaviour', async ({ brow
   const page = await context.newPage();
   try {
     await page.goto(`${test.info().project.use.baseURL}/privacy/`);
-    await expect(page.locator('#cookie-settings')).toContainText('Analytics cookies stay off without JavaScript');
+    const fallback = page.locator('#cookie-settings noscript p');
+    await expect(fallback).toBeVisible();
+    expect(await fallback.textContent()).toContain('Analytics cookies stay off without JavaScript');
     await expect(page.locator('#manageAnalyticsCookies')).toBeHidden();
     await expect(page.locator('footer')).toContainText('Privacy');
   } finally {
