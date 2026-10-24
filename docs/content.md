@@ -31,10 +31,12 @@ All page paths use `https://www.samanthafernando.com` as their canonical origin 
 | `/` | Samantha Fernando - Composer | Official website of British composer Samantha Fernando. Explore her compositions, recordings, films, writing and score-hire information. |
 | `/biography/` | Biography \| Samantha Fernando | About British composer Samantha Fernando: her artistic practice, collaborations, selected milestones, education and fellowship. |
 | `/works/` | Works & Media \| Samantha Fernando | Explore compositions by Samantha Fernando, with instrumentation, commissions, premiere details, recordings and performance films. |
+| `/listen/` | Listen \| Samantha Fernando | Listen to recordings of compositions by Samantha Fernando, published across SoundCloud and Spotify. |
+| `/watch/` | Watch \| Samantha Fernando | Performance films and composer features by Samantha Fernando. |
 | `/writing/` | Writing \| Samantha Fernando | Essays by composer Samantha Fernando on creative process, composition and artistic philosophy. |
 | `/contact/` | Contact & Score Hire \| Samantha Fernando | Contact Samantha Fernando about commissions, score hire, performance materials, performance notifications and academic enquiries. |
 
-Listen and Watch open `/works/#listen` and `/works/#watch`, both canonicalised to `/works/`. Search and instrumentation filters do not create separate pages.
+Listen and Watch are standalone pages at `/listen/` and `/watch/` sharing the Works & Media catalogue with the recording or film view preselected. Search and instrumentation filters do not create separate pages.
 
 ## Biography Page
 
@@ -158,7 +160,7 @@ Media actions use explicit related-Work references, including the three tracks f
 
 ## Watch
 
-- Catalogue filter: Watch, inside Works & Media. The committed fallback and import contain eleven films.
+- Standalone `/watch/` page sharing the Works & Media catalogue, film view preselected. The committed fallback and import contain eleven films.
 - The Exoplanets: Samantha Fernando introduces TRAPPIST-1e. Related work: Exoplanets: TRAPPIST-1e. Label: The Exoplanets (2025). Description: Samantha Fernando introduces her movement inspired by the rocky exoplanet TRAPPIST-1e. Link: https://www.youtube.com/watch?v=PtuinjIcJD0
 - Current, Rising: The World's First Hyper-Reality Opera. Action label: Trailer. Label: Royal Ballet and Opera (2020). Duration: 0:50. Description: Trailer for a 15-minute hyper-reality opera combining virtual reality with a multisensory set. Music is composed by Samantha Fernando, directed by Netia Jones, with libretto by Melanie Wilson and vocals by Anna Dennis. Link: https://www.youtube.com/watch?v=KXrYuIWLv60
 - Trailer: Current, Rising - The World's First Hyper-Reality Opera. Action label: Trailer. Related work: Current, Rising. Label: Royal Opera House (2021). Published 6 May 2021. Description: Official trailer for the hyper-reality opera composed by Samantha Fernando with libretto by Melanie Wilson. Link: https://www.youtube.com/watch?v=eY0GioXHBL4
@@ -173,7 +175,7 @@ Media actions use explicit related-Work references, including the three tracks f
 
 ## Listen
 
-- Catalogue filter: Listen, inside Works & Media. The catalogue contains thirteen recordings. Cards show the related Work's category pill and the track time when known. Spotify actions read `Preview`; SoundCloud actions read `Listen`.
+- Standalone `/listen/` page sharing the Works & Media catalogue, recording view preselected. The catalogue contains thirteen recordings. Cards show the related Work's category pill and the track time when known. Spotify actions read `Preview`; SoundCloud actions read `Listen`.
 
 ### SoundCloud Tracks
 
@@ -217,7 +219,7 @@ More tracks are available on Samantha's SoundCloud and Spotify pages. Not all re
 - Works introductory text: Full repertoire categorised by instrumentation and scale.
 - Listen introductory text: Published recordings across SoundCloud and Spotify.
 - Watch introductory text: Performance films and composer features.
-- Entry model: Works opens All Works. Listen opens the Listen filter. Watch opens the Watch filter.
+- Entry model: Works opens All Works at `/works/`. Listen opens the recording catalogue at `/listen/`. Watch opens the film catalogue at `/watch/`.
 - Watch content: Actual YouTube videos only. Project-information cards such as glass human and Current, Rising remain in project or biography content.
 - Video behaviour: Watch renders editorial YouTube thumbnail cards from `768px` in two columns and from `1280px` in three columns, showing the year without a redundant `Film` label, then opens the existing in-page modal after a user clicks.
 
@@ -273,3 +275,4 @@ The `/writing/` page shows the Writing introduction, complete Wintering essay, p
 - Gavin Higgins: https://www.gavinhiggins.com/
 - Manchester Collective: https://manchestercollective.co.uk/
 - Tonia Ko: https://toniako.com/
+
