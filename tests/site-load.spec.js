@@ -449,6 +449,8 @@ test('aligns Works and Listen CTAs with card content on mobile @mobile', async (
   expect((await worksAction.boundingBox()).x).toBe((await worksContent.boundingBox()).x);
 
   await page.locator('#works-view-listen').click();
+  await expect(page).toHaveURL(/\/listen\/$/);
+  await expect(page.locator('#worksContainer .work-media-action').first()).toBeVisible();
   const listenAction = page.locator('#worksContainer .work-media-action').first();
   const listenCard = page.locator('#worksContainer > div').first();
   const listenContent = listenCard.locator('div').first();
@@ -531,6 +533,7 @@ test('keeps Samantha email address out of public contact content', async ({ page
 
 test('shows a contact error when Formspree rejects the submission', async ({ page }) => {
   await page.goto('/contact/');
+  await page.waitForFunction(() => typeof window.handleContactSubmit === 'function');
   await page.route('https://formspree.io/f/mlgqqjen', async route => {
     await route.fulfill({ status: 422, contentType: 'application/json', body: '{}' });
   });
