@@ -102,3 +102,27 @@ for (const width of [390, 768, 820, 1024, 1280]) {
   }
 }
 
+for (const width of [390, 768, 1024]) {
+  for (const theme of ['light', 'dark']) {
+    for (const textScale of [1, 2]) {
+      test(`privacy page and footer fit at ${width}px in ${theme} mode with ${textScale * 100}% text`, async ({ page }) => {
+        await page.setViewportSize({ width, height: 1000 });
+        await page.addInitScript(({ theme, textScale }) => {
+          localStorage.setItem('theme', theme);
+          document.addEventListener('DOMContentLoaded', () => {
+            document.documentElement.style.fontSize = `${16 * textScale}px`;
+          });
+        }, { theme, textScale });
+        await page.goto('/privacy/');
+        await page.evaluate(() => document.fonts.ready);
+        await page.getByRole('button', { name: 'Reject', exact: true }).click();
+        await expectWithinViewport(page);
+        // The revisit control stays reachable and the footer rows wrap inside the page.
+        await page.getByRole('button', { name: 'Cookie preferences' }).click();
+        await expect(page.getByRole('dialog', { name: 'Analytics and privacy' })).toBeVisible();
+        await page.keyboard.press('Escape');
+        await expectWithinViewport(page);
+      });
+    }
+  }
+}
