@@ -7,7 +7,8 @@ module.exports = defineConfig({
   workers: process.env.CI ? 2 : undefined,
   use: {
     baseURL: 'http://127.0.0.1:8010',
-    trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
+    trace: 'retain-on-failure',
   },
   webServer: {
     command: 'npm run build:test && exec python3 scripts/serve.py --port 8010 --directory _site',
