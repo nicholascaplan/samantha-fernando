@@ -95,25 +95,25 @@ In 2021, Samantha saw the opening of Current, Rising, a world-first hyper-realit
 
 ### Upcoming performances
 
-- May/June 2027 - New work for The Marian Consort. More details to follow soon.
-- 23 February 2027 - New work for Fretwork and Ruby Hughes. Skipton Music Festival, UK. More dates to follow. Event: https://www.fretwork.co.uk/concerts-1/uojmskjcgfpkus2t8jr8lvdfwppoj5
-- 20 February 2027 - Formations. Performed by Ensemble 10:10 in Liverpool. Event: https://www.liverpoolphil.com/events/reinventing-beethoven/
+- 20 February 2027 - Formations. The Tung Auditorium, Liverpool. Ensemble 10:10. Event: https://www.liverpoolphil.com/events/reinventing-beethoven/
+- 23 February 2027 - New work for Fretwork and Ruby Hughes. Skipton Town Hall, Skipton. Skipton Music Festival. More dates to follow. Event: https://www.fretwork.co.uk/concerts-1/uojmskjcgfpkus2t8jr8lvdfwppoj5
+- May 2027 - New work for The Marian Consort. More details to follow soon.
 
 ### Past performances
 
-- 24 October 2026 - Balconies. Performed by Olivia de Prato in Singapore. Event: https://www.performerspresent.com/programme/plenary-motherhood-artistry
-- 16 October 2026 - Kinesphere. Performed by Sinead Walsh at Conway Hall, Bloomsbury Festival. Event: https://www.empowerwomenchangingmusic.com/events/empower-at-bloomsbury-festival-double-bill-soraya-verjee-and-no-more-girl-friday
-- 13 March 2026 - The Exoplanets. City of London Sinfonia, conducted by Micah Gleason. Hackney Empire, London.
-- 5 December 2025 - Wintering. Manchester Collective. Bristol Beacon, Bristol.
-- 3 December 2025 - Wintering. Manchester Collective. Sir Jack Lyons, York.
-- 29 November 2025 - Wintering. Manchester Collective. Tung Auditorium, Liverpool.
-- 28 November 2025 - Wintering. Manchester Collective. Howard Assembly Room, Leeds.
-- 27 November 2025 - Wintering. Manchester Collective. Stoller Hall, Manchester.
-- 22 November 2025 - Wintering (World Premiere). Manchester Collective & The Marian Consort. Wigmore Hall, London.
-- 6-7 September 2025 - The Exoplanets (World Premiere). City of London Sinfonia, conducted by Naomi Woo. Norwich Theatre Royal, Norwich.
-- 2 February 2025 - Fault Line. Tim Gill, London Sinfonietta. Turner Sims, Southampton.
+- 24 October 2026 - Balconies. YST Cube (Level 3), Yong Siew Toh Conservatory of Music, Singapore. Performed by Olivia de Prato. Event: https://www.performerspresent.com/programme/plenary-motherhood-artistry
+- 16 October 2026 - Kinesphere. Conway Hall, London. Performed by Sinead Walsh. Bloomsbury Festival. Event: https://www.empowerwomenchangingmusic.com/events/empower-at-bloomsbury-festival-double-bill-soraya-verjee-and-no-more-girl-friday
+- 13 March 2026 - The Exoplanets. Hackney Empire, London. City of London Sinfonia, conducted by Micah Gleason.
+- 5 December 2025 - Wintering. Bristol Beacon, Bristol. Manchester Collective.
+- 3 December 2025 - Wintering. Sir Jack Lyons, York. Manchester Collective.
+- 29 November 2025 - Wintering. Tung Auditorium, Liverpool. Manchester Collective.
+- 28 November 2025 - Wintering. Howard Assembly Room, Leeds. Manchester Collective.
+- 27 November 2025 - Wintering. Stoller Hall, Manchester. Manchester Collective.
+- 22 November 2025 - Wintering (World premiere). Wigmore Hall, London. Manchester Collective & The Marian Consort.
+- 6-7 September 2025 - The Exoplanets (World premiere). Norwich Theatre Royal, Norwich. City of London Sinfonia, conducted by Naomi Woo.
+- 2 February 2025 - Fault Line. Turner Sims, Southampton. Tim Gill, London Sinfonietta.
 
-The homepage section is present only while upcoming performances exist. Past performances are collapsed by default. Published Sanity Performance documents are the editing source; `content/performances.json` is the committed fallback. Future month ranges do not imply a confirmed day.
+The homepage section is present only while upcoming performances exist. Past performances are collapsed by default. Published Sanity Performance documents are the editing source; `content/performances.json` is the committed fallback. May 2027 uses 1-31 May sorting bounds, not confirmed performance dates. Displayed past-work groups run most recent stop first; each stop remains an individual editable record. Location and per-performance World premiere metadata are optional.
 
 ## Featured Operas & Major Projects
 
