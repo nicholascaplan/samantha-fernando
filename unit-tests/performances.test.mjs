@@ -80,7 +80,7 @@ test('Wintering shares one past card without dropping any supplied dates or venu
   assert.equal((html.match(/<h4>Wintering<\/h4>/g)||[]).length,1)
   for(const event of events.filter(event=>event.title.startsWith('Wintering'))) {
     assert.ok(html.includes(event.dateLabel))
-    assert.ok(html.includes(event.description.replace(/&/g,'&amp;')))
+    assert.ok(html.includes(event.description.replace(/(?<!\.)\.$/,'').replace(/&/g,'&amp;')))
   }
   assert.match(html,/22 November 2025.*World premiere/)
 })
@@ -92,4 +92,15 @@ test('optional locations are escaped, invalid types fall back and tour dates run
   assert.match(renderPerformances([{...events[0],location:'<Hall> & City'}],'2026-10-27'), /&lt;Hall&gt; &amp; City/)
   const html=renderPerformances(events,'2026-10-27')
   assert.ok(html.indexOf('22 November 2025')<html.indexOf('5 December 2025'))
+})
+
+
+test('performance listing copy omits a final sentence stop but keeps internal punctuation and ellipses', () => {
+  const event = {title:'New work',dateLabel:'May 2027',startDate:'2027-05-01',description:'St. John’s ensemble. More details soon.', location:'St. George’s, London'}
+  const html = renderPerformances([event], '2026-10-27')
+  assert.match(html, /St\. John’s ensemble\. More details soon<\/p>/)
+  assert.match(html, /St\. George’s, London/)
+  assert.match(renderPerformances([{...event, description:'More details...'}], '2026-10-27'), /More details\.\.\.<\/p>/)
+  const tour = {...event,title:'Wintering',startDate:'2025-11-22',description:'Manchester Collective. More details soon.'}
+  assert.match(renderPerformances([event,tour], '2026-10-27'), /Manchester Collective\. More details soon<\/p>/)
 })
