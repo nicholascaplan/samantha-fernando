@@ -85,13 +85,14 @@ test('Wintering shares one past card without dropping any supplied dates or venu
   assert.match(html,/22 November 2025.*World premiere/)
 })
 
-test('optional locations are escaped, invalid types fall back and tour dates run earliest first', async()=>{
+test('optional locations are escaped, invalid types fall back and grouped dates run most recent first', async()=>{
   const {validatePerformances,buildPerformances}=await import('../scripts/lib/performances.mjs')
   assert.throws(()=>validatePerformances([{...events[0],location:{venue:'Bad'}}]), /location must be text/)
   assert.equal((await buildPerformances(events,async()=>[{...events[0],location:42}],'2026-10-27')).usedFallback,true)
   assert.match(renderPerformances([{...events[0],location:'<Hall> & City'}],'2026-10-27'), /&lt;Hall&gt; &amp; City/)
   const html=renderPerformances(events,'2026-10-27')
-  assert.ok(html.indexOf('22 November 2025')<html.indexOf('5 December 2025'))
+  assert.ok(html.indexOf('5 December 2025')<html.indexOf('22 November 2025'))
+  assert.ok(html.indexOf('13 March 2026')<html.indexOf('6-7 September 2025'))
 })
 
 

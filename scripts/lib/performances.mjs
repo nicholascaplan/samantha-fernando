@@ -27,7 +27,7 @@ export function renderPerformances(events, today) {
     if (!name) return [renderEvent(event)]
     if (renderedGroups.has(name)) return []
     renderedGroups.add(name)
-    const stops = past.filter(stop=>groupName(stop)===name).sort((a,b)=>a.startDate.localeCompare(b.startDate))
+    const stops = past.filter(stop=>groupName(stop)===name).sort((a,b)=>b.startDate.localeCompare(a.startDate))
     return [`<li class="performance-entry performance-tour"><h4>${escape(name)}</h4>
       <ul class="performance-tour-stops">${stops.map(stop => `<li><p class="performance-date">${escape(stop.dateLabel)}${stop.isWorldPremiere ? ' <span class="performance-premiere">World premiere</span>' : ''}</p>${stop.location ? `<p class="performance-location">${escape(stop.location)}</p>` : ''}${stop.description ? `<p>${escape(eventCopy(stop.description))}</p>` : ''}${stop.url ? `<a class="performance-link" href="${escape(stop.url)}"><span class="performance-link-label">Event details</span><span class="performance-link-end">&nbsp;↗</span></a>` : ''}</li>`).join('\n')}</ul></li>`]
   }).join('\n')
