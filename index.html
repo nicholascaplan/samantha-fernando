@@ -125,6 +125,10 @@
             outline-offset: 3px;
         }
 
+        .mobile-menu-follow { margin-top: 1rem; padding-top: .75rem; border-top: 1px solid #525252; }
+        #mobileMenu:not(.hidden) .mobile-menu-follow a { display: inline-flex; align-items: center; gap: .65rem; min-height: 44px; }
+        body.light-mode .mobile-menu-follow { border-color: #d4d4d4; }
+
         /* Keep labels and metadata in the same editorial sans-serif voice. */
         .font-mono {
             font-family: 'Inter', sans-serif !important;
@@ -894,6 +898,12 @@
                 <a href="/biography/" data-mobile-nav="bio" class="mobile-nav-btn block w-full text-left py-2 text-neutral-300 hover:text-amber-400">Biography</a>
                 <a href="/writing/" data-mobile-nav="writing" class="mobile-nav-btn block w-full text-left py-2 text-neutral-300 hover:text-amber-400">Writing</a>
                 <a href="/contact/" data-mobile-nav="contact" class="mobile-nav-btn block w-full text-left py-2 text-neutral-300 hover:text-amber-400">Contact</a>
+                <div class="mobile-menu-follow" role="group" aria-label="Follow Samantha Fernando">
+                    <a href="https://www.instagram.com/_samfernando_/" target="_blank" rel="noopener noreferrer" aria-label="Samantha Fernando on Instagram (opens in a new tab)">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true" focusable="false"><rect x="3.5" y="3.5" width="17" height="17" rx="4.5"/><circle cx="12" cy="12" r="4"/><circle cx="17.1" cy="6.9" r="1" fill="currentColor" stroke="none"/></svg>
+                        <span>Instagram</span>
+                    </a>
+                </div>
         </div>
     </header>
 
