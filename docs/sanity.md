@@ -83,13 +83,13 @@ The webhook URL uses the renamed repository endpoint below. After any repository
 | URL | `https://api.github.com/repos/nicholascaplan/samantha-fernando/dispatches` |
 | Dataset | `production` |
 | Trigger on | Create, Update, Delete |
-| Filter | `_id == "biographyPage"` |
+| Filter | `_type in ["performance", "biographyPage", "worksMediaSettings", "work", "recording", "film"] && !(_id in path("drafts.**"))` |
 | Projection | `{"event_type": "sanity-content-published"}` |
 | Method | `POST` |
 | Headers | `Authorization` set to `Bearer <token>` (word `Bearer`, one space, no colon) and `Accept: application/vnd.github+json` |
 | Drafts | Off |
 
-The table describes the currently configured Biography-only filter. Replace it with the type-based filter in Catalogue Activation when activating Works & Media; update this table to reflect the actual configuration at that point.
+The table reflects the live filter verified on 27 October 2026. Keep all existing types when adding a new content type.
 
 ### GitHub Token
 
@@ -155,3 +155,13 @@ These steps require an authenticated maintainer and are not completed merely by 
 3. Verify the published records in Studio and run the normal production build. It must report `Performances rendered from Sanity`, with the supplied upcoming and past entries present.
 4. In Manage, inspect the current **Trigger site deploy** webhook. Add `performance` to its existing type filter while preserving its other types, dataset, destination and headers. Do not replace or expose its credential. The operational notes above contain conflicting historic filter examples, so inspect the live filter rather than copying either.
 5. Verify a real performance publication triggers the existing repository dispatch and, after an approved website merge/deploy, check the public output. Until activation is verified, do not report that Sam can edit these records in the hosted Studio or that publication reaches the site.
+
+### Activation record - 27 October 2026
+
+- Updated existing hosted Studio and schema deployed.
+- Non-overwriting import created 14 published Performance documents (3 upcoming, 11 past at activation).
+- Normal production build confirmed Performances rendered from Sanity.
+- Existing enabled production webhook filter now includes performance, with other types, destination, projection and headers preserved; saved state reloaded and checked.
+- Hosted list displayed the imported records, but document forms remained at Loading document / Trying to connect after one reopen. The existing Biography editor also stalled. Actual editor usability is not verified; no package/account/CORS change was made to work around it.
+- Publication-to-dispatch verification is deliberately deferred until website merge/deploy is authorized. No test edit was published merely to trigger current main.
+- Website PR22 remains unmerged; the public site does not yet contain this implementation.
