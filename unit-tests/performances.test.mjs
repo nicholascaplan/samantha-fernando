@@ -77,7 +77,7 @@ test('invalid description types reject the complete snapshot while absent text s
 
 test('Wintering shares one past card without dropping any supplied dates or venues', () => {
   const html = renderPerformances(events,'2026-10-27')
-  assert.equal((html.match(/<h4>Wintering<\/h4>/g)||[]).length,1)
+  assert.equal((html.match(/<h3>Wintering<\/h3>/g)||[]).length,1)
   for(const event of events.filter(event=>event.title.startsWith('Wintering'))) {
     assert.ok(html.includes(event.dateLabel))
     assert.ok(html.includes(event.description.replace(/(?<!\.)\.$/,'').replace(/&/g,'&amp;')))

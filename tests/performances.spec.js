@@ -64,7 +64,7 @@ test('performance cards align and Wintering keeps every date and venue', async (
   expect(new Set(boxes.map(box=>Math.round(box.top))).size).toBe(1);
   expect(new Set(boxes.map(box=>Math.round(box.height))).size).toBe(1);
   await page.locator('.past-performances summary').click();
-  await expect(page.locator('.performance-tour h4').filter({hasText:'Wintering'})).toHaveText('Wintering');
+  await expect(page.locator('.performance-tour h3').filter({hasText:'Wintering'})).toHaveText('Wintering');
   await expect(page.locator('.performance-tour').filter({has:page.getByRole('heading',{name:'Wintering',exact:true})}).locator('.performance-tour-stops > li')).toHaveCount(6);
   for (const venue of ['Bristol Beacon','Sir Jack Lyons','Tung Auditorium','Howard Assembly Room','Stoller Hall','Wigmore Hall']) await expect(page.locator('.performance-tour').filter({has:page.getByRole('heading',{name:'Wintering',exact:true})})).toContainText(venue);
   await expect(page.locator('.performance-tour').filter({has:page.getByRole('heading',{name:'Wintering',exact:true})})).toContainText('22 November 2025 World premiere');
@@ -139,7 +139,7 @@ test('performance card spacing uses a steady rhythm with optional metadata @mobi
  await page.goto('/');
  const cards=page.locator('#performances .performance-list').first().locator(':scope > li');
  const spaces=await cards.evaluateAll(cards=>cards.map(c=>{
-  const title=c.querySelector('h4'),date=c.querySelector('.performance-date'),venue=c.querySelector('.performance-location');
+  const title=c.querySelector('h3'),date=c.querySelector('.performance-date'),venue=c.querySelector('.performance-location');
   const description=[...c.children].find(e=>e.tagName==='P'&&!e.className);
   const gap=(a,b)=>b.getBoundingClientRect().top-a.getBoundingClientRect().bottom;
   return {dateTitle:gap(date,title),afterTitle:gap(title,venue||description),venueDescription:venue?gap(venue,description):null};
