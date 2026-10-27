@@ -2,7 +2,7 @@ const { test, expect } = require('@playwright/test');
 test('homepage performances are accessible, linked and responsive @mobile', async ({page}) => {
   await page.goto('/');
   await expect(page.locator('#performances')).toBeVisible();
-  await expect(page.locator('#upcoming-performances')).toHaveText('Upcoming performances');
+  await expect(page.locator('#performances-title')).toHaveText('Upcoming performances');
   await expect(page.locator('#performances .performance-list').first().locator('li')).toHaveCount(3);
   await expect(page.getByRole('link', {name:'Event details'})).toHaveCount(2);
   await page.getByText('Past performances', {exact:true}).click();
@@ -55,4 +55,17 @@ test('past performance disclosure shares theme focus and supports keyboard toggl
       await page.screenshot({path:`/tmp/sam-focus-${light?'light':'dark'}.png`});
     }
   }
+});
+
+test('performance cards align and Wintering keeps every date and venue', async ({page}) => {
+  await page.goto('/');
+  const cards = page.locator('#performances .performance-list').first().locator(':scope > li');
+  const boxes = await cards.evaluateAll(els=>els.map(el=>{const r=el.getBoundingClientRect();return {top:r.top,height:r.height};}));
+  expect(new Set(boxes.map(box=>Math.round(box.top))).size).toBe(1);
+  expect(new Set(boxes.map(box=>Math.round(box.height))).size).toBe(1);
+  await page.locator('.past-performances summary').click();
+  await expect(page.locator('.performance-tour h4')).toHaveText('Wintering');
+  await expect(page.locator('.performance-tour-stops > li')).toHaveCount(6);
+  for (const venue of ['Bristol Beacon','Sir Jack Lyons','Tung Auditorium','Howard Assembly Room','Stoller Hall','Wigmore Hall']) await expect(page.locator('.performance-tour')).toContainText(venue);
+  await expect(page.locator('.performance-tour')).toContainText('22 November 2025 · World Premiere');
 });

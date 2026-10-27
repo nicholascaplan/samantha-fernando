@@ -18,12 +18,19 @@ export function renderPerformances(events, today) {
     ${event.description ? `<p>${escape(event.description)}</p>` : ''}
     ${event.url ? `<a class="performance-link" href="${escape(event.url)}">Event details<span class="performance-link-end">&nbsp;↗</span></a>` : ''}
   </li>`
+  const wintering = past.filter(event => /^Wintering(?: \(World Premiere\))?$/i.test(event.title))
+  const renderedPast = past.flatMap(event => {
+    if (!wintering.includes(event)) return [renderEvent(event)]
+    if (event !== wintering[0]) return []
+    return [`<li class="performance-entry performance-tour"><h4>Wintering</h4>
+      <ul class="performance-tour-stops">${wintering.map(stop => `<li><p class="performance-date">${escape(stop.dateLabel)}${/World Premiere/i.test(stop.title) ? ' · World Premiere' : ''}</p>${stop.description ? `<p>${escape(stop.description)}</p>` : ''}${stop.url ? `<a class="performance-link" href="${escape(stop.url)}">Event details<span class="performance-link-end">&nbsp;↗</span></a>` : ''}</li>`).join('\n')}</ul></li>`]
+  }).join('\n')
   return `<section id="performances" aria-labelledby="performances-title" class="performances-groups">
-    <h2 id="performances-title">Performances</h2>
-    <section aria-labelledby="upcoming-performances"><h3 id="upcoming-performances">Upcoming performances</h3>
+    <h2 id="performances-title">Upcoming performances</h2>
+    <section aria-labelledby="performances-title">
     <ul class="performance-list">${upcoming.map(renderEvent).join('\n')}</ul></section>
     <details class="past-performances"><summary id="past-performances">Past performances</summary>
-    ${past.length ? `<ul class="performance-list">${past.map(renderEvent).join('\n')}</ul>` : '<p>No past performances are listed.</p>'}</details>
+    ${past.length ? `<ul class="performance-list">${renderedPast}</ul>` : '<p>No past performances are listed.</p>'}</details>
   </section>`
 }
 

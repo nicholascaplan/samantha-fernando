@@ -738,7 +738,17 @@
         .performances-groups h2 { font-family: inherit; font-size: 1.75rem; margin-bottom: 1.5rem; }
         .performances-groups h3, .past-performances summary { font-size: 1rem; font-weight: 600; }
         .performance-list { list-style: none; padding: 0; margin: 1rem 0 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.5rem; }
-        .performance-entry { min-width: 0; overflow-wrap: anywhere; }
+        .performance-entry { min-width: 0; overflow-wrap: anywhere; display: flex; flex-direction: column; align-items: flex-start; padding: 1.5rem; border: 1px solid #525252; border-radius: 1rem; background: #262626; }
+        .performance-entry > .performance-link { margin-top: auto; padding-top: 1.25rem; }
+        .performance-tour-stops { list-style: none; padding: 0; margin: .75rem 0 0; width: 100%; }
+        .performance-tour-stops > li + li { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #525252; }
+        .performance-tour-stops .performance-date { margin-bottom: .35rem; }
+        .performance-tour { grid-column: 1 / -1; }
+        .performance-tour-stops { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem 2rem; }
+        .performance-tour-stops > li + li { margin-top: 0; }
+        .performance-tour-stops > li { padding-top: 1rem; border-top: 1px solid #525252; }
+        body.light-mode .performance-entry { background: #faf9f5; border-color: #c8c7bf; }
+        body.light-mode .performance-tour-stops > li { border-color: #d4d4d4; }
         .performance-entry h4 { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; line-height: 1.15; margin: .4rem 0 .6rem; color: #f5f5f5; }
         .performance-entry p { font-size: .9rem; line-height: 1.6; color: #d4d4d4; }
         .performance-entry .performance-date { font-size: .8rem; color: #fbbf24; }
@@ -750,7 +760,8 @@
         body.light-mode .performance-entry p { color: #404040; }
         body.light-mode .performance-entry .performance-date, body.light-mode .performance-link { color: #92400e; }
         body.light-mode .performances-groups { border-color: #d4d4d4; }
-        @media (max-width: 767px) { .performance-list { grid-template-columns: 1fr; } }
+        @media (min-width: 768px) and (max-width: 1023px) { .performance-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        @media (max-width: 767px) { .performance-list, .performance-tour-stops { grid-template-columns: 1fr; } .performance-tour { grid-column: auto; } }
     </style>
 </head>
 <body class="light-mode min-h-screen flex flex-col selection:bg-amber-800/30 selection:text-amber-200">
