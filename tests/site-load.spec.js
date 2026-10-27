@@ -419,8 +419,14 @@ test('shows the next home section in the initial mobile viewport @mobile', async
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
 
-  await expect(page.locator('#featured-projects')).toBeInViewport();
+  await rejectAnalyticsCookies(page);
+  const nextHeading = await page.locator('#performances').count()
+    ? page.locator('#performances-title')
+    : page.locator('#featured-projects h2');
+  await expect(nextHeading).toBeInViewport({ ratio: 1 });
   await expect(page.locator('#featured-projects')).toContainText('Spotlight Works');
+  await page.locator('#featured-projects h2').scrollIntoViewIfNeeded();
+  await expect(page.locator('#featured-projects h2')).toBeInViewport({ ratio: 1 });
 });
 
 test('uses the shared Instrumentation menu on mobile @mobile', async ({ page }) => {
