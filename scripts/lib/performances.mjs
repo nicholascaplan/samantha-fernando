@@ -15,7 +15,7 @@ export function renderPerformances(events, today) {
   if (!upcoming.length) return ''
   const renderEvent = event => `<li class="performance-entry">
     <p class="performance-date">${escape(event.dateLabel)}${event.isWorldPremiere ? ' <span class="performance-premiere">World premiere</span>' : ''}</p>
-    <h4>${escape(event.title)}</h4>
+    <h3>${escape(event.title)}</h3>
     ${event.location ? `<p class="performance-location">${escape(event.location)}</p>` : ''}
     ${event.description ? `<p>${escape(eventCopy(event.description))}</p>` : ''}
     ${event.url ? `<a class="performance-link" href="${escape(event.url)}"><span class="performance-link-label">Event details</span><span class="performance-link-end">&nbsp;↗</span></a>` : ''}
@@ -28,13 +28,13 @@ export function renderPerformances(events, today) {
     if (renderedGroups.has(name)) return []
     renderedGroups.add(name)
     const stops = past.filter(stop=>groupName(stop)===name).sort((a,b)=>b.startDate.localeCompare(a.startDate))
-    return [`<li class="performance-entry performance-tour"><h4>${escape(name)}</h4>
+    return [`<li class="performance-entry performance-tour"><h3>${escape(name)}</h3>
       <ul class="performance-tour-stops">${stops.map(stop => `<li><p class="performance-date">${escape(stop.dateLabel)}${stop.isWorldPremiere ? ' <span class="performance-premiere">World premiere</span>' : ''}</p>${stop.location ? `<p class="performance-location">${escape(stop.location)}</p>` : ''}${stop.description ? `<p>${escape(eventCopy(stop.description))}</p>` : ''}${stop.url ? `<a class="performance-link" href="${escape(stop.url)}"><span class="performance-link-label">Event details</span><span class="performance-link-end">&nbsp;↗</span></a>` : ''}</li>`).join('\n')}</ul></li>`]
   }).join('\n')
   return `<section id="performances" aria-labelledby="performances-title" class="performances-groups">
     <h2 id="performances-title">Upcoming performances</h2>
-    <section aria-labelledby="performances-title">
-    <ul class="performance-list">${upcoming.map(renderEvent).join('\n')}</ul></section>
+    <div>
+    <ul class="performance-list">${upcoming.map(renderEvent).join('\n')}</ul></div>
     <details class="past-performances"><summary id="past-performances">Past performances</summary>
     ${past.length ? `<div class="past-performances-content"><ul class="performance-list">${renderedPast}</ul></div>` : '<p>No past performances are listed.</p>'}</details>
   </section>`
