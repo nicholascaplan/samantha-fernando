@@ -133,3 +133,16 @@ test('disclosure motion is reversible with stable summary and opaque text',async
   await expect(details).not.toHaveAttribute('open');
   await expect(details).not.toHaveAttribute('style',/height|overflow/);
 });
+
+
+test('performance card spacing uses a steady rhythm with optional metadata @mobile', async ({page}) => {
+ await page.goto('/');
+ const cards=page.locator('#performances .performance-list').first().locator(':scope > li');
+ const spaces=await cards.evaluateAll(cards=>cards.map(c=>{
+  const title=c.querySelector('h4'),date=c.querySelector('.performance-date'),venue=c.querySelector('.performance-location');
+  const description=[...c.children].find(e=>e.tagName==='P'&&!e.className);
+  const gap=(a,b)=>b.getBoundingClientRect().top-a.getBoundingClientRect().bottom;
+  return {dateTitle:gap(date,title),afterTitle:gap(title,venue||description),venueDescription:venue?gap(venue,description):null};
+ }));
+ for(const s of spaces){ expect(s.dateTitle).toBeCloseTo(6,0);expect(s.afterTitle).toBeCloseTo(8,0);if(s.venueDescription!==null)expect(s.venueDescription).toBeCloseTo(8,0); }
+});
