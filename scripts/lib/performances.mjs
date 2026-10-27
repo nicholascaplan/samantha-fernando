@@ -36,7 +36,7 @@ export function renderPerformances(events, today) {
     <section aria-labelledby="performances-title">
     <ul class="performance-list">${upcoming.map(renderEvent).join('\n')}</ul></section>
     <details class="past-performances"><summary id="past-performances">Past performances</summary>
-    ${past.length ? `<div class="past-performances-content"><ul class="performance-list">${renderedPast}</ul></div>` : '<p>No past performances are listed.</p>'}</details>
+    <div class="past-performances-content">${past.length ? `<ul class="performance-list">${renderedPast}</ul>` : '<p>No past performances are listed.</p>'}</div></details>
   </section>`
 }
 
