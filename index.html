@@ -1646,6 +1646,7 @@
         }
 
         function initialisePage() {
+            initialisePerformanceMotion();
             if (document.getElementById('worksContainer')) {
                 // Retired view fragments land on their catalogue pages.
                 if (window.location.pathname === '/works/' && ['#listen', '#watch'].includes(window.location.hash)) {
@@ -2639,8 +2640,10 @@
         });
 
         // Keep native details/summary semantics and no-JS behavior, with reversible motion.
-        const pastPerformances = document.querySelector('.past-performances');
-        if (pastPerformances) {
+        function initialisePerformanceMotion() {
+            const pastPerformances = document.querySelector('.past-performances');
+            if (!pastPerformances || pastPerformances.dataset.motionInitialised) return;
+            pastPerformances.dataset.motionInitialised = 'true';
             const summary = pastPerformances.querySelector('summary');
             const content = pastPerformances.querySelector('.past-performances-content');
             let motion;
