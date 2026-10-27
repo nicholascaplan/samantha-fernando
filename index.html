@@ -755,7 +755,8 @@
         .performance-entry .performance-location { font-size: .8rem; line-height: 1.5; font-weight: 600; letter-spacing: .02em; margin: .3rem 0 .8rem; color: #e5e5e5; }
         body.light-mode .performance-entry .performance-location { color: #525252; }
         .performance-entry .performance-date { font-size: .8rem; color: #fbbf24; }
-        .performance-link { display: inline-block; margin-top: .75rem; font-size: .85rem; color: #fbbf24; text-decoration: underline; text-underline-offset: .2em; }
+        .performance-link { display: inline-block; margin-top: .75rem; font-size: .85rem; color: #fbbf24; text-decoration: none; }
+        .performance-link-label { text-decoration: underline; text-underline-offset: .2em; }
         .performance-link-end { white-space: nowrap; }
         .past-performances { margin-top: 2rem; }
         .past-performances summary { cursor: pointer; width: fit-content; }
@@ -2630,21 +2631,39 @@
             }
         });
 
-        // Native disclosure stays functional without JavaScript. Opening motion is optional.
+        // Keep native details/summary semantics and no-JS behavior, with reversible motion.
         const pastPerformances = document.querySelector('.past-performances');
         if (pastPerformances) {
+            const summary = pastPerformances.querySelector('summary');
             const content = pastPerformances.querySelector('.past-performances-content');
-            let openingAnimation;
+            let motion;
+            let targetOpen = pastPerformances.open;
+            summary.addEventListener('click', event => {
+                if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+                event.preventDefault();
+                const from = pastPerformances.getBoundingClientRect().height;
+                targetOpen = !targetOpen;
+                if (motion) motion.cancel();
+                pastPerformances.style.height = `${from}px`;
+                pastPerformances.style.overflow = 'hidden';
+                pastPerformances.open = true;
+                const closedHeight = summary.getBoundingClientRect().height;
+                const to = targetOpen ? closedHeight + content.getBoundingClientRect().height : closedHeight;
+                const animation = pastPerformances.animate([{height:`${from}px`},{height:`${to}px`}], {
+                    duration: 320, easing: 'cubic-bezier(.4, 0, .2, 1)', fill: 'forwards'
+                });
+                motion = animation;
+                animation.onfinish = () => {
+                    if (motion !== animation) return;
+                    pastPerformances.open = targetOpen;
+                    animation.cancel();
+                    motion = null;
+                    pastPerformances.style.height = '';
+                    pastPerformances.style.overflow = '';
+                };
+            });
             pastPerformances.addEventListener('toggle', () => {
-                if (openingAnimation) openingAnimation.cancel();
-                content.style.overflow = '';
-                if (!pastPerformances.open || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-                content.style.overflow = 'hidden';
-                openingAnimation = content.animate([
-                    { height: '0px', opacity: 0 },
-                    { height: `${content.scrollHeight}px`, opacity: 1 }
-                ], { duration: 280, easing: 'ease-out' });
-                openingAnimation.onfinish = () => { content.style.overflow = ''; openingAnimation = null; };
+                if (!motion) targetOpen = pastPerformances.open;
             });
         }
 

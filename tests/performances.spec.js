@@ -75,7 +75,7 @@ test('performance cards align and Wintering keeps every date and venue', async (
 test('location is styled metadata and blank locations do not add placeholders', async ({page}) => {
   await page.goto('/');
   const fretwork=page.locator('.performance-entry').filter({has:page.getByRole('heading',{name:'New work for Fretwork and Ruby Hughes',exact:true})});
-  await expect(fretwork.locator('.performance-location')).toHaveText('Skipton Town Hall, Skipton, UK');
+  await expect(fretwork.locator('.performance-location')).toHaveText('Skipton Town Hall, Skipton');
   const marian=page.locator('.performance-entry').filter({has:page.getByRole('heading',{name:'New work for The Marian Consort',exact:true})});
   await expect(marian.locator('.performance-location')).toHaveCount(0);
   await expect(marian).not.toContainText(/unknown|TBC|location to follow/i);
@@ -101,14 +101,34 @@ test('past opening motion settles without clipping and respects reduced motion',
   const details=page.locator('.past-performances');
   const summary=details.locator('summary');
   await summary.click();
-  await expect.poll(()=>details.locator('.past-performances-content').evaluate(el=>el.getAnimations().length)).toBe(0);
+  await expect.poll(()=>details.evaluate(el=>el.getAnimations().length)).toBe(0);
   expect(await details.locator('.past-performances-content').evaluate(el=>el.clientHeight>=el.scrollHeight-1)).toBeTruthy();
   await summary.click();await summary.click();await summary.click();await summary.click();
   await expect(details).toHaveAttribute('open','');
-  await expect.poll(()=>details.locator('.past-performances-content').evaluate(el=>el.getAnimations().length)).toBe(0);
-  await expect.poll(()=>details.locator('.past-performances-content').evaluate(el=>getComputedStyle(el).overflow)).toBe('visible');
+  await expect.poll(()=>details.evaluate(el=>el.getAnimations().length)).toBe(0);
+  await expect.poll(()=>details.evaluate(el=>getComputedStyle(el).overflow)).toBe('visible');
   await summary.click();
+  await expect(details).not.toHaveAttribute('open');
   await page.emulateMedia({reducedMotion:'reduce'});
   await summary.click();
-  expect(await details.locator('.past-performances-content').evaluate(el=>el.getAnimations().length)).toBe(0);
+  expect(await details.evaluate(el=>el.getAnimations().length)).toBe(0);
+});
+
+test('disclosure motion is reversible with stable summary and opaque text',async({page})=>{
+  await page.goto('/');
+  const details=page.locator('.past-performances');
+  const summary=details.locator('summary');
+  await summary.scrollIntoViewIfNeeded();
+  const before=await summary.boundingBox();
+  expect(await summary.evaluate(el=>{el.click();return el.parentElement.getAnimations().length;})).toBe(1);
+  expect(await details.locator('.past-performances-content').evaluate(el=>getComputedStyle(el).opacity)).toBe('1');
+  await summary.evaluate(el=>el.click());
+  await expect(details).not.toHaveAttribute('open');
+  expect(Math.abs((await summary.boundingBox()).y-before.y)).toBeLessThan(2);
+  await summary.click();
+  await expect.poll(()=>details.evaluate(el=>el.getAnimations().length)).toBe(0);
+  await expect(details).toHaveAttribute('open','');
+  await summary.click();
+  await expect(details).not.toHaveAttribute('open');
+  await expect(details).not.toHaveAttribute('style',/height|overflow/);
 });

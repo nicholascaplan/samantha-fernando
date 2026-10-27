@@ -17,7 +17,7 @@ export function renderPerformances(events, today) {
     <h4>${escape(event.title)}</h4>
     ${event.location ? `<p class="performance-location">${escape(event.location)}</p>` : ''}
     ${event.description ? `<p>${escape(event.description)}</p>` : ''}
-    ${event.url ? `<a class="performance-link" href="${escape(event.url)}">Event details<span class="performance-link-end">&nbsp;↗</span></a>` : ''}
+    ${event.url ? `<a class="performance-link" href="${escape(event.url)}"><span class="performance-link-label">Event details</span><span class="performance-link-end">&nbsp;↗</span></a>` : ''}
   </li>`
   const groupName = event => /^(Wintering|The Exoplanets)(?: \(World Premiere\))?$/i.exec(event.title)?.[1]
   const renderedGroups = new Set()
@@ -28,7 +28,7 @@ export function renderPerformances(events, today) {
     renderedGroups.add(name)
     const stops = past.filter(stop=>groupName(stop)===name).sort((a,b)=>a.startDate.localeCompare(b.startDate))
     return [`<li class="performance-entry performance-tour"><h4>${escape(name)}</h4>
-      <ul class="performance-tour-stops">${stops.map(stop => `<li><p class="performance-date">${escape(stop.dateLabel)}${stop.isWorldPremiere ? ' <span class="performance-premiere">World premiere</span>' : ''}</p>${stop.location ? `<p class="performance-location">${escape(stop.location)}</p>` : ''}${stop.description ? `<p>${escape(stop.description)}</p>` : ''}${stop.url ? `<a class="performance-link" href="${escape(stop.url)}">Event details<span class="performance-link-end">&nbsp;↗</span></a>` : ''}</li>`).join('\n')}</ul></li>`]
+      <ul class="performance-tour-stops">${stops.map(stop => `<li><p class="performance-date">${escape(stop.dateLabel)}${stop.isWorldPremiere ? ' <span class="performance-premiere">World premiere</span>' : ''}</p>${stop.location ? `<p class="performance-location">${escape(stop.location)}</p>` : ''}${stop.description ? `<p>${escape(stop.description)}</p>` : ''}${stop.url ? `<a class="performance-link" href="${escape(stop.url)}"><span class="performance-link-label">Event details</span><span class="performance-link-end">&nbsp;↗</span></a>` : ''}</li>`).join('\n')}</ul></li>`]
   }).join('\n')
   return `<section id="performances" aria-labelledby="performances-title" class="performances-groups">
     <h2 id="performances-title">Upcoming performances</h2>
