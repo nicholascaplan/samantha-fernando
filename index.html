@@ -125,7 +125,13 @@
             outline-offset: 3px;
         }
 
-        .mobile-menu-follow { margin-top: 1rem; padding-top: .75rem; border-top: 1px solid #525252; }
+        #mobileMenu { padding-top: .5rem; padding-bottom: .75rem; }
+        #mobileMenu > * + * { margin-top: 0; }
+        #mobileMenu .mobile-nav-btn { min-height: 44px; display: flex; align-items: center; padding-top: .25rem; padding-bottom: .25rem; }
+        #mobileMenu > .mobile-menu-follow { margin-top: .5rem; }
+        #mobileMenuBackdrop { position: fixed; inset: 0; background: rgba(0,0,0,.16); z-index: 49; }
+        @media (min-width:1024px) { #mobileMenuBackdrop { display:none; } }
+        .mobile-menu-follow { margin-top: .5rem; padding-top: .5rem; border-top: 1px solid #525252; }
         #mobileMenu:not(.hidden) { max-height: calc(100dvh - 3.5rem); overflow-y: auto; overscroll-behavior: contain; }
         #mobileMenu:not(.hidden) .mobile-menu-follow { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,8rem),1fr)); gap: .25rem .75rem; }
         #mobileMenu:not(.hidden) .mobile-menu-follow a { display: inline-flex; align-items: center; gap: .65rem; min-height: 44px; }
@@ -839,6 +845,7 @@
         </div>
     </div>
 
+    <div id="mobileMenuBackdrop" class="hidden" aria-hidden="true"></div>
     <header class="sticky top-0 z-50 glass-panel border-b border-neutral-800/60">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-20 py-4 flex flex-wrap items-center justify-between gap-4">
             
@@ -2424,6 +2431,7 @@
             const menu = document.getElementById('mobileMenu');
             const icon = document.getElementById('mobileMenuIcon');
             const isClosed = menu.classList.contains('hidden');
+            document.getElementById('mobileMenuBackdrop').classList.toggle('hidden', !isClosed);
             if (isClosed) {
                 menu.classList.remove('hidden');
                 icon.classList.remove('fa-bars');
@@ -2438,6 +2446,13 @@
             document.getElementById('mobileMenuToggle').setAttribute('aria-label', menuLabel);
             document.getElementById('mobileMenuToggle').title = menuLabel;
         }
+
+        document.getElementById('mobileMenuBackdrop').addEventListener('click', event => {
+            event.preventDefault();
+            event.stopPropagation();
+            if (!document.getElementById('mobileMenu').classList.contains('hidden')) toggleMobileMenu();
+            document.getElementById('mobileMenuToggle').focus();
+        });
 
         function updateThemeToggle() {
             setWorksView(activeWorksView, false);
