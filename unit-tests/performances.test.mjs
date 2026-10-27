@@ -10,11 +10,11 @@ test('supplied performances are ordered upcoming soonest first and past newest f
   assert.equal(result.past.length, 11)
 })
 test('date ranges stay upcoming through their final month, without inventing a performance date', () => {
-  assert.equal(splitPerformances(events, '2027-06-30').upcoming.length, 1)
-  assert.equal(splitPerformances(events, '2027-07-01').upcoming.length, 0)
-  const html = renderPerformances(events, '2027-07-01')
+  assert.equal(splitPerformances(events, '2027-05-31').upcoming.length, 1)
+  assert.equal(splitPerformances(events, '2027-06-01').upcoming.length, 0)
+  const html = renderPerformances(events, '2027-06-01')
   assert.equal(html, '')
-  assert.match(renderPerformances(events, '2027-06-30'), /May\/June 2027/)
+  assert.match(renderPerformances(events, '2027-05-31'), /May 2027/)
   assert.doesNotMatch(html, /1 May|30 June|datetime=/)
 })
 test('only verified event links are rendered and the chosen singer is preserved', () => {
@@ -31,16 +31,16 @@ test('event copy is HTML escaped', () => {
 })
 
 test('London day boundaries drive production date classification', () => {
-  assert.equal(londonDate(new Date('2027-06-30T22:59:59Z')), '2027-06-30')
-  assert.equal(londonDate(new Date('2027-06-30T23:00:00Z')), '2027-07-01')
+  assert.equal(londonDate(new Date('2027-05-31T22:59:59Z')), '2027-05-31')
+  assert.equal(londonDate(new Date('2027-05-31T23:00:00Z')), '2027-06-01')
 })
 test('complete generated homepage omits all performances after the last range ends', async () => {
   const {renderPages} = await import('../scripts/lib/pages.mjs')
   const source = await readFile(new URL('../index.html', import.meta.url), 'utf8')
   const renderHome = today => renderPages(source.replace(/<!-- performances:start -->[\s\S]*?<!-- performances:end -->/, () => renderPerformances(events, today))).get('index.html')
   assert.match(renderHome('2026-10-27'), /id="performances"/)
-  assert.match(renderHome('2027-06-30'), /May\/June 2027/)
-  assert.doesNotMatch(renderHome('2027-07-01'), /id="performances"|id="past-performances"|Ruby Hughes/)
+  assert.match(renderHome('2027-05-31'), /May 2027/)
+  assert.doesNotMatch(renderHome('2027-06-01'), /id="performances"|id="past-performances"|Ruby Hughes/)
 })
 
 test('published performance snapshot is independent of fallback and intentionally empty lists stay empty', async () => {
@@ -82,5 +82,14 @@ test('Wintering shares one past card without dropping any supplied dates or venu
     assert.ok(html.includes(event.dateLabel))
     assert.ok(html.includes(event.description.replace(/&/g,'&amp;')))
   }
-  assert.match(html,/22 November 2025 · World Premiere/)
+  assert.match(html,/22 November 2025.*World premiere/)
+})
+
+test('optional locations are escaped, invalid types fall back and tour dates run earliest first', async()=>{
+  const {validatePerformances,buildPerformances}=await import('../scripts/lib/performances.mjs')
+  assert.throws(()=>validatePerformances([{...events[0],location:{venue:'Bad'}}]), /location must be text/)
+  assert.equal((await buildPerformances(events,async()=>[{...events[0],location:42}],'2026-10-27')).usedFallback,true)
+  assert.match(renderPerformances([{...events[0],location:'<Hall> & City'}],'2026-10-27'), /&lt;Hall&gt; &amp; City/)
+  const html=renderPerformances(events,'2026-10-27')
+  assert.ok(html.indexOf('22 November 2025')<html.indexOf('5 December 2025'))
 })

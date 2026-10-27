@@ -13,35 +13,42 @@ export function renderPerformances(events, today) {
   const {upcoming, past} = splitPerformances(events, today)
   if (!upcoming.length) return ''
   const renderEvent = event => `<li class="performance-entry">
-    <p class="performance-date">${escape(event.dateLabel)}</p>
+    <p class="performance-date">${escape(event.dateLabel)}${event.isWorldPremiere ? ' <span class="performance-premiere">World premiere</span>' : ''}</p>
     <h4>${escape(event.title)}</h4>
+    ${event.location ? `<p class="performance-location">${escape(event.location)}</p>` : ''}
     ${event.description ? `<p>${escape(event.description)}</p>` : ''}
     ${event.url ? `<a class="performance-link" href="${escape(event.url)}">Event details<span class="performance-link-end">&nbsp;↗</span></a>` : ''}
   </li>`
-  const wintering = past.filter(event => /^Wintering(?: \(World Premiere\))?$/i.test(event.title))
+  const groupName = event => /^(Wintering|The Exoplanets)(?: \(World Premiere\))?$/i.exec(event.title)?.[1]
+  const renderedGroups = new Set()
   const renderedPast = past.flatMap(event => {
-    if (!wintering.includes(event)) return [renderEvent(event)]
-    if (event !== wintering[0]) return []
-    return [`<li class="performance-entry performance-tour"><h4>Wintering</h4>
-      <ul class="performance-tour-stops">${wintering.map(stop => `<li><p class="performance-date">${escape(stop.dateLabel)}${/World Premiere/i.test(stop.title) ? ' · World Premiere' : ''}</p>${stop.description ? `<p>${escape(stop.description)}</p>` : ''}${stop.url ? `<a class="performance-link" href="${escape(stop.url)}">Event details<span class="performance-link-end">&nbsp;↗</span></a>` : ''}</li>`).join('\n')}</ul></li>`]
+    const name = groupName(event)
+    if (!name) return [renderEvent(event)]
+    if (renderedGroups.has(name)) return []
+    renderedGroups.add(name)
+    const stops = past.filter(stop=>groupName(stop)===name).sort((a,b)=>a.startDate.localeCompare(b.startDate))
+    return [`<li class="performance-entry performance-tour"><h4>${escape(name)}</h4>
+      <ul class="performance-tour-stops">${stops.map(stop => `<li><p class="performance-date">${escape(stop.dateLabel)}${stop.isWorldPremiere ? ' <span class="performance-premiere">World premiere</span>' : ''}</p>${stop.location ? `<p class="performance-location">${escape(stop.location)}</p>` : ''}${stop.description ? `<p>${escape(stop.description)}</p>` : ''}${stop.url ? `<a class="performance-link" href="${escape(stop.url)}">Event details<span class="performance-link-end">&nbsp;↗</span></a>` : ''}</li>`).join('\n')}</ul></li>`]
   }).join('\n')
   return `<section id="performances" aria-labelledby="performances-title" class="performances-groups">
     <h2 id="performances-title">Upcoming performances</h2>
     <section aria-labelledby="performances-title">
     <ul class="performance-list">${upcoming.map(renderEvent).join('\n')}</ul></section>
     <details class="past-performances"><summary id="past-performances">Past performances</summary>
-    ${past.length ? `<ul class="performance-list">${renderedPast}</ul>` : '<p>No past performances are listed.</p>'}</details>
+    ${past.length ? `<div class="past-performances-content"><ul class="performance-list">${renderedPast}</ul></div>` : '<p>No past performances are listed.</p>'}</details>
   </section>`
 }
 
 
-export const PERFORMANCE_QUERY = '*[_type == "performance"]{_id,title,dateLabel,startDate,endDate,description,url}'
+export const PERFORMANCE_QUERY = '*[_type == "performance"]{_id,title,dateLabel,startDate,endDate,location,isWorldPremiere,description,url}'
 export function validatePerformances(events) {
   if (!Array.isArray(events)) throw new Error('Performance snapshot must be a list')
   const date = value => /^\d{4}-\d{2}-\d{2}$/.test(value || '') && !Number.isNaN(Date.parse(value)) && new Date(value).toISOString().slice(0, 10) === value
   return events.map(event => {
     for (const field of ['title', 'dateLabel']) if (typeof event[field] !== 'string' || !event[field].trim()) throw new Error(`Performance missing ${field}`)
     if (!date(event.startDate) || (event.endDate && (!date(event.endDate) || event.endDate < event.startDate))) throw new Error('Invalid performance date range')
+    if (event.isWorldPremiere != null && typeof event.isWorldPremiere !== 'boolean') throw new Error('Performance premiere flag must be boolean')
+    if (event.location != null && typeof event.location !== 'string') throw new Error('Performance location must be text')
     if (event.description != null && typeof event.description !== 'string') throw new Error('Performance description must be text')
     if (event.url) {
       const url = new URL(event.url)

@@ -744,13 +744,16 @@
         .performance-tour-stops > li + li { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #525252; }
         .performance-tour-stops .performance-date { margin-bottom: .35rem; }
         .performance-tour { grid-column: 1 / -1; }
-        .performance-tour-stops { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem 2rem; }
+        .performance-tour-stops { display: grid; grid-template-columns: 1fr; gap: 1rem; }
         .performance-tour-stops > li + li { margin-top: 0; }
         .performance-tour-stops > li { padding-top: 1rem; border-top: 1px solid #525252; }
         body.light-mode .performance-entry { background: #faf9f5; border-color: #c8c7bf; }
         body.light-mode .performance-tour-stops > li { border-color: #d4d4d4; }
         .performance-entry h4 { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; line-height: 1.15; margin: .4rem 0 .6rem; color: #f5f5f5; }
         .performance-entry p { font-size: .9rem; line-height: 1.6; color: #d4d4d4; }
+        .performance-premiere { display: inline-block; margin: .25rem 0 .25rem .5rem; padding: .15rem .45rem; border: 1px solid currentColor; border-radius: .35rem; font-size: .7rem; font-weight: 600; line-height: 1.4; vertical-align: middle; }
+        .performance-entry .performance-location { font-size: .8rem; line-height: 1.5; font-weight: 600; letter-spacing: .02em; margin: .3rem 0 .8rem; color: #e5e5e5; }
+        body.light-mode .performance-entry .performance-location { color: #525252; }
         .performance-entry .performance-date { font-size: .8rem; color: #fbbf24; }
         .performance-link { display: inline-block; margin-top: .75rem; font-size: .85rem; color: #fbbf24; text-decoration: underline; text-underline-offset: .2em; }
         .performance-link-end { white-space: nowrap; }
@@ -2626,6 +2629,24 @@
                 closeMobilePreview();
             }
         });
+
+        // Native disclosure stays functional without JavaScript. Opening motion is optional.
+        const pastPerformances = document.querySelector('.past-performances');
+        if (pastPerformances) {
+            const content = pastPerformances.querySelector('.past-performances-content');
+            let openingAnimation;
+            pastPerformances.addEventListener('toggle', () => {
+                if (openingAnimation) openingAnimation.cancel();
+                content.style.overflow = '';
+                if (!pastPerformances.open || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+                content.style.overflow = 'hidden';
+                openingAnimation = content.animate([
+                    { height: '0px', opacity: 0 },
+                    { height: `${content.scrollHeight}px`, opacity: 1 }
+                ], { duration: 280, easing: 'ease-out' });
+                openingAnimation.onfinish = () => { content.style.overflow = ''; openingAnimation = null; };
+            });
+        }
 
         // Route state and controls must not wait for external resources or providers.
         initialisePage();

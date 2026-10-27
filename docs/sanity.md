@@ -142,7 +142,7 @@ When working inside BoxedCode, the sandbox allowlist in `~/.nwb/box/box.json` mu
 
 ## Performances
 
-The performance implementation adds a **Performances** document list in Studio. Each record holds a title, display date label, sorting start date, optional final date, description and optional HTTPS event link. Only published documents reach the public website. For a month-only range such as May/June 2027, use 1 May and 30 June for sorting/grouping and retain "May/June 2027" as the display label; these are grouping bounds, not claimed performance dates. Exact dates need only a start date. Keep supplied qualifiers and unknown details blank.
+The performance implementation adds a **Performances** document list in Studio. Each record holds a title, display date label, sorting start date, optional final date, location, per-performance World premiere checkbox, description and optional HTTPS event link. Only published documents reach the public website. For a month-only date such as May 2027, use 1 May and 31 May for sorting/grouping and retain "May 2027" as the display label; these are grouping bounds, not claimed performance dates. Exact dates need only a start date. Keep supplied qualifiers and unknown details blank.
 
 Production builds query Performance documents independently of Biography and the catalogue. Invalid/unavailable content uses `content/performances.json` as a complete fallback; an intentionally empty published list stays empty. Tests use the committed records at a fixed fixture date. The daily rebuild classifies dates in Europe/London; no page timer is used.
 
@@ -163,18 +163,13 @@ These steps require an authenticated maintainer and are not completed merely by 
 - Normal production build confirmed Performances rendered from Sanity.
 - Existing enabled production webhook filter now includes performance, with other types, destination, projection and headers preserved; saved state reloaded and checked.
 - Hosted exact-date (Fretwork) and month-range (Marian Consort) forms were visually checked with the expected fields and values. Initial loading delays resolved without package, account or CORS changes. No draft or publication was created for this check.
-- Publication-to-dispatch verification is deliberately deferred until website merge/deploy is authorized. No test edit was published merely to trigger current main.
+- Publishing the approved venue updates triggered the existing repository dispatch and current-main deployment; see the metadata record below. New homepage output remains unverified publicly until approved website merge/deploy.
 - After the website deployment, replace this pending publication check with its verified outcome and deployment reference.
 
-### Pending venue description updates
+### Editable performance metadata
 
-The website cards and Wintering grouping do not require a schema change. Individual Wintering records remain independently editable. The verified venue descriptions below are committed in the fallback, but are **not yet published to Sanity**: publishing now would trigger the existing webhook against current main. After the approved website deployment, update only these descriptions, preserving other fields, then verify publication-to-dispatch and the public result.
+Location is a separate optional text field (venue and city), styled beneath the title. Leave it blank only when unknown; no placeholder is rendered. World premiere is a per-performance checkbox and appears beside that stop's date. Do not flag later performances of the same work. Wintering and The Exoplanets are grouped for display only; each stop remains a separate editable record. Stops run earliest first; past work groups remain ordered by their most recent performance.
 
-| Source key | Description |
-| --- | --- |
-| formations-liverpool-2027 | Ensemble 10:10. The Tung Auditorium, Liverpool. |
-| fretwork-skipton-2027 | Skipton Music Festival. Skipton Town Hall, Skipton, UK. More dates to follow. |
-| balconies-singapore-2026 | Performed by Olivia de Prato. YST Cube (Level 3), Yong Siew Toh Conservatory of Music, Singapore. |
-| kinesphere-bloomsbury-2026 | Performed by Sinead Walsh. Conway Hall, London. Bloomsbury Festival. |
+On 27 October 2026 the verified venue descriptions were published and triggered the existing repository dispatch; current-main deployment succeeded in [run 40580625977](https://github.com/nicholascaplan/samantha-fernando/actions/runs/40580625977). A subsequent explicit migration populated 13 known locations, separated venue text from performer/detail descriptions, set the two supplied world-premiere flags, and changed Marian Consort to May 2027 (sorting bounds 1-31 May, not claimed performance dates). All 14 records were independently re-read and checked. New fields were deployed to the existing hosted Studio. The website PR remains unmerged; its new public rendering still needs post-merge verification.
 
-Venue sources: [Liverpool Philharmonic](https://www.liverpoolphil.com/events/reinventing-beethoven/), [Fretwork](https://www.fretwork.co.uk/concerts-1/uojmskjcgfpkus2t8jr8lvdfwppoj5), [Performers Present](https://www.performerspresent.com/programme/plenary-motherhood-artistry), [EMPOWER](https://www.empowerwomenchangingmusic.com/events/empower-at-bloomsbury-festival-double-bill-soraya-verjee-and-no-more-girl-friday). The Marian Consort venue is not announced in the supplied material and remains blank.
+Venue sources: [Liverpool Philharmonic](https://www.liverpoolphil.com/events/reinventing-beethoven/), [Fretwork](https://www.fretwork.co.uk/concerts-1/uojmskjcgfpkus2t8jr8lvdfwppoj5), [Performers Present](https://www.performerspresent.com/programme/plenary-motherhood-artistry), [EMPOWER](https://www.empowerwomenchangingmusic.com/events/empower-at-bloomsbury-festival-double-bill-soraya-verjee-and-no-more-girl-friday). Older venues and premiere status are preserved from the supplied records. The Marian Consort venue remains unannounced in the supplied material.

@@ -64,8 +64,51 @@ test('performance cards align and Wintering keeps every date and venue', async (
   expect(new Set(boxes.map(box=>Math.round(box.top))).size).toBe(1);
   expect(new Set(boxes.map(box=>Math.round(box.height))).size).toBe(1);
   await page.locator('.past-performances summary').click();
-  await expect(page.locator('.performance-tour h4')).toHaveText('Wintering');
-  await expect(page.locator('.performance-tour-stops > li')).toHaveCount(6);
-  for (const venue of ['Bristol Beacon','Sir Jack Lyons','Tung Auditorium','Howard Assembly Room','Stoller Hall','Wigmore Hall']) await expect(page.locator('.performance-tour')).toContainText(venue);
-  await expect(page.locator('.performance-tour')).toContainText('22 November 2025 · World Premiere');
+  await expect(page.locator('.performance-tour h4').filter({hasText:'Wintering'})).toHaveText('Wintering');
+  await expect(page.locator('.performance-tour').filter({has:page.getByRole('heading',{name:'Wintering',exact:true})}).locator('.performance-tour-stops > li')).toHaveCount(6);
+  for (const venue of ['Bristol Beacon','Sir Jack Lyons','Tung Auditorium','Howard Assembly Room','Stoller Hall','Wigmore Hall']) await expect(page.locator('.performance-tour').filter({has:page.getByRole('heading',{name:'Wintering',exact:true})})).toContainText(venue);
+  await expect(page.locator('.performance-tour').filter({has:page.getByRole('heading',{name:'Wintering',exact:true})})).toContainText('22 November 2025 World premiere');
+  const dates=await page.locator('.performance-tour').filter({has:page.getByRole('heading',{name:'Wintering',exact:true})}).locator('.performance-date').allTextContents();
+  expect(dates).toEqual(['22 November 2025 World premiere','27 November 2025','28 November 2025','29 November 2025','3 December 2025','5 December 2025']);
+});
+
+test('location is styled metadata and blank locations do not add placeholders', async ({page}) => {
+  await page.goto('/');
+  const fretwork=page.locator('.performance-entry').filter({has:page.getByRole('heading',{name:'New work for Fretwork and Ruby Hughes',exact:true})});
+  await expect(fretwork.locator('.performance-location')).toHaveText('Skipton Town Hall, Skipton, UK');
+  const marian=page.locator('.performance-entry').filter({has:page.getByRole('heading',{name:'New work for The Marian Consort',exact:true})});
+  await expect(marian.locator('.performance-location')).toHaveCount(0);
+  await expect(marian).not.toContainText(/unknown|TBC|location to follow/i);
+});
+
+test('Exoplanets keeps both stops and premiere badges apply only to premieres', async ({page}) => {
+  await page.goto('/');
+  await page.locator('.past-performances summary').click();
+  const group=page.locator('.performance-tour').filter({has:page.getByRole('heading',{name:'The Exoplanets',exact:true})});
+  await expect(group.locator('.performance-tour-stops > li')).toHaveCount(2);
+  await expect(group).toContainText('6-7 September 2025');
+  await expect(group).toContainText('13 March 2026');
+  await expect(group).toContainText('Naomi Woo');
+  await expect(group).toContainText('Micah Gleason');
+  await expect(page.locator('.performance-premiere')).toHaveCount(2);
+  await expect(group.locator('li').first().locator('.performance-premiere')).toHaveText('World premiere');
+  await expect(group.locator('li').last().locator('.performance-premiere')).toHaveCount(0);
+  await expect(page.getByRole('heading',{name:'New work for The Marian Consort',exact:true}).locator('..')).toContainText('May 2027');
+});
+
+test('past opening motion settles without clipping and respects reduced motion', async ({page}) => {
+  await page.goto('/');
+  const details=page.locator('.past-performances');
+  const summary=details.locator('summary');
+  await summary.click();
+  await expect.poll(()=>details.locator('.past-performances-content').evaluate(el=>el.getAnimations().length)).toBe(0);
+  expect(await details.locator('.past-performances-content').evaluate(el=>el.clientHeight>=el.scrollHeight-1)).toBeTruthy();
+  await summary.click();await summary.click();await summary.click();await summary.click();
+  await expect(details).toHaveAttribute('open','');
+  await expect.poll(()=>details.locator('.past-performances-content').evaluate(el=>el.getAnimations().length)).toBe(0);
+  await expect.poll(()=>details.locator('.past-performances-content').evaluate(el=>getComputedStyle(el).overflow)).toBe('visible');
+  await summary.click();
+  await page.emulateMedia({reducedMotion:'reduce'});
+  await summary.click();
+  expect(await details.locator('.past-performances-content').evaluate(el=>el.getAnimations().length)).toBe(0);
 });
