@@ -1622,24 +1622,7 @@
             });
         }
 
-        let performanceRefreshTimer;
-        function refreshPerformances() {
-            clearTimeout(performanceRefreshTimer);
-            const section = document.getElementById('performances');
-            if (!section) return;
-            const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
-            const upcoming = section.querySelector('[data-upcoming-performances]');
-            const past = section.querySelector('[data-past-performances]');
-            for (const entry of [...upcoming.children]) {
-                if (entry.dataset.performanceEnd < today) past?.prepend(entry);
-            }
-            section.hidden = upcoming.children.length === 0;
-            if (!section.hidden) performanceRefreshTimer = setTimeout(refreshPerformances, 60000);
-        }
-        document.addEventListener('visibilitychange', refreshPerformances);
-
         function initialisePage() {
-            refreshPerformances();
             if (document.getElementById('worksContainer')) {
                 // Retired view fragments land on their catalogue pages.
                 if (window.location.pathname === '/works/' && ['#listen', '#watch'].includes(window.location.hash)) {

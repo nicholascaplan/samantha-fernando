@@ -27,15 +27,3 @@ test('homepage performance section survives navigation and has no horizontal los
     }
   }
 });
-
-test('stale homepage moves elapsed events and hides when the final range ends', async ({page}) => {
-  await page.clock.install({time: new Date('2027-06-30T22:59:00Z')});
-  await page.goto('/');
-  await expect(page.locator('[data-upcoming-performances] > li')).toHaveCount(1);
-  await expect(page.locator('#performances')).toBeVisible();
-  await page.clock.fastForward(61000);
-  await expect(page.locator('#performances')).toBeHidden();
-  await page.getByRole('link',{name:'Explore works',exact:true}).click();
-  await page.locator('#nav-home').click();
-  await expect(page.locator('#performances')).toBeHidden();
-});

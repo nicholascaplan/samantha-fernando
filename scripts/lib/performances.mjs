@@ -12,7 +12,7 @@ export function splitPerformances(events, today = londonDate()) {
 export function renderPerformances(events, today) {
   const {upcoming, past} = splitPerformances(events, today)
   if (!upcoming.length) return ''
-  const renderEvent = event => `<li class="performance-entry" data-performance-end="${escape(endDate(event))}">
+  const renderEvent = event => `<li class="performance-entry">
     <p class="performance-date">${escape(event.dateLabel)}</p>
     <h4>${escape(event.title)}</h4>
     ${event.description ? `<p>${escape(event.description)}</p>` : ''}
@@ -21,8 +21,8 @@ export function renderPerformances(events, today) {
   return `<section id="performances" aria-labelledby="performances-title" class="performances-groups">
     <h2 id="performances-title">Performances</h2>
     <section aria-labelledby="upcoming-performances"><h3 id="upcoming-performances">Upcoming performances</h3>
-    <ul class="performance-list" data-upcoming-performances>${upcoming.map(renderEvent).join('\n')}</ul></section>
+    <ul class="performance-list">${upcoming.map(renderEvent).join('\n')}</ul></section>
     <details class="past-performances"><summary id="past-performances">Past performances</summary>
-    ${past.length ? `<ul class="performance-list" data-past-performances>${past.map(renderEvent).join('\n')}</ul>` : '<p>No past performances are listed.</p>'}</details>
+    ${past.length ? `<ul class="performance-list">${past.map(renderEvent).join('\n')}</ul>` : '<p>No past performances are listed.</p>'}</details>
   </section>`
 }
