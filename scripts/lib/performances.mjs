@@ -35,6 +35,7 @@ export function validatePerformances(events) {
   return events.map(event => {
     for (const field of ['title', 'dateLabel']) if (typeof event[field] !== 'string' || !event[field].trim()) throw new Error(`Performance missing ${field}`)
     if (!date(event.startDate) || (event.endDate && (!date(event.endDate) || event.endDate < event.startDate))) throw new Error('Invalid performance date range')
+    if (event.description != null && typeof event.description !== 'string') throw new Error('Performance description must be text')
     if (event.url) {
       const url = new URL(event.url)
       if (url.protocol !== 'https:' || url.username || url.password) throw new Error('Performance link must be a public HTTPS URL')

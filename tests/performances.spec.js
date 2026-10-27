@@ -27,3 +27,32 @@ test('homepage performance section survives navigation and has no horizontal los
     }
   }
 });
+
+test('past performance disclosure shares theme focus and supports keyboard toggling', async ({page}) => {
+  await page.goto('/');
+  // Dismiss consent before checking the page's keyboard controls.
+  const reject = page.getByRole('button', {name:'Reject',exact:true});
+  if (await reject.isVisible()) await reject.click();
+  const summary = page.locator('.past-performances summary');
+  for (const light of [true,false]) {
+    await page.evaluate(light=>document.body.classList.toggle('light-mode',light),light);
+    await summary.focus();
+    await page.keyboard.press('Tab');
+    await page.keyboard.press('Shift+Tab');
+    await expect(summary).toBeFocused();
+    expect(await summary.evaluate(el=>el.matches(':focus-visible'))).toBeTruthy();
+    const focus = await summary.evaluate(el=>({width:getComputedStyle(el).outlineWidth,color:getComputedStyle(el).outlineColor,token:getComputedStyle(el).getPropertyValue('--color-focus').trim()}));
+    expect(focus.width).toBe('3px');
+    const tokenColor = await summary.evaluate(el=>{const probe=document.createElement('span');probe.style.color='var(--color-focus)';el.append(probe);const color=getComputedStyle(probe).color;probe.remove();return color;});
+    expect(focus.color).toBe(tokenColor);
+    await expect(page.locator('.past-performances')).not.toHaveAttribute('open');
+    await page.keyboard.press('Enter');
+    await expect(page.locator('.past-performances')).toHaveAttribute('open','');
+    await page.keyboard.press('Space');
+    await expect(page.locator('.past-performances')).not.toHaveAttribute('open');
+    if (test.info().project.name === 'chromium') {
+      await summary.evaluate(el=>el.scrollIntoView({block:'center'}));
+      await page.screenshot({path:`/tmp/sam-focus-${light?'light':'dark'}.png`});
+    }
+  }
+});

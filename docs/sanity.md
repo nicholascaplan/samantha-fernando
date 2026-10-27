@@ -154,7 +154,7 @@ These steps require an authenticated maintainer and are not completed merely by 
 2. Run `npx sanity exec scripts/seed-performances.ts --with-user-token` from `studio/`. It adds missing imported records and never overwrites an existing record or draft with the same source key.
 3. Verify the published records in Studio and run the normal production build. It must report `Performances rendered from Sanity`, with the supplied upcoming and past entries present.
 4. In Manage, inspect the current **Trigger site deploy** webhook. Add `performance` to its existing type filter while preserving its other types, dataset, destination and headers. Do not replace or expose its credential. The operational notes above contain conflicting historic filter examples, so inspect the live filter rather than copying either.
-5. Verify a real performance publication triggers the existing repository dispatch and, after an approved website merge/deploy, check the public output. Until activation is verified, do not report that Sam can edit these records in the hosted Studio or that publication reaches the site.
+5. Verify a real performance publication triggers the existing repository dispatch and, after an approved website merge/deploy, check the public output. Editor verification and publication-to-site verification are separate checks. Do not report that publication reaches the site until the latter is verified.
 
 ### Activation record - 27 October 2026
 
@@ -162,6 +162,6 @@ These steps require an authenticated maintainer and are not completed merely by 
 - Non-overwriting import created 14 published Performance documents (3 upcoming, 11 past at activation).
 - Normal production build confirmed Performances rendered from Sanity.
 - Existing enabled production webhook filter now includes performance, with other types, destination, projection and headers preserved; saved state reloaded and checked.
-- Hosted list displayed the imported records, but document forms remained at Loading document / Trying to connect after one reopen. The existing Biography editor also stalled. Actual editor usability is not verified; no package/account/CORS change was made to work around it.
+- Hosted exact-date (Fretwork) and month-range (Marian Consort) forms were visually checked with the expected fields and values. Initial loading delays resolved without package, account or CORS changes. No draft or publication was created for this check.
 - Publication-to-dispatch verification is deliberately deferred until website merge/deploy is authorized. No test edit was published merely to trigger current main.
-- Website PR22 remains unmerged; the public site does not yet contain this implementation.
+- After the website deployment, replace this pending publication check with its verified outcome and deployment reference.

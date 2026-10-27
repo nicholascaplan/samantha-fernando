@@ -120,7 +120,7 @@
         }
 
         /* Role-based tokens keep shared interactive states consistent across themes. */
-        :where(button, a, input, select, textarea, [role="button"], [role="option"]):focus-visible {
+        :where(button, a, input, select, textarea, summary, [role="button"], [role="option"]):focus-visible {
             outline: 3px solid var(--color-focus);
             outline-offset: 3px;
         }

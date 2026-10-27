@@ -63,3 +63,14 @@ test('initial import leaves existing published documents and drafts unchanged', 
   assert.equal(result.created,1)
   assert.equal(created[0].sourceKey,events[1].id)
 })
+
+test('invalid description types reject the complete snapshot while absent text stays optional', async () => {
+  const {buildPerformances, validatePerformances} = await import('../scripts/lib/performances.mjs')
+  for (const description of [{text:'Wrong type'}, ['Wrong type'], 42, false]) {
+    assert.throws(()=>validatePerformances([{...events[0],description}]), /description must be text/)
+    const result = await buildPerformances(events, async()=>[{...events[0],description}], '2026-10-27')
+    assert.equal(result.usedFallback,true)
+    assert.equal(result.html,renderPerformances(events,'2026-10-27'))
+  }
+  for (const description of [undefined,null,'']) assert.equal(validatePerformances([{...events[0],description}])[0].description,'')
+})
