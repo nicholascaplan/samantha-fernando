@@ -126,7 +126,7 @@
         }
 
         .mobile-menu-follow { margin-top: 1rem; padding-top: .75rem; border-top: 1px solid #525252; }
-        #mobileMenu:not(.hidden) { max-height: calc(100dvh - 3.5rem); overflow-y: auto; overscroll-behavior: contain; }
+        #mobileMenu:not(.hidden) { max-height: calc(100dvh - var(--mobile-menu-top, 3.5rem)); overflow-y: auto; overscroll-behavior: contain; }
         #mobileMenu:not(.hidden) .mobile-menu-follow { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,8rem),1fr)); gap: .25rem .75rem; }
         #mobileMenu:not(.hidden) .mobile-menu-follow a { display: inline-flex; align-items: center; gap: .65rem; min-height: 44px; }
         body.light-mode .mobile-menu-follow { border-color: #d4d4d4; }
@@ -2420,7 +2420,17 @@
             }
         }
 
+        function updateMobileMenuSpace() {
+            const menu = document.getElementById('mobileMenu');
+            const header = menu.closest('header');
+            menu.style.setProperty('--mobile-menu-top', `${header.getBoundingClientRect().bottom}px`);
+        }
+        new ResizeObserver(updateMobileMenuSpace).observe(document.querySelector('header'));
+        window.addEventListener('resize', updateMobileMenuSpace);
+        window.visualViewport?.addEventListener('resize', updateMobileMenuSpace);
+
         function toggleMobileMenu() {
+            updateMobileMenuSpace();
             const menu = document.getElementById('mobileMenu');
             const icon = document.getElementById('mobileMenuIcon');
             const isClosed = menu.classList.contains('hidden');
