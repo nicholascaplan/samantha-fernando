@@ -42,3 +42,24 @@ test('complete generated homepage omits all performances after the last range en
   assert.match(renderHome('2027-06-30'), /May\/June 2027/)
   assert.doesNotMatch(renderHome('2027-07-01'), /id="performances"|id="past-performances"|Ruby Hughes/)
 })
+
+test('published performance snapshot is independent of fallback and intentionally empty lists stay empty', async () => {
+  const {buildPerformances} = await import('../scripts/lib/performances.mjs')
+  assert.deepEqual(await buildPerformances(events, async()=>[], '2026-10-27'), {html:'',usedFallback:false})
+  const result = await buildPerformances(events, async()=>[{title:'incomplete'}], '2026-10-27')
+  assert.equal(result.usedFallback,true)
+  assert.match(result.html,/Ruby Hughes/)
+})
+test('invalid dates and unsafe event URLs reject the entire snapshot', async () => {
+  const {validatePerformances} = await import('../scripts/lib/performances.mjs')
+  for (const patch of [{startDate:'2027-02-30'},{endDate:'2020-01-01'},{url:'javascript:alert(1)'},{url:'https://user:secret@example.com'}]) {
+    assert.throws(()=>validatePerformances([{...events[0],...patch}]))
+  }
+})
+test('initial import leaves existing published documents and drafts unchanged', async () => {
+  const {seedPerformances} = await import('../scripts/lib/performances.mjs')
+  const created=[]
+  const result=await seedPerformances({fetch:async()=>[{_id:'drafts.existing',sourceKey:events[0].id}],create:async doc=>created.push(doc)}, events.slice(0,2))
+  assert.equal(result.created,1)
+  assert.equal(created[0].sourceKey,events[1].id)
+})

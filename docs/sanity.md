@@ -138,3 +138,20 @@ npx tsc --noEmit
 ## Sandbox Note For Maintainers
 
 When working inside BoxedCode, the sandbox allowlist in `~/.nwb/box/box.json` must include `api.sanity.io`, `9a66iw1t.api.sanity.io`, `9a66iw1t.apicdn.sanity.io` and `cdn.sanity.io` for the build and Studio commands to reach Sanity. Hosted auto-update Studio builds also need `sanity-cdn.com`; the local-only check can use `--no-auto-updates` instead.
+
+
+## Performances
+
+The performance implementation adds a **Performances** document list in Studio. Each record holds a title, display date label, sorting start date, optional final date, description and optional HTTPS event link. Only published documents reach the public website. For a month-only range such as May/June 2027, use 1 May and 30 June for sorting/grouping and retain "May/June 2027" as the display label; these are grouping bounds, not claimed performance dates. Exact dates need only a start date. Keep supplied qualifiers and unknown details blank.
+
+Production builds query Performance documents independently of Biography and the catalogue. Invalid/unavailable content uses `content/performances.json` as a complete fallback; an intentionally empty published list stays empty. Tests use the committed records at a fixed fixture date. The daily rebuild classifies dates in Europe/London; no page timer is used.
+
+### Activation steps
+
+These steps require an authenticated maintainer and are not completed merely by merging website code:
+
+1. Deploy the updated Studio/schema with `npm run deploy` from `studio/`.
+2. Run `npx sanity exec scripts/seed-performances.ts --with-user-token` from `studio/`. It adds missing imported records and never overwrites an existing record or draft with the same source key.
+3. Verify the published records in Studio and run the normal production build. It must report `Performances rendered from Sanity`, with the supplied upcoming and past entries present.
+4. In Manage, inspect the current **Trigger site deploy** webhook. Add `performance` to its existing type filter while preserving its other types, dataset, destination and headers. Do not replace or expose its credential. The operational notes above contain conflicting historic filter examples, so inspect the live filter rather than copying either.
+5. Verify a real performance publication triggers the existing repository dispatch and, after an approved website merge/deploy, check the public output. Until activation is verified, do not report that Sam can edit these records in the hosted Studio or that publication reaches the site.

@@ -113,7 +113,7 @@ In 2021, Samantha saw the opening of Current, Rising, a world-first hyper-realit
 - 6-7 September 2025 - The Exoplanets (World Premiere). City of London Sinfonia, conducted by Naomi Woo. Norwich Theatre Royal, Norwich.
 - 2 February 2025 - Fault Line. Tim Gill, London Sinfonietta. Turner Sims, Southampton.
 
-The homepage section is present only while upcoming performances exist. Past performances are collapsed by default. `content/performances.json` is the build source; future month ranges do not imply a confirmed day.
+The homepage section is present only while upcoming performances exist. Past performances are collapsed by default. Published Sanity Performance documents are the editing source; `content/performances.json` is the committed fallback. Future month ranges do not imply a confirmed day.
 
 ## Featured Operas & Major Projects
 
