@@ -732,6 +732,24 @@
             .works-filter-toolbar { grid-template-columns: 1fr; gap: 0.55rem; }
             #tab-works #worksSearchInput { padding-top: 0.65rem; padding-bottom: 0.65rem; font-size: 0.8rem; }
         }
+
+        .performances-groups { border-top: 1px solid #404040; padding-top: 2rem; }
+        .performances-groups h2 { font-family: inherit; font-size: 1.75rem; margin-bottom: 1.5rem; }
+        .performances-groups h3, .past-performances summary { font-size: 1rem; font-weight: 600; }
+        .performance-list { list-style: none; padding: 0; margin: 1rem 0 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.5rem; }
+        .performance-entry { min-width: 0; overflow-wrap: anywhere; }
+        .performance-entry h4 { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; line-height: 1.15; margin: .4rem 0 .6rem; color: #f5f5f5; }
+        .performance-entry p { font-size: .9rem; line-height: 1.6; color: #d4d4d4; }
+        .performance-entry .performance-date { font-size: .8rem; color: #fbbf24; }
+        .performance-link { display: inline-block; margin-top: .75rem; font-size: .85rem; color: #fbbf24; text-decoration: underline; text-underline-offset: .2em; }
+        .performance-link-end { white-space: nowrap; }
+        .past-performances { margin-top: 2rem; }
+        .past-performances summary { cursor: pointer; width: fit-content; }
+        body.light-mode .performance-entry h4 { color: #171717; }
+        body.light-mode .performance-entry p { color: #404040; }
+        body.light-mode .performance-entry .performance-date, body.light-mode .performance-link { color: #92400e; }
+        body.light-mode .performances-groups { border-color: #d4d4d4; }
+        @media (max-width: 767px) { .performance-list { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body class="light-mode min-h-screen flex flex-col selection:bg-amber-800/30 selection:text-amber-200">
@@ -944,6 +962,8 @@
                     <p class="hero-introduction text-lg text-neutral-300 font-serif-italic font-light leading-relaxed">Samantha Fernando (b. 1984) is a British composer whose work is centred on an exploration of timbre, space, and the unfolding of sound. She is drawn to ideas of landscape, architecture, and place.</p>
                 </div>
             </div>
+
+            <!-- performances:start --><!-- performances:end -->
 
             <div id="featured-projects" class="pt-12 border-t border-neutral-800/80 space-y-12">
                 <div>
@@ -1602,7 +1622,24 @@
             });
         }
 
+        let performanceRefreshTimer;
+        function refreshPerformances() {
+            clearTimeout(performanceRefreshTimer);
+            const section = document.getElementById('performances');
+            if (!section) return;
+            const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+            const upcoming = section.querySelector('[data-upcoming-performances]');
+            const past = section.querySelector('[data-past-performances]');
+            for (const entry of [...upcoming.children]) {
+                if (entry.dataset.performanceEnd < today) past?.prepend(entry);
+            }
+            section.hidden = upcoming.children.length === 0;
+            if (!section.hidden) performanceRefreshTimer = setTimeout(refreshPerformances, 60000);
+        }
+        document.addEventListener('visibilitychange', refreshPerformances);
+
         function initialisePage() {
+            refreshPerformances();
             if (document.getElementById('worksContainer')) {
                 // Retired view fragments land on their catalogue pages.
                 if (window.location.pathname === '/works/' && ['#listen', '#watch'].includes(window.location.hash)) {

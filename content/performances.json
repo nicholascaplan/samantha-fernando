@@ -1,0 +1,106 @@
+[
+  {
+    "id": "marian-consort-2027",
+    "dateLabel": "May/June 2027",
+    "startDate": "2027-05-01",
+    "endDate": "2027-06-30",
+    "title": "New work for The Marian Consort",
+    "description": "More details to follow soon."
+  },
+  {
+    "id": "fretwork-skipton-2027",
+    "dateLabel": "23 February 2027",
+    "startDate": "2027-02-23",
+    "title": "New work for Fretwork and Ruby Hughes",
+    "description": "Skipton Music Festival, UK. More dates to follow.",
+    "url": "https://www.fretwork.co.uk/concerts-1/uojmskjcgfpkus2t8jr8lvdfwppoj5"
+  },
+  {
+    "id": "formations-liverpool-2027",
+    "dateLabel": "20 February 2027",
+    "startDate": "2027-02-20",
+    "title": "Formations",
+    "description": "Ensemble 10:10, Liverpool.",
+    "url": "https://www.liverpoolphil.com/events/reinventing-beethoven/"
+  },
+  {
+    "id": "balconies-singapore-2026",
+    "dateLabel": "24 October 2026",
+    "startDate": "2026-10-24",
+    "title": "Balconies",
+    "description": "Performed by Olivia de Prato in Singapore.",
+    "url": "https://www.performerspresent.com/programme/plenary-motherhood-artistry"
+  },
+  {
+    "id": "kinesphere-bloomsbury-2026",
+    "dateLabel": "16 October 2026",
+    "startDate": "2026-10-16",
+    "title": "Kinesphere",
+    "description": "Performed by Sinead Walsh at Conway Hall, Bloomsbury Festival.",
+    "url": "https://www.empowerwomenchangingmusic.com/events/empower-at-bloomsbury-festival-double-bill-soraya-verjee-and-no-more-girl-friday"
+  },
+  {
+    "id": "the-exoplanets-2026-03-13",
+    "startDate": "2026-03-13",
+    "dateLabel": "13 March 2026",
+    "title": "The Exoplanets",
+    "description": "City of London Sinfonia, conducted by Micah Gleason. Hackney Empire, London."
+  },
+  {
+    "id": "wintering-2025-12-05",
+    "startDate": "2025-12-05",
+    "dateLabel": "5 December 2025",
+    "title": "Wintering",
+    "description": "Manchester Collective. Bristol Beacon, Bristol."
+  },
+  {
+    "id": "wintering-2025-12-03",
+    "startDate": "2025-12-03",
+    "dateLabel": "3 December 2025",
+    "title": "Wintering",
+    "description": "Manchester Collective. Sir Jack Lyons, York."
+  },
+  {
+    "id": "wintering-2025-11-29",
+    "startDate": "2025-11-29",
+    "dateLabel": "29 November 2025",
+    "title": "Wintering",
+    "description": "Manchester Collective. Tung Auditorium, Liverpool."
+  },
+  {
+    "id": "wintering-2025-11-28",
+    "startDate": "2025-11-28",
+    "dateLabel": "28 November 2025",
+    "title": "Wintering",
+    "description": "Manchester Collective. Howard Assembly Room, Leeds."
+  },
+  {
+    "id": "wintering-2025-11-27",
+    "startDate": "2025-11-27",
+    "dateLabel": "27 November 2025",
+    "title": "Wintering",
+    "description": "Manchester Collective. Stoller Hall, Manchester."
+  },
+  {
+    "id": "wintering-(world-premiere)-2025-11-22",
+    "startDate": "2025-11-22",
+    "dateLabel": "22 November 2025",
+    "title": "Wintering (World Premiere)",
+    "description": "Manchester Collective & The Marian Consort. Wigmore Hall, London."
+  },
+  {
+    "id": "the-exoplanets-(world-premiere)-2025-09-06",
+    "startDate": "2025-09-06",
+    "dateLabel": "6-7 September 2025",
+    "title": "The Exoplanets (World Premiere)",
+    "description": "City of London Sinfonia, conducted by Naomi Woo. Norwich Theatre Royal, Norwich.",
+    "endDate": "2025-09-07"
+  },
+  {
+    "id": "fault-line-2025-02-02",
+    "startDate": "2025-02-02",
+    "dateLabel": "2 February 2025",
+    "title": "Fault Line",
+    "description": "Tim Gill, London Sinfonietta. Turner Sims, Southampton."
+  }
+]

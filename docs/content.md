@@ -93,17 +93,27 @@ In 2021, Samantha saw the opening of Current, Rising, a world-first hyper-realit
 
 ## Events
 
-### Upcoming Events
+### Upcoming performances
 
-- 13 Mar 2026 - The Exoplanets - City of London Sinfonia, cond. Micah Gleason - Hackney Empire, London
-- 5 Dec 2025 - Wintering - Manchester Collective - Bristol Beacon, Bristol
-- 3 Dec 2025 - Wintering - Manchester Collective - Sir Jack Lyons, York
-- 29 Nov 2025 - Wintering - Manchester Collective - Tung Auditorium, Liverpool
-- 28 Nov 2025 - Wintering - Manchester Collective - Howard Assembly Room, Leeds
-- 27 Nov 2025 - Wintering - Manchester Collective - Stoller Hall, Manchester
-- 22 Nov 2025 - Wintering (World Premiere) - Manchester Collective & The Marian Consort - Wigmore Hall, London
-- 6-7 Sep 2025 - The Exoplanets (World Premiere) - City of London Sinfonia, cond. Naomi Woo - Norwich Theatre Royal, Norwich
-- 2 Feb 2025 - Fault Line - Tim Gill, London Sinfonietta - Turner Sims, Southampton
+- May/June 2027 - New work for The Marian Consort. More details to follow soon.
+- 23 February 2027 - New work for Fretwork and Ruby Hughes. Skipton Music Festival, UK. More dates to follow. Event: https://www.fretwork.co.uk/concerts-1/uojmskjcgfpkus2t8jr8lvdfwppoj5
+- 20 February 2027 - Formations. Performed by Ensemble 10:10 in Liverpool. Event: https://www.liverpoolphil.com/events/reinventing-beethoven/
+
+### Past performances
+
+- 24 October 2026 - Balconies. Performed by Olivia de Prato in Singapore. Event: https://www.performerspresent.com/programme/plenary-motherhood-artistry
+- 16 October 2026 - Kinesphere. Performed by Sinead Walsh at Conway Hall, Bloomsbury Festival. Event: https://www.empowerwomenchangingmusic.com/events/empower-at-bloomsbury-festival-double-bill-soraya-verjee-and-no-more-girl-friday
+- 13 March 2026 - The Exoplanets. City of London Sinfonia, conducted by Micah Gleason. Hackney Empire, London.
+- 5 December 2025 - Wintering. Manchester Collective. Bristol Beacon, Bristol.
+- 3 December 2025 - Wintering. Manchester Collective. Sir Jack Lyons, York.
+- 29 November 2025 - Wintering. Manchester Collective. Tung Auditorium, Liverpool.
+- 28 November 2025 - Wintering. Manchester Collective. Howard Assembly Room, Leeds.
+- 27 November 2025 - Wintering. Manchester Collective. Stoller Hall, Manchester.
+- 22 November 2025 - Wintering (World Premiere). Manchester Collective & The Marian Consort. Wigmore Hall, London.
+- 6-7 September 2025 - The Exoplanets (World Premiere). City of London Sinfonia, conducted by Naomi Woo. Norwich Theatre Royal, Norwich.
+- 2 February 2025 - Fault Line. Tim Gill, London Sinfonietta. Turner Sims, Southampton.
+
+The homepage section is present only while upcoming performances exist. Past performances are collapsed by default. `content/performances.json` is the build source; future month ranges do not imply a confirmed day.
 
 ## Featured Operas & Major Projects
 

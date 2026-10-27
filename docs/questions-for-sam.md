@@ -4,7 +4,7 @@ Use this document to collect content decisions needed before the Works & Media c
 
 ## Content Refresh
 
-- [ ] **HIGH PRIORITY: Confirm current content.** The event record ends in March 2026 and the featured writing is dated November 2025. Please provide any current or upcoming events, new works, recordings and writing to publish.
+- [ ] **HIGH PRIORITY: Confirm current content.** Performance updates through May/June 2027 have been supplied; please continue to provide new event dates, recordings and writing to publish. The featured writing is dated November 2025.
 
 ## Site Decisions
 

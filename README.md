@@ -1,6 +1,6 @@
 # Samantha Fernando Website
 
-Static multi-page portfolio for composer Samantha Fernando. Biography, Works & Media, Listen, Watch, Writing, Contact and Privacy have directly loadable HTML pages. Writing shows the complete Wintering essay directly.
+Static multi-page portfolio for composer Samantha Fernando. Biography, Works & Media, Listen, Watch, Writing, Contact and Privacy have directly loadable HTML pages. Homepage performances are generated from `content/performances.json` and shown only while upcoming events exist. Writing shows the complete Wintering essay directly.
 
 ## Technical Overview
 
