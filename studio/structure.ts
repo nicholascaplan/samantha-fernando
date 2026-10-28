@@ -13,6 +13,7 @@ export const structure: StructureResolver = (S) =>
         .child(
           S.document().schemaType('biographyPage').documentId('biographyPage').title('Biography Page'),
         ),
+      S.documentTypeListItem('performance').title('Performances'),
       S.divider(),
       S.listItem().title('Works & Media').child(
         S.list().title('Works & Media').items([
@@ -25,5 +26,5 @@ export const structure: StructureResolver = (S) =>
           S.documentTypeListItem('film').title('Films (Watch)'),
         ]),
       ),
-      ...S.documentTypeListItems().filter((item) => ![...SINGLETON_TYPES, ...CATALOGUE_TYPES].includes(item.getId() as string)),
+      ...S.documentTypeListItems().filter((item) => ![...SINGLETON_TYPES, ...CATALOGUE_TYPES, 'performance'].includes(item.getId() as string)),
     ])

@@ -4,6 +4,7 @@ import {resolve} from 'node:path'
 import {createClient} from '@sanity/client'
 import {renderBiography, replaceRegion, validateBiography} from './lib/biography.mjs'
 import {buildCatalogue, CATALOGUE_QUERY} from './lib/catalogue.mjs'
+import {renderPerformances, buildPerformances, PERFORMANCE_QUERY} from './lib/performances.mjs'
 import {renderPages} from './lib/pages.mjs'
 import {assertPublicOutput} from './lib/public-output.mjs'
 
@@ -79,7 +80,11 @@ try {
   console.warn(`::warning::Sanity content unavailable, using committed Biography fallback. ${error.message}`)
 }
 const catalogue = useFallback ? {html, usedFallback: true} : await buildCatalogue(html, () => client.fetch(CATALOGUE_QUERY))
-const pages = renderPages(catalogue.html)
+const performances = JSON.parse(await readFile(resolve(root, 'content/performances.json'), 'utf8'))
+const performanceSnapshot = useFallback ? {html: renderPerformances(performances, '2026-10-27'), usedFallback: true} : await buildPerformances(performances, () => client.fetch(PERFORMANCE_QUERY))
+const content = catalogue.html.replace(/<!-- performances:start -->[\s\S]*?<!-- performances:end -->/, () => performanceSnapshot.html)
+if (!performanceSnapshot.usedFallback) console.log('Performances rendered from Sanity.')
+const pages = renderPages(content)
 for (const [filename, content] of pages) {
   const destination = resolve(outDir, filename)
   await mkdir(resolve(destination, '..'), {recursive: true})

@@ -19,7 +19,7 @@ Use this file to track unresolved implementation, product and maintenance work. 
 - [ ] **Renew the Sanity publish-webhook token by 5 January 2027.** The GitHub token has a 90-day expiry and an expired token silently stops deploys. Follow the renewal steps in `docs/sanity.md` and update the expiry date there.
 - [ ] **Confirm Samantha can sign in to the Studio and publish.** She was invited as an Editor on 7 October 2026. Check her first edit appears on the live site.
 - [ ] **Verify normal catalogue editing in production.** Studio schemas and initial 48-document import are complete, the site is deployed and the webhook dispatch was verified with a temporary non-rendered marker. During routine content work, verify a Recording add/edit/unpublish and both default-recording providers. Live-site propagation remains unverified from BoxedCode; confirm outside the sandbox.
-- [ ] **Migrate the remaining sections to Sanity, one at a time.** Remaining scope: Writing essay, Events, site metadata and hero, homepage Spotlight Works, Contact. Reuse `scripts/lib/` and the marker pattern in `index.html`.
+- [ ] **Migrate the remaining sections to Sanity, one at a time.** Remaining scope: Writing essay, site metadata and hero, homepage Spotlight Works, Contact. Reuse `scripts/lib/` and the marker pattern in `index.html`.
 - [ ] **Decide whether to add the 2013 RPS Composition Prize to the Biography milestones.** It is in the content record but not on the page; see `docs/questions-for-sam.md`.
 - [ ] **Add a draft preview route.** Studio cannot preview a static build; consider a local `build:content` against drafts or a separate preview deploy.
 

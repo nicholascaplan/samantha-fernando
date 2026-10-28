@@ -83,13 +83,13 @@ The webhook URL uses the renamed repository endpoint below. After any repository
 | URL | `https://api.github.com/repos/nicholascaplan/samantha-fernando/dispatches` |
 | Dataset | `production` |
 | Trigger on | Create, Update, Delete |
-| Filter | `_id == "biographyPage"` |
+| Filter | `_type in ["performance", "biographyPage", "worksMediaSettings", "work", "recording", "film"] && !(_id in path("drafts.**"))` |
 | Projection | `{"event_type": "sanity-content-published"}` |
 | Method | `POST` |
 | Headers | `Authorization` set to `Bearer <token>` (word `Bearer`, one space, no colon) and `Accept: application/vnd.github+json` |
 | Drafts | Off |
 
-The table describes the currently configured Biography-only filter. Replace it with the type-based filter in Catalogue Activation when activating Works & Media; update this table to reflect the actual configuration at that point.
+The table reflects the live filter verified on 27 October 2026. Keep all existing types when adding a new content type.
 
 ### GitHub Token
 
@@ -138,3 +138,40 @@ npx tsc --noEmit
 ## Sandbox Note For Maintainers
 
 When working inside BoxedCode, the sandbox allowlist in `~/.nwb/box/box.json` must include `api.sanity.io`, `9a66iw1t.api.sanity.io`, `9a66iw1t.apicdn.sanity.io` and `cdn.sanity.io` for the build and Studio commands to reach Sanity. Hosted auto-update Studio builds also need `sanity-cdn.com`; the local-only check can use `--no-auto-updates` instead.
+
+
+## Performances
+
+The performance implementation adds a **Performances** document list in Studio. Each record holds a title, display date label, sorting start date, optional final date, location, per-performance World premiere checkbox, description and optional HTTPS event link. Only published documents reach the public website. For a month-only date such as May 2027, use 1 May and 31 May for sorting/grouping and retain "May 2027" as the display label; these are grouping bounds, not claimed performance dates. Exact dates need only a start date. Keep supplied qualifiers and unknown details blank.
+
+Production builds query Performance documents independently of Biography and the catalogue. Invalid/unavailable content uses `content/performances.json` as a complete fallback; an intentionally empty published list stays empty. Tests use the committed records at a fixed fixture date. The daily rebuild classifies dates in Europe/London; no page timer is used.
+
+### Activation steps
+
+These steps require an authenticated maintainer and are not completed merely by merging website code:
+
+1. Deploy the updated Studio/schema with `npm run deploy` from `studio/`.
+2. Run `npx sanity exec scripts/seed-performances.ts --with-user-token` from `studio/`. It adds missing imported records and never overwrites an existing record or draft with the same source key.
+3. Verify the published records in Studio and run the normal production build. It must report `Performances rendered from Sanity`, with the supplied upcoming and past entries present.
+4. In Manage, inspect the current **Trigger site deploy** webhook. Add `performance` to its existing type filter while preserving its other types, dataset, destination and headers. Do not replace or expose its credential. The operational notes above contain conflicting historic filter examples, so inspect the live filter rather than copying either.
+5. Verify a real performance publication triggers the existing repository dispatch and, after an approved website merge/deploy, check the public output. Editor verification and publication-to-site verification are separate checks. Do not report that publication reaches the site until the latter is verified.
+
+### Activation record - 27 October 2026
+
+- Updated existing hosted Studio and schema deployed.
+- Non-overwriting import created 14 published Performance documents (3 upcoming, 11 past at activation).
+- Normal production build confirmed Performances rendered from Sanity.
+- Existing enabled production webhook filter now includes performance, with other types, destination, projection and headers preserved; saved state reloaded and checked.
+- Hosted exact-date (Fretwork) and month-range (Marian Consort) forms were visually checked with the expected fields and values. Initial loading delays resolved without package, account or CORS changes. After the later location/premiere-field revision, labels appeared but a Network error overlay blocked usable-editor verification; API/schema/build success does not settle that connection issue. No draft or publication was created for this check.
+- Publishing the approved venue updates triggered the existing repository dispatch and current-main deployment; see the metadata record below. New homepage output remains unverified publicly until approved website merge/deploy.
+- After the website deployment, replace this pending publication check with its verified outcome and deployment reference.
+
+### Editable performance metadata
+
+Location is a separate optional text field (venue and city), styled beneath the title. Leave it blank only when unknown; no placeholder is rendered. World premiere is a per-performance checkbox and appears beside that stop's date. Do not flag later performances of the same work. Wintering and The Exoplanets are grouped for display only; each stop remains a separate editable record. Stops run most recent first; past work groups remain ordered by their most recent performance.
+
+On 27 October 2026 the verified venue descriptions were published and triggered the existing repository dispatch; current-main deployment succeeded in [run 40580625977](https://github.com/nicholascaplan/samantha-fernando/actions/runs/40580625977). A subsequent explicit migration populated 13 known locations, separated venue text from performer/detail descriptions, set the two supplied world-premiere flags, and changed Marian Consort to May 2027 (sorting bounds 1-31 May, not claimed performance dates). All 14 records were independently re-read and checked. New fields were deployed to the existing hosted Studio. The website PR remains unmerged; its new public rendering still needs post-merge verification. The manual combined preview is a snapshot only.
+
+Venue sources: [Liverpool Philharmonic](https://www.liverpoolphil.com/events/reinventing-beethoven/), [Fretwork](https://www.fretwork.co.uk/concerts-1/uojmskjcgfpkus2t8jr8lvdfwppoj5), [Performers Present](https://www.performerspresent.com/programme/plenary-motherhood-artistry), [EMPOWER](https://www.empowerwomenchangingmusic.com/events/empower-at-bloomsbury-festival-double-bill-soraya-verjee-and-no-more-girl-friday). Older venues and premiere status are preserved from the supplied records. The Marian Consort venue remains unannounced in the supplied material.
+
+Performance listing descriptions omit a single final sentence full stop for display; internal punctuation and source CMS text remain intact.
