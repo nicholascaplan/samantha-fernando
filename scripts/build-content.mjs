@@ -12,6 +12,8 @@ const DATASET = 'production'
 const root = resolve(import.meta.dirname, '..')
 const outDir = resolve(root, process.argv[2] ?? '_site')
 const useFallback = process.argv.includes('--fallback')
+const useTestFonts = process.argv.includes('--test-font-fixtures')
+if (useTestFonts && !useFallback) throw new Error('Test font fixtures require --fallback')
 if (outDir === root || !outDir.startsWith(`${root}/_site`)) throw new Error('Build output must be a project _site directory')
 
 const QUERY = `*[_id == "biographyPage"][0]{
@@ -57,6 +59,18 @@ for (const file of ['CNAME', 'robots.txt']) {
 }
 
 let html = await readFile(resolve(root, 'index.html'), 'utf8')
+if (useTestFonts) {
+  const fontRoot = resolve(root, 'tests/fixtures/font-awesome-6.4.0')
+  const manifest = JSON.parse(await readFile(resolve(fontRoot, 'manifest.json'), 'utf8'))
+  for (const file of manifest.files) {
+    const bytes = await readFile(resolve(fontRoot, file.path))
+    if (createHash('sha256').update(bytes).digest('hex') !== file.sha256) throw new Error(`Test font hash mismatch: ${file.path}`)
+    const destination = resolve(outDir, '_test-fonts', file.path)
+    await mkdir(resolve(destination, '..'), {recursive: true})
+    await writeFile(destination, bytes)
+  }
+  html = html.replace('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css', '/_test-fonts/css/all.min.css')
+}
 try {
   if (useFallback) throw new Error('Deterministic fallback build requested')
   html = await buildBiography(html)
@@ -71,6 +85,6 @@ for (const [filename, content] of pages) {
   await mkdir(resolve(destination, '..'), {recursive: true})
   await writeFile(destination, content)
 }
-await assertPublicOutput(outDir)
+await assertPublicOutput(outDir, {testFontFixtures: useTestFonts})
 if (!catalogue.usedFallback) console.log('Works & Media rendered from Sanity.')
 console.log(`Public site written to ${outDir}`)
