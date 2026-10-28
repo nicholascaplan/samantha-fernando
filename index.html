@@ -379,7 +379,14 @@
         #soundbarProgress { width: 100%; height: 0.35rem; overflow: hidden; border: 1px solid rgba(180, 83, 9, 0.3); border-radius: 9999px; background: rgba(139, 129, 117, 0.35); }
         #soundbarProgressFill { width: 0; height: 100%; border-radius: inherit; background: #b45309; box-shadow: 0 0 0.4rem rgba(180, 83, 9, 0.65); transition: width 0.2s linear; }
         #soundbarTimes { display: flex; justify-content: space-between; font-variant-numeric: tabular-nums; color: #d4d4d4; }
-        #soundbarLoading { text-align: center; font-size: 10px; }
+        #soundbarLoading { display: flex; align-items: center; justify-content: center; gap: 0.35rem; text-align: center; font-size: 10px; }
+        #soundbarLoading.hidden { display: none; }
+        .loading-spinner { width: 0.55rem; height: 0.55rem; flex: none; border-radius: 50%; border: 1.5px solid rgba(245, 245, 245, 0.3); border-top-color: #f6bf7b; animation: soundbar-loading-spin 1s linear infinite; }
+        .light-mode .loading-spinner { border-color: rgba(24, 33, 31, 0.2); border-top-color: #944900; }
+        @keyframes soundbar-loading-spin { to { transform: rotate(360deg); } }
+        @media (prefers-reduced-motion: reduce) {
+            .loading-spinner { animation: none; }
+        }
         #soundbarControls { position: absolute; right: 1.25rem; top: 50%; display: flex; gap: 0.2rem; transform: translateY(-50%); }
         #soundbarControls button { color: #f6bf7b; }
         #soundbarControls button:hover { background: rgba(180, 83, 9, 0.24); }
@@ -979,7 +986,7 @@
                 <span id="soundbarElapsedTime">0:00</span>
                 <span id="soundbarDurationTime" class="hidden"></span>
             </div>
-            <span id="soundbarLoading" class="hidden" role="status">Loading audio…</span>
+            <span id="soundbarLoading" class="hidden" role="status"><span class="loading-spinner" aria-hidden="true"></span>Loading audio…</span>
         </div>
         <div id="soundbarControls">
             <button id="soundbarPauseBtn" onclick="toggleActivePlayback()" aria-label="Pause playback" title="Pause playback" class="w-7 h-7 rounded-full flex items-center justify-center text-amber-700 hover:bg-amber-100 transition-colors">
