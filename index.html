@@ -805,6 +805,12 @@
         body.light-mode .performance-entry .performance-date, body.light-mode .performance-link { color: #92400e; }
         body.light-mode .performances-groups { border-color: #d4d4d4; }
         @media (min-width: 768px) and (max-width: 1023px) { .performance-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        /* Keep enlarged phone headings readable without disabling emergency wrapping. */
+        @media (max-width: 767px) {
+            .performances-groups h2 { font-family: Newsreader, Georgia, serif; font-size: 1.25rem; line-height: 1.2; }
+            .performance-entry { padding-inline: min(1.5rem, 5vw); }
+            .performance-entry h3 { font-size: 1.375rem; }
+        }
         @media (max-width: 767px) { .performance-list, .performance-tour-stops { grid-template-columns: 1fr; } .performance-tour { grid-column: auto; } .performance-entry > .performance-link { margin-top: 1rem; padding-top: 0; } }
     </style>
 </head>

@@ -77,3 +77,5 @@ Record only decisions that constrain future work. Implementation history and com
 Past performances show the two newest cards by default in one desktop row, with a native Show more/Show less disclosure for the remaining history. Preserve whole-summary keyboard activation, no-JavaScript access, reduced-motion behavior and existing grouped tour dates. The recent-history treatment is a preview proposal pending final visual checks.
 
 Mobile navigation uses compact vertical spacing while retaining at least 44px link targets and readable enlarged text. When open, a backdrop intercepts page taps: tapping outside the menu dismisses it without activating the content below. Header controls remain available. The compact treatment is a review proposal until approved.
+
+On phones, performance headings use the existing Newsreader serif treatment and rem-based sizes; card side padding is capped by viewport width so enlarged text has room to wrap at word boundaries. Preserve emergency wrapping for unusually long future CMS words, rather than truncating or hiding content.
