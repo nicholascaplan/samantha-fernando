@@ -5,24 +5,31 @@
 // window must exceed those pauses; 500ms covers them with margin and still
 // returns as soon as the scroll is actually done. A scroll that never
 // settles fails the test by timeout rather than passing early.
+// Playwright's waitForFunction stops polling when the predicate returns any
+// truthy value - and a Promise object is truthy - without re-checking the
+// value it resolves to. So the predicate must return false synchronously
+// until the anchor exists; only then does it return the settle Promise,
+// whose resolution Playwright awaits before returning.
 async function waitForScrollSettle(page, selector, quietMs = 500) {
-  await page.waitForFunction(([sel, quiet]) => new Promise(resolve => {
+  await page.waitForFunction(([sel, quiet]) => {
     const el = document.querySelector(sel);
-    if (!el) return resolve(false);
-    let lastTop = el.getBoundingClientRect().top;
-    let lastMove = performance.now();
-    const check = () => {
-      const top = el.getBoundingClientRect().top;
-      const now = performance.now();
-      if (top !== lastTop) {
-        lastTop = top;
-        lastMove = now;
-      }
-      if (now - lastMove >= quiet) return resolve(true);
+    if (!el) return false;
+    return new Promise(resolve => {
+      let lastTop = el.getBoundingClientRect().top;
+      let lastMove = performance.now();
+      const check = () => {
+        const top = el.getBoundingClientRect().top;
+        const now = performance.now();
+        if (top !== lastTop) {
+          lastTop = top;
+          lastMove = now;
+        }
+        if (now - lastMove >= quiet) return resolve(true);
+        requestAnimationFrame(check);
+      };
       requestAnimationFrame(check);
-    };
-    requestAnimationFrame(check);
-  }), [selector, quietMs]);
+    });
+  }, [selector, quietMs]);
 }
 
 module.exports = { waitForScrollSettle };
