@@ -105,3 +105,7 @@ test('performance listing copy omits a final sentence stop but keeps internal pu
   const tour = {...event,title:'Wintering',startDate:'2025-11-22',description:'Manchester Collective. More details soon.'}
   assert.match(renderPerformances([event,tour], '2026-10-27'), /Manchester Collective\. More details soon<\/p>/)
 })
+test('recent past preview keeps two newest cards outside disclosure and no redundant control for short history',()=>{
+ const html=renderPerformances(events,'2026-10-27');const recent=html.split('class="performance-list recent-past-performances">')[1].split('</ul>')[0];assert.match(recent,/Balconies/);assert.match(recent,/Kinesphere/);assert.doesNotMatch(recent,/Wintering|Exoplanets/);assert.match(html,/Show more/);assert.match(html,/Show less/);
+ for(const count of[0,1,2]){const list=[events.find(e=>e.startDate.startsWith('2027')), ...splitPerformances(events,'2026-10-27').past.slice(0,count)];assert.doesNotMatch(renderPerformances(list,'2026-10-27'),/<details|Show more/)}
+});

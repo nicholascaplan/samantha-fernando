@@ -4,8 +4,10 @@ test('homepage performances are accessible, linked and responsive @mobile', asyn
   await expect(page.locator('#performances')).toBeVisible();
   await expect(page.locator('#performances-title')).toHaveText('Upcoming performances');
   await expect(page.locator('#performances .performance-list').first().locator('li')).toHaveCount(3);
-  await expect(page.getByRole('link', {name:'Event details'})).toHaveCount(2);
-  await page.getByText('Past performances', {exact:true}).click();
+  await expect(page.getByRole('link', {name:'Event details'})).toHaveCount(4);
+  await expect(page.locator('.recent-past-performances > li')).toHaveCount(2);
+  await expect(page.locator('.past-performances').getByRole('heading',{name:'Wintering',exact:true})).toBeHidden();
+  await page.locator('.past-performances summary').click();
   await expect(page.getByRole('heading',{name:'Balconies',exact:true})).toBeVisible();
   await expect(page.getByRole('heading',{name:'Kinesphere',exact:true})).toBeVisible();
   await expect(page.getByRole('link', {name:'Event details'})).toHaveCount(4);
