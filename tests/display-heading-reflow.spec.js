@@ -1,5 +1,5 @@
 const {test,expect}=require('@playwright/test');
-for(const width of [320,390,768,1440]) for(const theme of ['light','dark']) for(const [route,label] of [['/','Featured Operas & Major Projects'],['/works/','Works & Media'],['/listen/','Listen'],['/watch/','Watch'],['/writing/','Writing'],['/contact/','Contact & Score Hire'],['/privacy/','Privacy']]) {
+for(const width of [320,390,768,780,1440]) for(const theme of ['light','dark']) for(const [route,label] of [['/','Featured Operas & Major Projects'],['/works/','Works & Media'],['/listen/','Listen'],['/watch/','Watch'],['/writing/','Writing'],['/contact/','Contact & Score Hire'],['/privacy/','Privacy']]) {
  test(`display heading ${route} words intact ${width}px ${theme}${width<768?' @mobile':''}`,async({page})=>{
   await page.setViewportSize({width,height:1000});
   await page.addInitScript(t=>localStorage.setItem('theme',t),theme);
@@ -24,10 +24,13 @@ for(const width of [320,390,768,1440]) for(const theme of ['light','dark']) for(
      }
     }
     const s=getComputedStyle(e);
-    return {words,font:parseFloat(s.fontSize),family:s.fontFamily,transform:s.textTransform};
+    return {words,font:parseFloat(s.fontSize),family:s.fontFamily,transform:s.textTransform,phone:matchMedia('(max-width: 767px)').matches};
    });
    expect(actual.words).toEqual([]);
-   expect(actual.font).toBe((width<768?22:30)*scale);
+   // WebKit excludes its desktop scrollbar from the media-query viewport.
+   if(width<768)expect(actual.phone).toBe(true);
+   if(width>=780)expect(actual.phone).toBe(false);
+   expect(actual.font).toBe((actual.phone?22:30)*scale);
    expect(actual.family).toContain('Cinzel');
    expect(actual.transform).toBe('uppercase');
    expect(await heading.evaluate(e=>e.scrollWidth<=e.clientWidth)).toBe(true);
