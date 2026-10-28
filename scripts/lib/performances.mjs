@@ -35,7 +35,7 @@ export function renderPerformances(events, today) {
     <h2 id="performances-title">Upcoming performances</h2>
     <div>
     <ul class="performance-list">${upcoming.map(renderEvent).join('\n')}</ul></div>
-    <details class="past-performances"><summary id="past-performances">Past performances</summary>
+    <details class="past-performances"><summary id="past-performances"><span>Past performances</span><span class="performance-history-action" aria-hidden="true"><span class="history-show">Show dates</span><span class="history-hide">Hide dates</span><span class="history-chevron"></span></span></summary>
     <div class="past-performances-content">${past.length ? `<ul class="performance-list">${renderedPast}</ul>` : '<p>No past performances are listed.</p>'}</div></details>
   </section>`
 }
