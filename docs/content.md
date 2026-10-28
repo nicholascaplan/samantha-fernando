@@ -85,6 +85,11 @@ In 2021, Samantha saw the opening of Current, Rising, a world-first hyper-realit
 - 2021 - Current, Rising: Hyper-reality opera experience at the Royal Opera House, London.
 - 2013 - RPS Composition Prize: Royal Philharmonic Society award & Philharmonia commission.
 
+### Home Page Heading
+
+- Name line: Samantha Fernando (no trailing comma).
+- Subtitle on the next line: British Composer.
+
 ### Home Page Calls To Action
 
 - Explore Works: Works
