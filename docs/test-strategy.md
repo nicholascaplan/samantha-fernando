@@ -8,7 +8,7 @@ Use Playwright smoke tests to protect visitor-facing behaviour without coupling 
 npm test
 ```
 
-`npm test` runs Chromium. Use `npm run test:all` for the complete browser and tagged-mobile matrix. Playwright runs `npm run build:test` and serves `_site/` on port 8010, without reusing existing servers. Use `--config=playwright.built.config.js` to check already-built production output without replacing it with fallbacks.
+`npm test` runs Chromium. Use `npm run test:all` for the complete browser and tagged-mobile matrix. Playwright runs `npm run build:test -- --test-font-fixtures` and serves `_site/` on port 8010, without reusing existing servers. Use `--config=playwright.built.config.js` to check already-built production output without replacing it with fallbacks.
 
 `npm run test:unit` runs the Node unit tests in `unit-tests/`. They are kept outside `tests/` so Playwright does not pick them up.
 
@@ -57,3 +57,9 @@ The GitHub branch protection rule for `main` requires pull requests, the unit an
 ## Deployment
 
 The Pages workflow runs unit/browser tests on deterministic generated pages and the multi-page smoke suite on the final Sanity-backed artifact before upload. The exact public-file allowlist is enforced by `scripts/lib/public-output.mjs`; source templates, docs and test files are never published. Verify the GitHub Actions deployment after each requested push; live-site propagation should be checked separately.
+
+### Font Awesome isolation and live dependency gate
+
+Browser checks use `npm run build:test -- --test-font-fixtures`: the explicit flag is valid only with `--fallback`. It copies the exact pinned Font Awesome 6.4.0 CSS and all referenced font formats from `tests/fixtures/` into a test-only output directory. Hashes are checked at build time. The HTML rewrite changes only the Font Awesome stylesheet URL; production source and normal build output keep the CDN URL. The production artifact allowlist rejects test fixture directories, including stale output left by a test build. Use a clean output directory before switching build modes.
+
+For PR CI only (`GITHUB_EVENT_NAME=pull_request`), Playwright global setup runs `scripts/check-font-assets.mjs` in each required browser job. It downloads each live CDN asset with a 30-second limit and checks the same SHA-256 manifest, so deterministic browser tests do not hide an unavailable or changed production dependency. Ordinary local/offline unit tests and deployment jobs gain no live asset gate; the already-built production config explicitly disables it. Google Fonts and media providers are not replaced by this fixture. Browser assertions, timeouts and retries are unchanged. Failed browser traces are retained in the existing seven-day failure artifact for diagnosis.
