@@ -1,0 +1,15 @@
+# Netlify is used for pull request deploy previews only.
+# Production hosting stays on GitHub Pages at https://www.samanthafernando.com/.
+# Deploy previews inherit [build]; production deploys run only the redirect
+# writer in [context.production], so the project's production address points
+# at the live site instead of publishing a second copy.
+
+[build]
+  command = "npm ci && npm run build:css && npm run build:content"
+  publish = "_site"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+[context.production]
+  command = "mkdir -p _site && echo '/*  https://www.samanthafernando.com/:splat  302!' > _site/_redirects"
