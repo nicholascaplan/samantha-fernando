@@ -354,9 +354,12 @@ test('pauses the player when the watchdog expires after play was requested', asy
 
 test('does not report a script failure for a request the visitor already cancelled', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('analyticsConsent', 'rejected'));
-  // Hold the script request back so the cancellation lands before the failure.
+  // Hold the script request until the visitor has cancelled, so the failure
+  // lands after the cancellation instead of racing it.
+  let releaseScriptFailure;
+  const scriptFailureReleased = new Promise(resolve => { releaseScriptFailure = resolve; });
   await page.route('https://w.soundcloud.com/player/api.js', async route => {
-    await new Promise(resolve => setTimeout(resolve, 900));
+    await scriptFailureReleased;
     return route.abort();
   });
   const scriptFailed = page.waitForEvent('requestfailed', request =>
@@ -371,9 +374,19 @@ test('does not report a script failure for a request the visitor already cancell
   await lookUpCard(page).click();
   await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Resume playback');
 
-  // Once the load failure and its rejection have settled, the notice must not
-  // have appeared for the cancelled request.
+  // Assert only once the failure has passed through the app's own handling.
+  // The listener is attached and acknowledged before the request is released,
+  // so the error event cannot fire before it. The app's own error listener
+  // was registered when the element was created, so it runs first, and two
+  // macrotasks later its rejection handler has run too.
+  await page.evaluate(() => {
+    const script = document.querySelector('script[src*="w.soundcloud.com/player/api.js"]');
+    window.__scriptFailureHandled = new Promise(resolve => {
+      script.addEventListener('error', () => setTimeout(() => setTimeout(resolve, 0), 0));
+    });
+  });
+  releaseScriptFailure();
   await scriptFailed;
-  await page.waitForTimeout(400);
+  await page.evaluate(() => window.__scriptFailureHandled);
   await expect(page.locator('#audioAvailabilityMessage')).toBeHidden();
 });
