@@ -1,4 +1,5 @@
 const {test, expect} = require('@playwright/test');
+const { waitForScrollSettle } = require('./scroll-settle');
 
 const pages = [
   ['/', 'Samantha Fernando - Composer', 'home'],
@@ -154,6 +155,9 @@ test('consented analytics sends one page view per navigation and stops after rej
   await page.getByRole('link', {name: 'Privacy', exact: true}).click();
   await expect(page).toHaveURL(/\/privacy\/#cookie-settings$/);
   await expect.poll(views).toHaveLength(3);
+  // Enhanced navigation smooth-scrolls to the anchor; let the scroll settle
+  // before clicking so the button is not mid-motion (WebKit animates in bursts).
+  await waitForScrollSettle(page, '#cookie-settings');
   await page.getByRole('button', {name: 'Cookie preferences'}).click();
   await page.keyboard.press('Escape');
   await page.getByRole('button', {name: 'Reject', exact: true}).click();
