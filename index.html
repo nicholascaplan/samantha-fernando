@@ -746,6 +746,11 @@
             #tab-works #worksSearchInput { padding-top: 0.65rem; padding-bottom: 0.65rem; font-size: 0.8rem; }
         }
 
+        /* Keep the display heading's words intact when phone text is enlarged. */
+        @media (max-width: 767px) {
+            #featured-projects h2 { font-size: 1.375rem; letter-spacing: .025em; }
+        }
+
         .performances-groups { border-top: 1px solid #404040; padding-top: 2rem; }
         .performances-groups h2 { font-family: inherit; font-size: 1.75rem; margin-bottom: 1.5rem; }
         .performances-groups h3, .past-performances summary { font-size: 1rem; font-weight: 600; }
