@@ -30,6 +30,7 @@ module.exports = defineConfig({
     },
     {
       name: 'firefox',
+      testMatch: 'firefox-input-diagnostic.spec.js',
       grepInvert: /@mobile/,
       use: { ...devices['Desktop Firefox'] },
     },
