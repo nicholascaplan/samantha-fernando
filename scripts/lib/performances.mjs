@@ -30,13 +30,19 @@ export function renderPerformances(events, today) {
     const stops = past.filter(stop=>groupName(stop)===name).sort((a,b)=>b.startDate.localeCompare(a.startDate))
     return [`<li class="performance-entry performance-tour"><h3>${escape(name)}</h3>
       <ul class="performance-tour-stops">${stops.map(stop => `<li><p class="performance-date">${escape(stop.dateLabel)}${stop.isWorldPremiere ? ' <span class="performance-premiere">World premiere</span>' : ''}</p>${stop.location ? `<p class="performance-location">${escape(stop.location)}</p>` : ''}${stop.description ? `<p>${escape(eventCopy(stop.description))}</p>` : ''}${stop.url ? `<a class="performance-link" href="${escape(stop.url)}"><span class="performance-link-label">Event details</span><span class="performance-link-end">&nbsp;↗</span></a>` : ''}</li>`).join('\n')}</ul></li>`]
-  }).join('\n')
+  })
+  const recentPast = renderedPast.slice(0, 2).join('\n')
+  const olderPast = renderedPast.slice(2).join('\n')
   return `<section id="performances" aria-labelledby="performances-title" class="performances-groups">
     <h2 id="performances-title">Upcoming performances</h2>
     <div>
     <ul class="performance-list">${upcoming.map(renderEvent).join('\n')}</ul></div>
-    <details class="past-performances"><summary id="past-performances"><span>Past performances</span><span class="performance-history-action" aria-hidden="true"><span class="history-show">Show dates</span><span class="history-hide">Hide dates</span><span class="history-chevron"></span></span></summary>
-    <div class="past-performances-content">${past.length ? `<ul class="performance-list">${renderedPast}</ul>` : '<p>No past performances are listed.</p>'}</div></details>
+    <section class="past-performances-preview" aria-labelledby="past-performances-title">
+      <h2 id="past-performances-title">Past performances</h2>
+      ${past.length ? `<ul class="performance-list recent-past-performances">${recentPast}</ul>` : '<p>No past performances are listed.</p>'}
+      ${olderPast ? `<details class="past-performances"><summary id="past-performances"><span class="performance-history-action"><span class="history-show">Show more</span><span class="history-hide">Show less</span><span class="history-chevron" aria-hidden="true"></span></span></summary>
+      <div class="past-performances-content"><ul class="performance-list">${olderPast}</ul></div></details>` : ''}
+    </section>
   </section>`
 }
 
