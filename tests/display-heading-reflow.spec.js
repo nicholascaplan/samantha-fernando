@@ -8,7 +8,8 @@ for(const width of [320,390,768,1440]) for(const theme of ['light','dark']) for(
   await page.evaluate(()=>document.fonts.ready);
   await expect(page.locator('body')).toHaveClass(theme==='light'?/light-mode/:/^(?!.*light-mode)/);
   await expect(page.locator('#themeToggleBtn')).toHaveAttribute('aria-pressed',String(theme==='dark'));
-  const heading=page.locator('main :is(h1,h2).font-display').first();
+  const heading=page.locator('main :is(h1,h2).font-display');
+  await expect(heading).toHaveCount(1);
   await expect(heading).toHaveText(label);
   for(const scale of [1,2]) {
    await page.evaluate(scale=>document.documentElement.style.fontSize=16*scale+'px',scale);
