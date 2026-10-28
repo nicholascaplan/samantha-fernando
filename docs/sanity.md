@@ -80,7 +80,7 @@ The webhook URL uses the renamed repository endpoint below. After any repository
 | Field | Value |
 |---|---|
 | Name | `Trigger site deploy` |
-| URL | `https://api.github.com/repos/nicholascaplan/samantha-fernando/dispatches` |
+| URL | `https://api.github.com/repos/nickcaplan/samantha-fernando/dispatches` |
 | Dataset | `production` |
 | Trigger on | Create, Update, Delete |
 | Filter | `_type in ["performance", "biographyPage", "worksMediaSettings", "work", "recording", "film"] && !(_id in path("drafts.**"))` |
@@ -95,9 +95,9 @@ The table reflects the live filter verified on 27 October 2026. Keep all existin
 
 The header uses a GitHub fine-grained personal access token. It is stored only in the webhook's headers in Sanity Manage; never put it in the repository, docs, logs or chat.
 
-- Repository access: only `nicholascaplan/samantha-fernando`.
+- Repository access: only `nickcaplan/samantha-fernando`.
 - Permissions: **Contents: Read and write** (required for `repository_dispatch`) and the mandatory read-only **Metadata**.
-- **Expiry: 90 days.** The current token was created on 7 October 2026 and expires on or about **5 January 2027**. Check the exact date in GitHub under Settings, Developer settings, Personal access tokens, Fine-grained tokens.
+- **Expiry: 30 days.** The current token was created on 28 October 2026 and expires on **27 November 2026**. Check the exact date in GitHub under Settings, Developer settings, Personal access tokens, Fine-grained tokens.
 - **Renew before it expires.** An expired token fails silently for editors: publishing still works in Sanity but the site is not rebuilt.
 
 To renew: create a new token with the same repository and permissions, edit the webhook's `Authorization` header to `Bearer <new token>`, publish a small test edit and confirm a `204` in the webhook's attempts log and a new "Deploy GitHub Pages" run. Then delete the old token and update the expiry date in this document.
@@ -170,7 +170,7 @@ These steps require an authenticated maintainer and are not completed merely by 
 
 Location is a separate optional text field (venue and city), styled beneath the title. Leave it blank only when unknown; no placeholder is rendered. World premiere is a per-performance checkbox and appears beside that stop's date. Do not flag later performances of the same work. Wintering and The Exoplanets are grouped for display only; each stop remains a separate editable record. Stops run most recent first; past work groups remain ordered by their most recent performance.
 
-On 27 October 2026 the verified venue descriptions were published and triggered the existing repository dispatch; current-main deployment succeeded in [run 40580625977](https://github.com/nicholascaplan/samantha-fernando/actions/runs/40580625977). A subsequent explicit migration populated 13 known locations, separated venue text from performer/detail descriptions, set the two supplied world-premiere flags, and changed Marian Consort to May 2027 (sorting bounds 1-31 May, not claimed performance dates). All 14 records were independently re-read and checked. New fields were deployed to the existing hosted Studio. The website PR remains unmerged; its new public rendering still needs post-merge verification. The manual combined preview is a snapshot only.
+On 27 October 2026 the verified venue descriptions were published and triggered the existing repository dispatch; current-main deployment succeeded in [run 40580625977](https://github.com/nickcaplan/samantha-fernando/actions/runs/40580625977). A subsequent explicit migration populated 13 known locations, separated venue text from performer/detail descriptions, set the two supplied world-premiere flags, and changed Marian Consort to May 2027 (sorting bounds 1-31 May, not claimed performance dates). All 14 records were independently re-read and checked. New fields were deployed to the existing hosted Studio. The website PR remains unmerged; its new public rendering still needs post-merge verification. The manual combined preview is a snapshot only.
 
 Venue sources: [Liverpool Philharmonic](https://www.liverpoolphil.com/events/reinventing-beethoven/), [Fretwork](https://www.fretwork.co.uk/concerts-1/uojmskjcgfpkus2t8jr8lvdfwppoj5), [Performers Present](https://www.performerspresent.com/programme/plenary-motherhood-artistry), [EMPOWER](https://www.empowerwomenchangingmusic.com/events/empower-at-bloomsbury-festival-double-bill-soraya-verjee-and-no-more-girl-friday). Older venues and premiere status are preserved from the supplied records. The Marian Consort venue remains unannounced in the supplied material.
 
