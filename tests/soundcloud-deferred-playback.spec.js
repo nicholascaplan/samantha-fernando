@@ -323,3 +323,57 @@ test('still plays when the SoundCloud API arrives after the player iframes would
   await expect(page.locator('#soundbarLoading')).toBeHidden();
   await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
 });
+
+test('pauses the player when the watchdog expires after play was requested', async ({ page }) => {
+  await mockSoundCloud(page);
+  await page.clock.install();
+  await page.clock.pauseAt(new Date());
+  await page.goto('/listen/');
+
+  await lookUpCard(page).click();
+  await page.clock.runFor(600);
+  await expect(page.locator('#soundbarLoading')).toBeVisible();
+
+  // The player reports ready and play() is issued, but the PLAY event never
+  // arrives before the watchdog: marking the track unavailable must also stop
+  // the audio, or the soundbar says stopped while the visitor hears playback.
+  await fireWidgetEvent(page, 'READY');
+  await page.clock.runFor(16000);
+  await expect(page.locator('#audioAvailabilityMessage')).toBeVisible();
+  const calls = await page.evaluate(() => window.__soundCloudCalls);
+  const playIndex = calls.findIndex(([command]) => command === 'play');
+  const pauseIndex = calls.findIndex(([command]) => command === 'pause');
+  expect(playIndex).toBeGreaterThanOrEqual(0);
+  expect(pauseIndex).toBeGreaterThan(playIndex);
+
+  // A PLAY event that only arrives after the watchdog stays ignored.
+  await fireWidgetEvent(page, 'PLAY');
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Resume playback');
+  await expect(page.locator('#soundbarLoading')).toBeHidden();
+});
+
+test('does not report a script failure for a request the visitor already cancelled', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('analyticsConsent', 'rejected'));
+  // Hold the script request back so the cancellation lands before the failure.
+  await page.route('https://w.soundcloud.com/player/api.js', async route => {
+    await new Promise(resolve => setTimeout(resolve, 900));
+    return route.abort();
+  });
+  const scriptFailed = page.waitForEvent('requestfailed', request =>
+    request.url() === 'https://w.soundcloud.com/player/api.js'
+  );
+
+  await page.goto('/listen/');
+  await lookUpCard(page).click();
+  await expect(page.locator('#soundbar')).toBeVisible();
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
+
+  await lookUpCard(page).click();
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Resume playback');
+
+  // Once the load failure and its rejection have settled, the notice must not
+  // have appeared for the cancelled request.
+  await scriptFailed;
+  await page.waitForTimeout(400);
+  await expect(page.locator('#audioAvailabilityMessage')).toBeHidden();
+});

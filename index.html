@@ -2230,8 +2230,9 @@
             if (!player) {
                 pendingSoundCloudPlaybackId = currentTrackId;
                 pendingSoundCloudPlaybackStartsAtZero = false;
+                const requestedSoundCloudTrackId = currentTrackId;
                 initialiseSoundCloudPlayers().catch(() => {
-                    if (activeAudioProvider === 'soundcloud') showTrackUnavailable();
+                    if (activeAudioProvider === 'soundcloud' && armedSoundCloudPlaybackId === requestedSoundCloudTrackId) showTrackUnavailable();
                 });
                 return;
             }
@@ -2269,8 +2270,9 @@
             if (!player) {
                 pendingSoundCloudPlaybackId = currentTrackId;
                 pendingSoundCloudPlaybackStartsAtZero = true;
+                const requestedSoundCloudTrackId = currentTrackId;
                 initialiseSoundCloudPlayers().catch(() => {
-                    if (activeAudioProvider === 'soundcloud') showTrackUnavailable();
+                    if (activeAudioProvider === 'soundcloud' && armedSoundCloudPlaybackId === requestedSoundCloudTrackId) showTrackUnavailable();
                 });
                 return;
             }
@@ -2354,6 +2356,7 @@
             pendingSoundCloudPlaybackStartsAtZero = false;
             clearSoundCloudLoading();
             cancelledSoundCloudPlaybackId = currentTrackId;
+            soundcloudPlayers[currentTrackId]?.pause();
             setPlaybackState(false);
             const notice = document.getElementById('audioAvailabilityMessage');
             if (notice) {
@@ -2407,8 +2410,9 @@
             if (!player) {
                 pendingSoundCloudPlaybackId = id;
                 pendingSoundCloudPlaybackStartsAtZero = true;
+                const requestedSoundCloudTrackId = id;
                 initialiseSoundCloudPlayers().catch(() => {
-                    if (activeAudioProvider === 'soundcloud') showTrackUnavailable();
+                    if (activeAudioProvider === 'soundcloud' && armedSoundCloudPlaybackId === requestedSoundCloudTrackId) showTrackUnavailable();
                 });
                 return;
             }
