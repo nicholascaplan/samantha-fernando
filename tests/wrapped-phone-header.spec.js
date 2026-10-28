@@ -19,7 +19,10 @@ for (const width of [320, 390]) for (const theme of ['light', 'dark']) for (cons
   await toggle.click();
   await expect(menu).toBeHidden();
   await toggle.click();
-  await page.locator('#themeToggleBtn').click();
+  const themeToggle = page.locator('#themeToggleBtn');
+  const pressedBefore = await themeToggle.getAttribute('aria-pressed');
+  await themeToggle.click();
+  await expect(themeToggle).toHaveAttribute('aria-pressed', pressedBefore === 'true' ? 'false' : 'true');
   await expect(menu).toBeVisible();
   await page.touchscreen.tap(5,895);
   await expect(menu).toBeHidden();
