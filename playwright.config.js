@@ -2,6 +2,9 @@ const { defineConfig, devices } = require('@playwright/test');
 
 module.exports = defineConfig({
   testDir: './tests',
+  // Only PR CI adds the live dependency gate; deployment and offline units do not.
+  globalSetup: process.env.GITHUB_EVENT_NAME === 'pull_request'
+    ? require.resolve('./scripts/check-font-assets.mjs') : undefined,
   timeout: 30_000,
   forbidOnly: !!process.env.CI,
   workers: process.env.CI ? 2 : undefined,
@@ -10,7 +13,7 @@ module.exports = defineConfig({
     trace: 'retain-on-failure',
   },
   webServer: {
-    command: 'npm run build:test && exec python3 scripts/serve.py --port 8010 --directory _site',
+    command: 'npm run build:test -- --test-font-fixtures && exec python3 scripts/serve.py --port 8010 --directory _site',
     url: 'http://127.0.0.1:8010',
     reuseExistingServer: false,
   },
