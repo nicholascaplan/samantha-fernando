@@ -75,3 +75,5 @@ Record only decisions that constrain future work. Implementation history and com
 - Test generated output before publishing. Audit the artifact against the explicit page/asset allowlist and fail on unexpected or stale files; never upload source templates or maintainer content.
 
 The past-performance disclosure pairs its heading with an explicit Show dates/Hide dates action, with the chevron beside the action rather than alone at the far edge. Preserve native summary semantics and whole-row keyboard activation. The clarified treatment is a preview proposal pending user judgement.
+
+Mobile navigation uses compact vertical spacing while retaining at least 44px link targets and readable enlarged text. When open, a backdrop intercepts page taps: tapping outside the menu dismisses it without activating the content below. Header controls remain available. The compact treatment is a review proposal until approved.
