@@ -7,7 +7,6 @@ for (const isolate of [false, true]) {
     test.skip(browserName !== 'firefox', 'Firefox-only diagnostic');
     const browser = await firefox.launch({ firefoxUserPrefs: quietNotification ? { 'media.webspeech.synth.dont_notify_on_error': true } : {} });
     const context = await browser.newContext({ ...devices['Desktop Firefox'], viewport: { width: 768, height: 600 } });
-    await context.tracing.start({ screenshots: true, snapshots: true, sources: true });
     const page = await context.newPage();
     const messages = [];
     page.on('console', message => messages.push({ type: message.type(), text: message.text() }));
@@ -37,8 +36,6 @@ for (const isolate of [false, true]) {
      const state = await page.evaluate(() => ({ clicks: window.__diagnosticClicks, consent: localStorage.getItem('analyticsConsent'), banner: document.querySelector('#cookieConsentBanner')?.className, expanded: document.querySelector('#mobileMenuToggle')?.getAttribute('aria-expanded') })).catch(error => ({ unavailable: error.message }));
      console.log(JSON.stringify({ isolate, quietNotification, scale, state, messages }));
      await testInfo.attach('diagnostic-state', { body: JSON.stringify({ isolate, quietNotification, scale, state, messages }, null, 2), contentType: 'application/json' });
-     await context.tracing.stop({ path: testInfo.outputPath('diagnostic-trace.zip') }).catch(() => {});
-     await testInfo.attach('diagnostic-trace', { path: testInfo.outputPath('diagnostic-trace.zip'), contentType: 'application/zip' }).catch(() => {});
      await browser.close();
     }
    });
