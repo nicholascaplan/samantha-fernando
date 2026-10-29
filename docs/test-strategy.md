@@ -32,6 +32,7 @@ npm test
 - Contact-form readiness (`tests/contact-form-timing.spec.js`): a local server streams `/contact/` up to the form and holds the scripts back, then checks that an early submission is held and sent exactly once after load, keeps typed values when rejected, and shows the existing error (with no request and no navigation) if the scripts never load. Formspree is always mocked.
 - Keyboard-operable audio rows, catalogue view state, result announcements and Instrumentation-menu keyboard navigation.
 - Mocked Spotify and SoundCloud playback state, including provider hand-off and controller/playback preservation through repeated page changes.
+- Deferred SoundCloud initialisation (`tests/soundcloud-deferred-playback.spec.js`): no SoundCloud requests before the first playback request; the soundbar appears at intent; the "Loading audio…" message (steady text beside a small spinner, static when reduced motion is enabled) appears only after playback has been pending for half a second and clears on playback start, cancellation or a new selection; a request that never starts surfaces the unavailable message after 15 seconds and pauses the player; a failed player script surfaces it immediately unless the visitor already cancelled that request. Pending-playback timing uses Playwright's mocked clock, not fixed waits.
 - Public accessibility on the deployed hostname mapped to the local server.
 - Serious and critical Axe violations across interactive states.
 

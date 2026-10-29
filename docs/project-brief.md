@@ -48,7 +48,7 @@ Record only decisions that constrain future work. Implementation history and com
 - Render compact Works and Listen cards. Render Watch as thumbnail-led YouTube cards that open the in-page modal.
 - Show only the year in Watch metadata. Do not repeat the implied `Film` label.
 - Use `Preview` for Spotify and `Listen` for SoundCloud actions. Show a related-work category and duration when known.
-- Keep audio playback and the soundbar active during in-page navigation. SoundCloud players initialise after page load and queue early requests.
+- Keep audio playback and the soundbar active during in-page navigation. SoundCloud players initialise on playback intent and queue the request until each player is ready.
 - Use the custom playback rows rather than provider-native embeds. Native embeds add uncontrollable UI and inconsistent mobile sizing.
 - Use a shared media-action width on desktop; stack multiple actions there and use equal-width paired actions on mobile, wrapping when more than two actions are present. Left-align single mobile media actions.
 - Use a neutral treatment for availability and missing-metadata notices unless an actual error occurred.

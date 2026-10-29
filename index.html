@@ -379,6 +379,14 @@
         #soundbarProgress { width: 100%; height: 0.35rem; overflow: hidden; border: 1px solid rgba(180, 83, 9, 0.3); border-radius: 9999px; background: rgba(139, 129, 117, 0.35); }
         #soundbarProgressFill { width: 0; height: 100%; border-radius: inherit; background: #b45309; box-shadow: 0 0 0.4rem rgba(180, 83, 9, 0.65); transition: width 0.2s linear; }
         #soundbarTimes { display: flex; justify-content: space-between; font-variant-numeric: tabular-nums; color: #d4d4d4; }
+        #soundbarLoading { display: flex; align-items: center; justify-content: center; gap: 0.35rem; text-align: center; font-size: 10px; }
+        #soundbarLoading.hidden { display: none; }
+        .loading-spinner { width: 0.55rem; height: 0.55rem; flex: none; border-radius: 50%; border: 1.5px solid rgba(245, 245, 245, 0.3); border-top-color: #f6bf7b; animation: soundbar-loading-spin 1s linear infinite; }
+        .light-mode .loading-spinner { border-color: rgba(24, 33, 31, 0.2); border-top-color: #944900; }
+        @keyframes soundbar-loading-spin { to { transform: rotate(360deg); } }
+        @media (prefers-reduced-motion: reduce) {
+            .loading-spinner { animation: none; }
+        }
         #soundbarControls { position: absolute; right: 1.25rem; top: 50%; display: flex; gap: 0.2rem; transform: translateY(-50%); }
         #soundbarControls button { color: #f6bf7b; }
         #soundbarControls button:hover { background: rgba(180, 83, 9, 0.24); }
@@ -978,6 +986,7 @@
                 <span id="soundbarElapsedTime">0:00</span>
                 <span id="soundbarDurationTime" class="hidden"></span>
             </div>
+            <span id="soundbarLoading" class="hidden" role="status"><span class="loading-spinner" aria-hidden="true"></span>Loading audio…</span>
         </div>
         <div id="soundbarControls">
             <button id="soundbarPauseBtn" onclick="toggleActivePlayback()" aria-label="Pause playback" title="Pause playback" class="w-7 h-7 rounded-full flex items-center justify-center text-amber-700 hover:bg-amber-100 transition-colors">
@@ -1884,6 +1893,43 @@
         let soundcloudPlayers = {};
         let soundcloudInitialisation = null;
         let playbackRequestToken = 0;
+        // Feedback for playback requests that have not started yet: a "Loading
+        // audio…" message appears only once playback has been pending for more
+        // than SOUNDCLOUD_LOADING_DELAY_MS, and a request that has not started
+        // within SOUNDCLOUD_PLAYBACK_TIMEOUT_MS surfaces the unavailable message.
+        const SOUNDCLOUD_LOADING_DELAY_MS = 500;
+        const SOUNDCLOUD_PLAYBACK_TIMEOUT_MS = 15000;
+        // The widget API cannot attribute PLAY events to a specific play()
+        // call, so a cancellation is recorded as the track's latest intent and
+        // PLAY events are ignored only until a newer request is armed.
+        let armedSoundCloudPlaybackId = null;
+        let cancelledSoundCloudPlaybackId = null;
+        let soundCloudLoadingTimer = null;
+        let soundCloudPlaybackWatchdog = null;
+
+        function clearSoundCloudLoading() {
+            armedSoundCloudPlaybackId = null;
+            window.clearTimeout(soundCloudLoadingTimer);
+            soundCloudLoadingTimer = null;
+            window.clearTimeout(soundCloudPlaybackWatchdog);
+            soundCloudPlaybackWatchdog = null;
+            document.getElementById('soundbarLoading')?.classList.add('hidden');
+        }
+
+        function armSoundCloudLoading(id) {
+            if (armedSoundCloudPlaybackId === id) return;
+            clearSoundCloudLoading();
+            armedSoundCloudPlaybackId = id;
+            cancelledSoundCloudPlaybackId = null;
+            setPlaybackState(true);
+            soundCloudLoadingTimer = window.setTimeout(() => {
+                document.getElementById('soundbarLoading')?.classList.remove('hidden');
+            }, SOUNDCLOUD_LOADING_DELAY_MS);
+            soundCloudPlaybackWatchdog = window.setTimeout(() => {
+                if (!armedSoundCloudPlaybackId) return;
+                showTrackUnavailable();
+            }, SOUNDCLOUD_PLAYBACK_TIMEOUT_MS);
+        }
 
         function initialiseSoundCloudPlayers() {
             if (soundcloudInitialisation) return soundcloudInitialisation;
@@ -1894,27 +1940,28 @@
                     .filter(media => media.type === 'listen' && media.provider === 'soundcloud')
                     .map(media => [media.id, {id: media.playerId || `soundcloudPlayer-${media.id}`, title: `${media.title} SoundCloud player`, url: media.url}]));
 
-                Object.values(tracks).forEach(track => {
-                    const iframe = document.createElement('iframe');
-                    iframe.id = track.id;
-                    iframe.title = track.title;
-                    iframe.className = 'soundcloud-player';
-                    iframe.allow = 'autoplay; encrypted-media; fullscreen';
-                    iframe.setAttribute('playsinline', '');
-                    iframe.src = `https://w.soundcloud.com/player/?url=${encodeURIComponent(track.url)}&auto_play=false`;
-                    playerContainer.appendChild(iframe);
-                });
-
+                // The widget API installs the page's message listener, so it must
+                // arrive before any player iframe can boot: a READY posted before
+                // then is dropped and the widget would never report ready.
                 const script = document.createElement('script');
                 script.src = 'https://w.soundcloud.com/player/api.js';
                 script.onload = () => {
+                    Object.values(tracks).forEach(track => {
+                        const iframe = document.createElement('iframe');
+                        iframe.id = track.id;
+                        iframe.title = track.title;
+                        iframe.className = 'soundcloud-player';
+                        iframe.allow = 'autoplay; encrypted-media; fullscreen';
+                        iframe.setAttribute('playsinline', '');
+                        iframe.src = `https://w.soundcloud.com/player/?url=${encodeURIComponent(track.url)}&auto_play=false`;
+                        playerContainer.appendChild(iframe);
+                    });
                     soundcloudPlayers = Object.fromEntries(Object.entries(tracks).map(([key, track]) => [key, SC.Widget(document.getElementById(track.id))]));
                     bindSoundCloudEvents();
                     resolve();
                 };
                 script.onerror = () => {
                     soundcloudInitialisation = null;
-                    playerContainer.replaceChildren();
                     reject(new Error('SoundCloud player failed to load.'));
                 };
                 document.head.appendChild(script);
@@ -1976,7 +2023,7 @@
             stopSoundbarProgressTimer();
             const updateProgress = () => {
                 if (!isAudioPlaying || activeAudioProvider !== 'soundcloud') return;
-                soundcloudPlayers[currentTrackId].getPosition(position => updateSoundbarProgress(position));
+                soundcloudPlayers[currentTrackId]?.getPosition(position => updateSoundbarProgress(position));
             };
             updateProgress();
             soundbarProgressTimer = window.setInterval(updateProgress, 500);
@@ -2024,6 +2071,9 @@
             updateSoundbarProgress(spotifyElapsedMs);
             document.getElementById('soundbarLabel').textContent = currentTrackName;
             document.getElementById('soundbar').classList.remove('hidden');
+            pendingSoundCloudPlaybackId = null;
+            pendingSoundCloudPlaybackStartsAtZero = false;
+            clearSoundCloudLoading();
             pauseSoundCloudPlayers();
             if (!spotifyReady) {
                 pendingSpotifyTrack = trackId;
@@ -2114,7 +2164,8 @@
                 }
             });
             player.bind(SC.Widget.Events.PLAY, () => {
-                if (activeAudioProvider === 'soundcloud' && currentTrackId === id) {
+                if (activeAudioProvider === 'soundcloud' && currentTrackId === id && cancelledSoundCloudPlaybackId !== id) {
+                    clearSoundCloudLoading();
                     loadSoundCloudProgressMetadata(id);
                     setPlaybackState(true);
                 }
@@ -2157,17 +2208,34 @@
                 return;
             }
 
-            const player = soundcloudPlayers[currentTrackId];
-            if (!player) {
-                initialiseSoundCloudPlayers().then(toggleActivePlayback).catch(showTrackUnavailable);
+            if (armedSoundCloudPlaybackId === currentTrackId) {
+                // Cancel a playback request that has not started yet.
+                pendingSoundCloudPlaybackId = null;
+                pendingSoundCloudPlaybackStartsAtZero = false;
+                clearSoundCloudLoading();
+                cancelledSoundCloudPlaybackId = currentTrackId;
+                soundcloudPlayers[currentTrackId]?.pause();
+                setPlaybackState(false);
                 return;
             }
+
+            const player = soundcloudPlayers[currentTrackId];
             if (isAudioPlaying) {
                 player.pause();
                 return;
             }
 
             isPlaybackStopped = false;
+            armSoundCloudLoading(currentTrackId);
+            if (!player) {
+                pendingSoundCloudPlaybackId = currentTrackId;
+                pendingSoundCloudPlaybackStartsAtZero = false;
+                const requestedSoundCloudTrackId = currentTrackId;
+                initialiseSoundCloudPlayers().catch(() => {
+                    if (activeAudioProvider === 'soundcloud' && armedSoundCloudPlaybackId === requestedSoundCloudTrackId) showTrackUnavailable();
+                });
+                return;
+            }
             if (readySoundCloudPlayers.has(currentTrackId)) player.play();
             else {
                 pendingSoundCloudPlaybackId = currentTrackId;
@@ -2198,8 +2266,14 @@
             }
 
             const player = soundcloudPlayers[currentTrackId];
+            armSoundCloudLoading(currentTrackId);
             if (!player) {
-                initialiseSoundCloudPlayers().then(restartActivePlayback).catch(showTrackUnavailable);
+                pendingSoundCloudPlaybackId = currentTrackId;
+                pendingSoundCloudPlaybackStartsAtZero = true;
+                const requestedSoundCloudTrackId = currentTrackId;
+                initialiseSoundCloudPlayers().catch(() => {
+                    if (activeAudioProvider === 'soundcloud' && armedSoundCloudPlaybackId === requestedSoundCloudTrackId) showTrackUnavailable();
+                });
                 return;
             }
             if (readySoundCloudPlayers.has(currentTrackId)) {
@@ -2217,6 +2291,8 @@
             pendingSpotifyTrack = null;
             pendingSoundCloudPlaybackId = null;
             pendingSoundCloudPlaybackStartsAtZero = false;
+            clearSoundCloudLoading();
+            cancelledSoundCloudPlaybackId = currentTrackId;
             spotifyController?.pause();
             pauseSoundCloudPlayers();
             activeSpotifyTrack = null;
@@ -2276,6 +2352,11 @@
         }
 
         function showTrackUnavailable() {
+            pendingSoundCloudPlaybackId = null;
+            pendingSoundCloudPlaybackStartsAtZero = false;
+            clearSoundCloudLoading();
+            cancelledSoundCloudPlaybackId = currentTrackId;
+            soundcloudPlayers[currentTrackId]?.pause();
             setPlaybackState(false);
             const notice = document.getElementById('audioAvailabilityMessage');
             if (notice) {
@@ -2288,8 +2369,14 @@
             const player = soundcloudPlayers[id];
             const notice = document.getElementById('audioAvailabilityMessage');
 
-            if (!player) {
-                initialiseSoundCloudPlayers().then(() => playTrack(title, artist, id)).catch(showTrackUnavailable);
+            if (activeAudioProvider === 'soundcloud' && id === currentTrackId && isAudioPlaying && armedSoundCloudPlaybackId === id) {
+                // Cancel a playback request that has not started yet.
+                pendingSoundCloudPlaybackId = null;
+                pendingSoundCloudPlaybackStartsAtZero = false;
+                clearSoundCloudLoading();
+                cancelledSoundCloudPlaybackId = id;
+                player?.pause();
+                setPlaybackState(false);
                 return;
             }
 
@@ -2319,6 +2406,16 @@
             loadSoundCloudProgressMetadata(id);
             // A newly selected recording always starts from the beginning.
             pendingSoundCloudPlaybackId = null;
+            armSoundCloudLoading(id);
+            if (!player) {
+                pendingSoundCloudPlaybackId = id;
+                pendingSoundCloudPlaybackStartsAtZero = true;
+                const requestedSoundCloudTrackId = id;
+                initialiseSoundCloudPlayers().catch(() => {
+                    if (activeAudioProvider === 'soundcloud' && armedSoundCloudPlaybackId === requestedSoundCloudTrackId) showTrackUnavailable();
+                });
+                return;
+            }
             if (readySoundCloudPlayers.has(id)) {
                 player.seekTo(0);
                 player.play();
@@ -2732,11 +2829,6 @@
 
         window.onload = function() {
             restoreMobilePreview();
-            if (!isMobilePreview) {
-                const initialiseWhenIdle = () => initialiseSoundCloudPlayers().catch(() => {});
-                if ('requestIdleCallback' in window) window.requestIdleCallback(initialiseWhenIdle, { timeout: 5000 });
-                else window.setTimeout(initialiseWhenIdle, 0);
-            }
         };
     </script>
     <script>
