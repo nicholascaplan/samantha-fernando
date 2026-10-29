@@ -434,7 +434,12 @@ test('a Spotify request waiting on the player API shows and honours cancellation
   await expect(page.locator('#soundbarLabel')).toHaveText('Balconies · Olivia de Prato');
   await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Cancel playback request');
 
+  // The pending request shows loading feedback, not only the label.
+  await page.clock.runFor(600);
+  await expect(page.locator('#soundbarLoading')).toBeVisible();
+
   await page.locator('#soundbarPauseBtn').click();
   await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Resume playback');
+  await expect(page.locator('#soundbarLoading')).toBeHidden();
   await expect(page.locator('#audioAvailabilityMessage')).toBeHidden();
 });

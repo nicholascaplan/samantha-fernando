@@ -2119,6 +2119,11 @@
             if (!spotifyReady) {
                 pendingSpotifyTrack = trackId;
                 setPendingPlaybackUI();
+                // A pending request shows the loading feedback too, not only
+                // the cancellable label.
+                window.setTimeout(() => {
+                    if (pendingSpotifyTrack === trackId) showSoundbarLoading('spotify');
+                }, SOUNDCLOUD_LOADING_DELAY_MS);
                 loadSpotifyApi();
                 return;
             }
@@ -2161,6 +2166,7 @@
         }
 
         function setSpotifyPlaybackState(playing, trackId) {
+            hideSoundbarLoading('spotify');
             isAudioPlaying = playing;
             if (playing) isPlaybackStopped = false;
             if (playing) startSpotifyProgressTimer();
