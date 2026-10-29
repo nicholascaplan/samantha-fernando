@@ -2043,10 +2043,7 @@
             script.async = true;
             script.onerror = () => {
                 spotifyApiLoading = false;
-                if (pendingSpotifyTrack) {
-                    pendingSpotifyTrack = null;
-                    showSpotifyUnavailable();
-                }
+                if (pendingSpotifyTrack) showSpotifyUnavailable();
             };
             document.head.appendChild(script);
         }
@@ -2157,6 +2154,11 @@
         }
 
         function showSpotifyUnavailable() {
+            // Failure ends the request: a late API-ready callback or a late
+            // controller callback must not start playback after the failure
+            // was surfaced.
+            playbackRequestToken += 1;
+            pendingSpotifyTrack = null;
             clearSpotifyLoading();
             spotifyController?.pause?.();
             setSpotifyPlaybackState(false, activeSpotifyTrack || currentTrackId);
@@ -2215,6 +2217,8 @@
             const wasStopped = isPlaybackStopped;
             const recording = mediaCatalog.find(media => media.type === 'listen' && media.provider === 'spotify' && media.id === trackId);
             if (!recording) return;
+            // A new request supersedes any failure notice from a previous one.
+            document.getElementById('audioAvailabilityMessage')?.classList.add('hidden');
             currentTrackName = recording.playbackLabel || recording.title;
             currentTrackId = trackId;
             activeAudioProvider = 'spotify';
@@ -2272,13 +2276,10 @@
             const container = document.createElement('div');
             container.className = 'spotify-player';
             document.body.appendChild(container);
-            // The request stays pending - cancellable, with its loading
-            // feedback - until the controller callback starts playback.
-            // Clearing the pending state earlier would leave the Cancel
-            // button requesting the track again instead of cancelling.
-            pendingSpotifyTrack = trackId;
-            setPendingPlaybackUI();
-            showSoundbarLoading('spotify');
+            // The request is pending from this call, not only once the
+            // controller callback runs: arm the loading feedback, watchdog
+            // and cancel affordance before the asynchronous createController.
+            armSpotifyLoading(trackId);
             spotifyReady.createController(container, { width: 1, height: 1 }, controller => {
                 if (requestToken !== playbackRequestToken || activeAudioProvider !== 'spotify') {
                     // A stale callback must not become the live controller:

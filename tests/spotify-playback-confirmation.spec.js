@@ -177,6 +177,70 @@ test('surfaces the unavailable message when playback never starts', async ({ pag
   await expect(page.locator('#audioAvailabilityMessage')).toHaveCSS('position', 'fixed');
 });
 
+test('a Spotify API that becomes ready after the failure notice cannot start playback', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__spotifyCalls = [];
+    window.__spotifyIFrameApi = {
+      createController: (_container, _options, callback) => callback({
+        loadUri: uri => window.__spotifyCalls.push(['loadUri', uri]),
+        seek: position => window.__spotifyCalls.push(['seek', position]),
+        play: () => window.__spotifyCalls.push(['play']),
+        pause: () => window.__spotifyCalls.push(['pause']),
+        addListener: () => {},
+      }),
+    };
+    localStorage.setItem('analyticsConsent', 'rejected');
+  });
+  // The API script hangs past the watchdog timeout.
+  await page.route('https://open.spotify.com/embed/iframe-api/v1', () => new Promise(() => {}));
+  await installPausedClock(page);
+  await page.goto('/listen/');
+
+  await balconiesCard(page).click();
+  await page.clock.runFor(16000);
+  await expect(page.locator('#audioAvailabilityMessage')).toBeVisible();
+
+  // The API arrives late: the failed request must stay failed, not revive.
+  await page.evaluate(() => window.onSpotifyIframeApiReady(window.__spotifyIFrameApi));
+  await expect(page.locator('#audioAvailabilityMessage')).toBeVisible();
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Resume playback');
+  expect(await page.evaluate(() => window.__spotifyCalls)).toEqual([]);
+});
+
+test('a retry after a stalled controller request is cancellable and watchdogged', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__spotifyCalls = [];
+    // createController never invokes its callback: every request waits forever.
+    window.__spotifyIFrameApi = { createController: () => {} };
+    localStorage.setItem('analyticsConsent', 'rejected');
+  });
+  await page.route('https://open.spotify.com/embed/iframe-api/v1', route =>
+    route.fulfill({
+      contentType: 'application/javascript',
+      body: 'window.__spotifyApiReadyCalled = true; window.onSpotifyIframeApiReady(window.__spotifyIFrameApi);',
+    }),
+  );
+  await installPausedClock(page);
+  await page.goto('/listen/');
+
+  await balconiesCard(page).click();
+  await expect.poll(() => page.evaluate(() => Boolean(window.__spotifyApiReadyCalled))).toBe(true);
+  // The first request times out waiting on a controller callback that never comes.
+  await page.clock.runFor(16000);
+  await expect(page.locator('#audioAvailabilityMessage')).toBeVisible();
+
+  // Retry with the API ready but no controller: the new request must still
+  // present as pending - cancellable immediately, loading after the delay,
+  // and guarded by its own watchdog - not silent.
+  await balconiesCard(page).click();
+  await expect(page.locator('#audioAvailabilityMessage')).toBeHidden();
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Cancel playback request');
+  await page.clock.runFor(600);
+  await expect(page.locator('#soundbarLoading')).toBeVisible();
+  await page.clock.runFor(16000);
+  await expect(page.locator('#audioAvailabilityMessage')).toBeVisible();
+});
+
 test('cancelling pending playback from the soundbar clears the loading state', async ({ page }) => {
   await mockSpotify(page);
   await installPausedClock(page);
