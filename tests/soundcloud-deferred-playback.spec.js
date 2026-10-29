@@ -416,3 +416,25 @@ test('the soundbar does not move when the loading message appears or clears', as
   expect(loading).toEqual(requested);
   expect(playing).toEqual(requested);
 });
+
+test('a Spotify request waiting on the player API shows and honours cancellation', async ({ page }) => {
+  await mockSoundCloud(page);
+  // The Spotify API script never calls back: the request stays in the
+  // pre-API pending window.
+  await page.route('https://open.spotify.com/embed/iframe-api/v1', route =>
+    route.fulfill({ contentType: 'application/javascript', body: '' }),
+  );
+  await installPausedClock(page);
+  await page.goto('/listen/');
+
+  // Switch from a pending SoundCloud request to a Spotify track: the pending
+  // label now belongs to the Spotify request and must mean cancellation.
+  await lookUpCard(page).click();
+  await page.locator('#worksContainer [data-spotify-track="2wNL47uCuwDpbOqCIpbSTS"]').click();
+  await expect(page.locator('#soundbarLabel')).toHaveText('Balconies · Olivia de Prato');
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Cancel playback request');
+
+  await page.locator('#soundbarPauseBtn').click();
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Resume playback');
+  await expect(page.locator('#audioAvailabilityMessage')).toBeHidden();
+});

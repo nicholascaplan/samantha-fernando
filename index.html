@@ -2118,6 +2118,7 @@
             pauseSoundCloudPlayers();
             if (!spotifyReady) {
                 pendingSpotifyTrack = trackId;
+                setPendingPlaybackUI();
                 loadSpotifyApi();
                 return;
             }
@@ -2233,6 +2234,15 @@
             }
             if (activeAudioProvider === 'spotify') {
                 if (!spotifyController) {
+                    if (pendingSpotifyTrack) {
+                        // A request still waiting on the player API is
+                        // cancelled here; the button said "Cancel playback
+                        // request", so cancelling is what it must do.
+                        playbackRequestToken += 1;
+                        pendingSpotifyTrack = null;
+                        setSpotifyPlaybackState(false, currentTrackId);
+                        return;
+                    }
                     playSpotifyTrack(currentTrackId);
                     return;
                 }
