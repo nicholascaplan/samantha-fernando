@@ -130,24 +130,23 @@ test('treats a real pause at the end as finished and replays from the start', as
   expect(calls.filter(call => call[0] === 'play')).toHaveLength(2);
 });
 
-test('shows a loading message only when playback stays pending beyond half a second', async ({ page }) => {
+test('shows loading feedback with the piece name as soon as playback is requested', async ({ page }) => {
   await mockSpotify(page);
   await installPausedClock(page);
   await page.goto('/listen/');
 
   await balconiesCard(page).click();
   await expect(page.locator('#soundbar')).toBeVisible();
-  await expect(page.locator('#soundbarLoading')).toBeHidden();
-
-  await page.clock.runFor(400);
-  await expect(page.locator('#soundbarLoading')).toBeHidden();
-
-  await page.clock.runFor(200);
+  // One-step reveal: the loading feedback is part of the pending
+  // presentation, and the piece name stays visible underneath it.
   await expect(page.locator('#soundbarLoading')).toBeVisible();
   await expect(page.locator('#soundbarLoading')).toHaveText('Loading audio…');
+  await expect(page.locator('#soundbarLabel')).toBeVisible();
+  await expect(page.locator('#soundbarLabel')).toHaveText(/Balconies/);
 
   await fireSpotifyUpdate(page, { isPaused: false, isBuffering: false, position: 0, duration: 30000 });
   await expect(page.locator('#soundbarLoading')).toBeHidden();
+  await expect(page.locator('#soundbarLabel')).toBeVisible();
   await expect(page.locator('#audioAvailabilityMessage')).toBeHidden();
 });
 
@@ -230,8 +229,8 @@ test('a retry after a stalled controller request is cancellable and watchdogged'
   await expect(page.locator('#audioAvailabilityMessage')).toBeVisible();
 
   // Retry with the API ready but no controller: the new request must still
-  // present as pending - cancellable immediately, loading after the delay,
-  // and guarded by its own watchdog - not silent.
+  // present as pending - cancellable immediately, showing the loading
+  // feedback, and guarded by its own watchdog - not silent.
   await balconiesCard(page).click();
   await expect(page.locator('#audioAvailabilityMessage')).toBeHidden();
   await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Cancel playback request');

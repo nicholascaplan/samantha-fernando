@@ -2126,8 +2126,12 @@
             // the cancelled track's reports are already rejected by URI.
             if (spotifyStaleGuardUri && spotifyStaleGuardUri !== trackId) spotifyStaleGuardUri = null;
             // A re-entered request (the API was still loading) keeps the
-            // pending clock it already had rather than starting over.
-            if (armedSpotifyTrackId === trackId) return;
+            // pending clock it already had rather than starting over; the
+            // loading feedback the entry point just cleared is shown again.
+            if (armedSpotifyTrackId === trackId) {
+                if (spotifyPlaybackPending) showSoundbarLoading('spotify');
+                return;
+            }
             clearSpotifyLoading();
             armedSpotifyTrackId = trackId;
             spotifyPlaybackPending = true;
