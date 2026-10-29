@@ -272,6 +272,35 @@ test('reselecting a track waiting on the controller callback cancels the request
   await expect(page.locator('#audioAvailabilityMessage')).toBeHidden();
 });
 
+test('a stale same-track report from a cancelled request cannot confirm the re-armed one', async ({ page }) => {
+  await mockSpotify(page);
+  await installPausedClock(page);
+  await page.goto('/listen/');
+
+  await balconiesCard(page).click();
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Cancel playback request');
+  // Cancel, then reselect the same track: the new request is pending again.
+  await page.locator('#soundbarPauseBtn').click();
+  await balconiesCard(page).click();
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Cancel playback request');
+
+  // A late playing report from the cancelled generation carries the same URI:
+  // it must not confirm the new request, move the bar, or stop the watchdog.
+  await fireSpotifyUpdate(page, { playingURI: 'spotify:track:2wNL47uCuwDpbOqCIpbSTS', isPaused: false, isBuffering: false, position: 5000, duration: 413000 });
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Cancel playback request');
+  await expect(page.locator('#soundbarElapsedTime')).toHaveText('0:00');
+  await page.clock.runFor(600);
+  await expect(page.locator('#soundbarLoading')).toBeVisible();
+
+  // The controller's paused acknowledgement drains the guard; the next real
+  // playing report confirms the new request normally.
+  await fireSpotifyUpdate(page, { playingURI: 'spotify:track:2wNL47uCuwDpbOqCIpbSTS', isPaused: true, position: 0, duration: 413000 });
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Cancel playback request');
+  await fireSpotifyUpdate(page, { playingURI: 'spotify:track:2wNL47uCuwDpbOqCIpbSTS', isPaused: false, isBuffering: false, position: 1000, duration: 413000 });
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
+  await expect(page.locator('#soundbarElapsedTime')).toHaveText('0:01');
+});
+
 test('cancelling pending playback from the soundbar clears the loading state', async ({ page }) => {
   await mockSpotify(page);
   await installPausedClock(page);

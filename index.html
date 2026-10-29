@@ -1925,6 +1925,12 @@
         // unavailable message instead of pretending to play.
         let spotifyPlaybackPending = false;
         let armedSpotifyTrackId = null;
+        // Set by a cancellation that could leave a same-URI playing report in
+        // flight: such a report is indistinguishable from the re-armed
+        // request's own confirmation by URI alone, so playing/buffering
+        // reports for this track are ignored until the controller acknowledges
+        // the cancellation with a paused report (or moves to another track).
+        let spotifyStaleGuardUri = null;
         let spotifyPlaybackWatchdog = null;
         const SPOTIFY_PLAYBACK_TIMEOUT_MS = 15000;
         let soundbarProgressTimer = null;
@@ -2116,6 +2122,9 @@
         }
 
         function armSpotifyLoading(trackId) {
+            // A request for another track makes the stale-report guard moot:
+            // the cancelled track's reports are already rejected by URI.
+            if (spotifyStaleGuardUri && spotifyStaleGuardUri !== trackId) spotifyStaleGuardUri = null;
             // A re-entered request (the API was still loading) keeps the
             // pending clock it already had rather than starting over.
             if (armedSpotifyTrackId === trackId) return;
@@ -2147,6 +2156,7 @@
         function cancelSpotifyPending() {
             // Invalidate any controller callback still waiting on this request.
             playbackRequestToken += 1;
+            if (spotifyController) spotifyStaleGuardUri = armedSpotifyTrackId || activeSpotifyTrack || currentTrackId;
             clearSpotifyLoading();
             pendingSpotifyTrack = null;
             spotifyController?.pause?.();
@@ -2187,6 +2197,20 @@
             // must not confirm or move the current track's bar.
             const expectedUri = `spotify:track:${armedSpotifyTrackId || activeSpotifyTrack || currentTrackId}`;
             if (data.playingURI && data.playingURI !== expectedUri) return;
+            if (spotifyStaleGuardUri) {
+                if (data.playingURI && data.playingURI !== `spotify:track:${spotifyStaleGuardUri}`) {
+                    spotifyStaleGuardUri = null;
+                } else if (data.isPaused === true) {
+                    // The cancellation's paused acknowledgement: the guard is
+                    // drained and later reports confirm normally again.
+                    spotifyStaleGuardUri = null;
+                    return;
+                } else {
+                    // A stale playing/buffering report from the cancelled
+                    // generation: not the re-armed request's confirmation.
+                    return;
+                }
+            }
             if (data.isPaused === false) {
                 // Confirmation must belong to a live request: an event after a
                 // cancellation or stop is stale and must not revive the bar.
