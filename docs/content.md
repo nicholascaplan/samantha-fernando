@@ -55,7 +55,7 @@ Listen and Watch are standalone pages at `/listen/` and `/watch/` sharing the Wo
 
 **Source of truth: Sanity.** The Biography is managed in the `biographyPage` singleton in Sanity project `9a66iw1t` (dataset `production`) and rendered into `/biography/` at build time using the shared source template in `index.html`. The copy below is the seeded content and the committed fallback; after the first edit in Sanity, the Studio is canonical and this section should be kept in step with it.
 
-Biography is the `/biography/` page, opened by the `Biography` navigation item. On mobile, a compact circular portrait breaks up the opening copy; larger screens retain the supporting portrait alongside the profile, milestones, education and fellowship.
+Biography is the `/biography/` page, opened by the `Biography` navigation item. The heading is followed by the birth-year line "b. 1984". On mobile, a circular portrait breaks up the opening copy; larger screens retain the supporting portrait alongside the profile, milestones, education and fellowship.
 
 ### Artistic Philosophy & Biography
 
