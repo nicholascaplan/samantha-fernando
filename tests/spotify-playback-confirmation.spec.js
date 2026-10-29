@@ -241,6 +241,37 @@ test('a retry after a stalled controller request is cancellable and watchdogged'
   await expect(page.locator('#audioAvailabilityMessage')).toBeVisible();
 });
 
+test('reselecting a track waiting on the controller callback cancels the request', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__spotifyCalls = [];
+    // createController never invokes its callback: every request waits forever.
+    window.__spotifyIFrameApi = { createController: () => {} };
+    localStorage.setItem('analyticsConsent', 'rejected');
+  });
+  await page.route('https://open.spotify.com/embed/iframe-api/v1', route =>
+    route.fulfill({
+      contentType: 'application/javascript',
+      body: 'window.__spotifyApiReadyCalled = true; window.onSpotifyIframeApiReady(window.__spotifyIFrameApi);',
+    }),
+  );
+  await installPausedClock(page);
+  await page.goto('/listen/');
+
+  await balconiesCard(page).click();
+  await expect.poll(() => page.evaluate(() => Boolean(window.__spotifyApiReadyCalled))).toBe(true);
+  // The API-ready dispatch must not cancel the queued request: it stays pending.
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Cancel playback request');
+
+  // A direct reselection in the controller-callback window cancels the request:
+  // no failure notice, no loading, and the request leaves the pending state.
+  await balconiesCard(page).click();
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Resume playback');
+  await page.clock.runFor(600);
+  await expect(page.locator('#soundbarLoading')).toBeHidden();
+  await page.clock.runFor(16000);
+  await expect(page.locator('#audioAvailabilityMessage')).toBeHidden();
+});
+
 test('cancelling pending playback from the soundbar clears the loading state', async ({ page }) => {
   await mockSpotify(page);
   await installPausedClock(page);

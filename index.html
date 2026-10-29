@@ -2054,7 +2054,7 @@
             if (pendingSpotifyTrack) {
                 const trackId = pendingSpotifyTrack;
                 pendingSpotifyTrack = null;
-                playSpotifyTrack(trackId);
+                playSpotifyTrack(trackId, { apiDispatch: true });
             }
         };
 
@@ -2212,7 +2212,7 @@
             }
         }
 
-        function playSpotifyTrack(trackId) {
+        function playSpotifyTrack(trackId, { apiDispatch = false } = {}) {
             const requestToken = ++playbackRequestToken;
             const wasStopped = isPlaybackStopped;
             const recording = mediaCatalog.find(media => media.type === 'listen' && media.provider === 'spotify' && media.id === trackId);
@@ -2270,6 +2270,15 @@
                 spotifyController.play();
                 activeSpotifyTrack = trackId;
                 armSpotifyLoading(trackId);
+                return;
+            }
+
+            if (!apiDispatch && armedSpotifyTrackId === trackId && spotifyPlaybackPending) {
+                // A direct reselection while the request still waits on the
+                // controller callback cancels that request. The API-ready
+                // dispatch passes apiDispatch so the queued first playback is
+                // never cancelled by this guard.
+                cancelSpotifyPending();
                 return;
             }
 
