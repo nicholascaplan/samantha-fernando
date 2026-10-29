@@ -92,7 +92,7 @@ test('exposes canonical metadata and structured data for search', async ({ page 
     'fetchpriority',
     'high',
   );
-  const heading = page.getByRole('heading', { name: 'Samantha Fernando, British Composer', level: 1 });
+  const heading = page.getByRole('heading', { name: 'Samantha Fernando British Composer', level: 1 });
   await expect(heading).toBeVisible();
   await expect(heading.locator('span')).toHaveText('British Composer');
   await expect(heading.locator('span')).toHaveClass(/text-xl/);
