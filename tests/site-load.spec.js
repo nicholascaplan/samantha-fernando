@@ -452,6 +452,26 @@ test('uses a compact portrait on mobile Biography @mobile', async ({ page }) => 
   await expect(page.locator('#tab-bio aside > figure')).toBeHidden();
 });
 
+test('keeps the Biography portrait viewport-sized at 200% root text @mobile', async ({ page }) => {
+  for (const width of [390, 320]) {
+    await page.setViewportSize({ width, height: 844 });
+    await page.goto('/biography/');
+    // Enlarge the root font size itself: real 200% browser text scales rem-based
+    // geometry, unlike a container font-size override.
+    await page.addStyleTag({ content: 'html { font-size: 200%; }' });
+
+    const portrait = page.locator('.bio-mobile-portrait');
+    await expect(portrait).toBeVisible();
+    const portraitBox = await portrait.boundingBox();
+    expect(portraitBox.width).toBeLessThanOrEqual(170);
+    expect(portraitBox.width).toBeGreaterThan(100);
+
+    // The opening paragraph must still wrap beside the float, not drop below it.
+    const firstParagraphBox = await page.locator('#tab-bio article > p').first().boundingBox();
+    expect(firstParagraphBox.y).toBeLessThan(portraitBox.y + portraitBox.height);
+  }
+});
+
 test('enlarges the mobile Biography portrait and shows the birth year @mobile', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/biography/');
