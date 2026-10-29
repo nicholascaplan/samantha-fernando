@@ -2154,10 +2154,18 @@
             if (activeAudioProvider !== 'spotify') return;
             const data = event?.data;
             if (!data) return;
+            // Events about another (previously loaded) track are stale: they
+            // must not confirm or move the current track's bar.
+            const expectedUri = `spotify:track:${armedSpotifyTrackId || activeSpotifyTrack || currentTrackId}`;
+            if (data.playingURI && data.playingURI !== expectedUri) return;
             if (data.isPaused === false) {
                 // Confirmation must belong to a live request: an event after a
                 // cancellation or stop is stale and must not revive the bar.
                 if (!spotifyPlaybackPending && !isSpotifyPlaying) return;
+                // A buffering report is not playback: a pending request stays
+                // pending (and the watchdog keeps running) until the player
+                // reports actual playback.
+                if (spotifyPlaybackPending && data.isBuffering === true) return;
                 clearSpotifyLoading();
                 if (typeof data.position === 'number') spotifyElapsedMs = data.position;
                 if (typeof data.duration === 'number' && data.duration > 0) trackDurationMs = data.duration;

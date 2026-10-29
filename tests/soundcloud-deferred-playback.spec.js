@@ -234,8 +234,11 @@ test('selecting Spotify cancels a pending SoundCloud request', async ({ page }) 
   await expect(page.locator('#soundbarLabel')).toHaveText('Balconies · Olivia de Prato');
 
   // The Spotify player confirms its request, so its own startup watchdog stays quiet.
+  await expect
+    .poll(() => page.evaluate(() => Boolean(window.__spotifyHandlers.playback_update)))
+    .toBe(true);
   await page.evaluate(() =>
-    window.__spotifyHandlers.playback_update?.({
+    window.__spotifyHandlers.playback_update({
       data: { isPaused: false, isBuffering: false, position: 0, duration: 30000 },
     }),
   );

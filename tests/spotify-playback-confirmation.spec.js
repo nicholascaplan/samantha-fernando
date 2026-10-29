@@ -274,3 +274,38 @@ test('resuming the same paused track continues from where it paused', async ({ p
     ['play'],
   ]);
 });
+
+test('stays pending while the player reports buffering, confirms on actual playback', async ({ page }) => {
+  await mockSpotify(page);
+  await page.goto('/listen/');
+
+  await balconiesCard(page).click();
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Cancel playback request');
+
+  // An unpaused but buffering report is not playback: the request stays
+  // pending and cancellable, and the watchdog keeps running.
+  await fireSpotifyUpdate(page, { isPaused: false, isBuffering: true, position: 0, duration: 413000 });
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Cancel playback request');
+  await expect(page.locator('#soundbarElapsedTime')).toHaveText('0:00');
+
+  await fireSpotifyUpdate(page, { isPaused: false, isBuffering: false, position: 0, duration: 413000 });
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
+});
+
+test('ignores playback events that report a different track', async ({ page }) => {
+  await mockSpotify(page);
+  await page.goto('/listen/');
+
+  await balconiesCard(page).click();
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Cancel playback request');
+
+  // A late event from a previously loaded track must not confirm or move
+  // the current track's bar.
+  await fireSpotifyUpdate(page, { playingURI: 'spotify:track:3YV79qjiJLOgYjjEzTsVEy', isPaused: false, isBuffering: false, position: 9000, duration: 30000 });
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Cancel playback request');
+  await expect(page.locator('#soundbarElapsedTime')).toHaveText('0:00');
+
+  await fireSpotifyUpdate(page, { playingURI: 'spotify:track:2wNL47uCuwDpbOqCIpbSTS', isPaused: false, isBuffering: false, position: 1000, duration: 413000 });
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
+  await expect(page.locator('#soundbarElapsedTime')).toHaveText('0:01');
+});
