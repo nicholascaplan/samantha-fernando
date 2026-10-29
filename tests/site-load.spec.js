@@ -1,4 +1,5 @@
 const { test, expect } = require('@playwright/test');
+const { waitForScrollSettle } = require('./scroll-settle');
 const AxeBuilder = require('@axe-core/playwright').default;
 
 async function mockPlaybackProviders(page) {
@@ -169,6 +170,9 @@ test('persists a rejected analytics choice and exposes cookie preferences', asyn
 
   await page.getByRole('link', { name: 'Privacy', exact: true }).click();
   await expect(page).toHaveURL(/\/privacy\/#cookie-settings$/);
+  // Enhanced navigation smooth-scrolls to the anchor; let the scroll settle
+  // before clicking so the button is not mid-motion (WebKit animates in bursts).
+  await waitForScrollSettle(page, '#cookie-settings');
   await page.getByRole('button', { name: 'Cookie preferences' }).click();
   await expect(page.getByRole('dialog', { name: 'Analytics and privacy' })).toBeVisible();
   await page.keyboard.press('Escape');
