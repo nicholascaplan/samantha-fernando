@@ -2122,7 +2122,11 @@
                 // A pending request shows the loading feedback too, not only
                 // the cancellable label.
                 window.setTimeout(() => {
-                    if (pendingSpotifyTrack === trackId) showSoundbarLoading('spotify');
+                    // Only the live request may show its loading feedback: a
+                    // timer from a superseded request must not fire early.
+                    if (requestToken === playbackRequestToken && pendingSpotifyTrack === trackId) {
+                        showSoundbarLoading('spotify');
+                    }
                 }, SOUNDCLOUD_LOADING_DELAY_MS);
                 loadSpotifyApi();
                 return;

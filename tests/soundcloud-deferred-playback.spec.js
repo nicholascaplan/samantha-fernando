@@ -246,6 +246,31 @@ test('selecting Spotify cancels a pending SoundCloud request', async ({ page }) 
   await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
 });
 
+test('reselecting a cancelled Spotify track restarts the loading feedback delay', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__spotifyCalls = [];
+    localStorage.setItem('analyticsConsent', 'rejected');
+  });
+  // The Spotify API script never resolves: requests stay in the pre-API
+  // pending window for the whole test.
+  await page.route('https://open.spotify.com/embed/iframe-api/v1', () => new Promise(() => {}));
+  await installPausedClock(page);
+  await page.goto('/listen/');
+
+  const card = page.locator('#worksContainer [data-spotify-track="2wNL47uCuwDpbOqCIpbSTS"]');
+  await card.click();
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Cancel playback request');
+  await page.clock.runFor(400);
+  // Cancel the first request, then select the same track again: the old
+  // request's loading timer must not fire for the new request.
+  await page.locator('#soundbarPauseBtn').click();
+  await card.click();
+  await page.clock.runFor(150); // 550ms after the first click, 150ms after the new request
+  await expect(page.locator('#soundbarLoading')).toBeHidden();
+  await page.clock.runFor(400); // 950ms after the first click, 550ms after the new request
+  await expect(page.locator('#soundbarLoading')).toBeVisible();
+});
+
 test('surfaces the unavailable message when the SoundCloud script fails to load', async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem('analyticsConsent', 'rejected');
