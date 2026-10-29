@@ -12,6 +12,10 @@ async function mockPlaybackProviders(page) {
           seek: position => window.__spotifyCalls.push(['seek', position]),
           play: () => window.__spotifyCalls.push(['play']),
           pause: () => window.__spotifyCalls.push(['pause']),
+          addListener: (event, handler) => {
+            window.__spotifyHandlers = window.__spotifyHandlers || {};
+            window.__spotifyHandlers[event] = handler;
+          },
         };
         callback(controller);
       },
@@ -826,6 +830,15 @@ for (const provider of ['soundcloud', 'spotify']) {
     } else {
       await page.evaluate(() => window.onSpotifyIframeApiReady(window.__spotifyIFrameApi));
       await page.locator('#worksContainer [data-spotify-track="2wNL47uCuwDpbOqCIpbSTS"]').click();
+      // The Spotify player confirms the request; only then does the bar show playing.
+      await expect
+        .poll(() => page.evaluate(() => Boolean(window.__spotifyHandlers?.playback_update)))
+        .toBe(true);
+      await page.evaluate(() =>
+        window.__spotifyHandlers.playback_update({
+          data: { isPaused: false, isBuffering: false, position: 0, duration: 30000 },
+        }),
+      );
     }
     await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
     const calls = await page.evaluate(() => JSON.stringify([window.__soundCloudCalls, window.__spotifyCalls]));

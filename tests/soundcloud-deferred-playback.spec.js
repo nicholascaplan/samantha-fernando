@@ -205,12 +205,16 @@ test('selecting Spotify cancels a pending SoundCloud request', async ({ page }) 
   await mockSoundCloud(page);
   await page.addInitScript(() => {
     window.__spotifyCalls = [];
+    window.__spotifyHandlers = {};
     window.__spotifyIFrameApi = {
       createController: (_container, _options, callback) => callback({
         loadUri: uri => window.__spotifyCalls.push(['loadUri', uri]),
         seek: position => window.__spotifyCalls.push(['seek', position]),
         play: () => window.__spotifyCalls.push(['play']),
         pause: () => window.__spotifyCalls.push(['pause']),
+        addListener: (event, handler) => {
+          window.__spotifyHandlers[event] = handler;
+        },
       }),
     };
   });
@@ -228,6 +232,13 @@ test('selecting Spotify cancels a pending SoundCloud request', async ({ page }) 
   await expect(page.locator('#soundbar')).toBeVisible();
   await page.locator('#worksContainer [data-spotify-track="2wNL47uCuwDpbOqCIpbSTS"]').click();
   await expect(page.locator('#soundbarLabel')).toHaveText('Balconies · Olivia de Prato');
+
+  // The Spotify player confirms its request, so its own startup watchdog stays quiet.
+  await page.evaluate(() =>
+    window.__spotifyHandlers.playback_update?.({
+      data: { isPaused: false, isBuffering: false, position: 0, duration: 30000 },
+    }),
+  );
   await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
 
   // The SoundCloud players finish initialising: READY must not start playback,

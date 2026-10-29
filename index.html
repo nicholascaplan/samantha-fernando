@@ -1902,7 +1902,15 @@
         let activeAudioProvider = defaultRecording?.provider || null;
         let trackDurationMs = 0;
         let spotifyElapsedMs = 0;
-        let spotifyPlaybackStartedAt = null;
+        // Spotify playback state is confirmed only by the player's own
+        // playback_update events: a request stays pending until the first
+        // event arrives, the soundbar position moves only with reported
+        // positions, and a request that never starts surfaces the
+        // unavailable message instead of pretending to play.
+        let spotifyPlaybackPending = false;
+        let armedSpotifyTrackId = null;
+        let spotifyPlaybackWatchdog = null;
+        const SPOTIFY_PLAYBACK_TIMEOUT_MS = 15000;
         let soundbarProgressTimer = null;
         const readySoundCloudPlayers = new Set();
         let pendingSoundCloudPlaybackId = null;
@@ -2017,7 +2025,13 @@
             const script = document.createElement('script');
             script.src = 'https://open.spotify.com/embed/iframe-api/v1';
             script.async = true;
-            script.onerror = () => { spotifyApiLoading = false; };
+            script.onerror = () => {
+                spotifyApiLoading = false;
+                if (pendingSpotifyTrack) {
+                    pendingSpotifyTrack = null;
+                    showSpotifyUnavailable();
+                }
+            };
             document.head.appendChild(script);
         }
 
@@ -2080,26 +2094,90 @@
             });
         }
 
-        function startSpotifyProgressTimer() {
-            stopSoundbarProgressTimer();
-            spotifyPlaybackStartedAt = Date.now() - spotifyElapsedMs;
-            soundbarProgressTimer = window.setInterval(() => {
-                if (!isSpotifyPlaying || activeAudioProvider !== 'spotify') return;
-                spotifyElapsedMs = Date.now() - spotifyPlaybackStartedAt;
-                if (trackDurationMs && spotifyElapsedMs >= trackDurationMs) {
+        function clearSpotifyLoading() {
+            spotifyPlaybackPending = false;
+            armedSpotifyTrackId = null;
+            window.clearTimeout(spotifyPlaybackWatchdog);
+            spotifyPlaybackWatchdog = null;
+            hideSoundbarLoading('spotify');
+        }
+
+        function armSpotifyLoading(trackId) {
+            // A re-entered request (the API was still loading) keeps the
+            // pending clock it already had rather than starting over.
+            if (armedSpotifyTrackId === trackId) return;
+            clearSpotifyLoading();
+            armedSpotifyTrackId = trackId;
+            spotifyPlaybackPending = true;
+            isSpotifyPlaying = true;
+            setSpotifyPlaybackState(true, activeSpotifyTrack || currentTrackId);
+            setPendingPlaybackUI();
+            // Loading feedback is part of the pending presentation: it
+            // appears with the request, not as a later pop-in.
+            showSoundbarLoading('spotify');
+            spotifyPlaybackWatchdog = window.setTimeout(() => {
+                if (spotifyPlaybackPending) showSpotifyUnavailable();
+            }, SPOTIFY_PLAYBACK_TIMEOUT_MS);
+        }
+
+        function cancelSpotifyPending() {
+            // Invalidate any controller callback still waiting on this request.
+            playbackRequestToken += 1;
+            clearSpotifyLoading();
+            pendingSpotifyTrack = null;
+            spotifyController?.pause?.();
+            setSpotifyPlaybackState(false, activeSpotifyTrack || currentTrackId);
+        }
+
+        function showSpotifyUnavailable() {
+            clearSpotifyLoading();
+            spotifyController?.pause?.();
+            setSpotifyPlaybackState(false, activeSpotifyTrack || currentTrackId);
+            const recording = mediaCatalog.find(media => media.type === 'listen' && media.provider === 'spotify' && media.id === (activeSpotifyTrack || currentTrackId));
+            const notice = document.getElementById('audioAvailabilityMessage');
+            if (notice) {
+                notice.textContent = 'Spotify could not start playback in the embedded player. ';
+                if (recording?.url) {
+                    const link = document.createElement('a');
+                    link.href = recording.url;
+                    link.target = '_blank';
+                    link.rel = 'noopener';
+                    link.className = 'underline';
+                    link.textContent = 'Play on Spotify';
+                    notice.appendChild(link);
+                }
+                notice.classList.remove('hidden');
+            }
+        }
+
+        function handleSpotifyPlaybackUpdate(event) {
+            if (activeAudioProvider !== 'spotify') return;
+            const data = event?.data;
+            if (!data) return;
+            if (data.isPaused === false) {
+                // Confirmation must belong to a live request: an event after a
+                // cancellation or stop is stale and must not revive the bar.
+                if (!spotifyPlaybackPending && !isSpotifyPlaying) return;
+                clearSpotifyLoading();
+                if (typeof data.position === 'number') spotifyElapsedMs = data.position;
+                if (typeof data.duration === 'number' && data.duration > 0) trackDurationMs = data.duration;
+                setSpotifyPlaybackState(true, activeSpotifyTrack || currentTrackId);
+                return;
+            }
+            if (data.isPaused === true && isSpotifyPlaying && !spotifyPlaybackPending) {
+                if (typeof data.position === 'number') spotifyElapsedMs = data.position;
+                if (typeof data.duration === 'number' && data.duration > 0) trackDurationMs = data.duration;
+                if (trackDurationMs && spotifyElapsedMs >= trackDurationMs - 250) {
                     spotifyElapsedMs = trackDurationMs;
                     isPlaybackStopped = true;
-                    spotifyController?.pause();
-                    isSpotifyPlaying = false;
-                    setSpotifyPlaybackState(false, activeSpotifyTrack);
-                    return;
                 }
-                updateSoundbarProgress(spotifyElapsedMs);
-            }, 500);
+                setSpotifyPlaybackState(false, activeSpotifyTrack || currentTrackId);
+            }
         }
 
         function playSpotifyTrack(trackId) {
             const requestToken = ++playbackRequestToken;
+            const wasStopped = isPlaybackStopped;
             const recording = mediaCatalog.find(media => media.type === 'listen' && media.provider === 'spotify' && media.id === trackId);
             if (!recording) return;
             currentTrackName = recording.playbackLabel || recording.title;
@@ -2119,36 +2197,40 @@
             hideSoundbarLoading('spotify');
             pauseSoundCloudPlayers();
             if (!spotifyReady) {
+                if (armedSpotifyTrackId === trackId) {
+                    // Reselecting a track whose request is still waiting on the
+                    // API cancels that request.
+                    cancelSpotifyPending();
+                    return;
+                }
                 pendingSpotifyTrack = trackId;
-                setPendingPlaybackUI();
-                // A pending request shows the loading feedback too, not only
-                // the cancellable label.
-                // Loading feedback is part of the pending presentation: it
-                // appears with the request, not as a later pop-in.
-                showSoundbarLoading('spotify');
+                armSpotifyLoading(trackId);
                 loadSpotifyApi();
                 return;
             }
 
             if (spotifyController) {
+                if (activeSpotifyTrack === trackId && spotifyPlaybackPending) {
+                    // Cancel a playback request that has not started yet.
+                    cancelSpotifyPending();
+                    return;
+                }
                 if (activeSpotifyTrack === trackId && isSpotifyPlaying) {
                     spotifyController.pause();
-                    isSpotifyPlaying = false;
                     setSpotifyPlaybackState(false, trackId);
                     return;
                 }
-                if (activeSpotifyTrack === trackId && !isPlaybackStopped) {
+                if (activeSpotifyTrack === trackId && !wasStopped) {
                     spotifyController.play();
-                    isSpotifyPlaying = true;
-                    setSpotifyPlaybackState(true, trackId);
+                    armSpotifyLoading(trackId);
                     return;
                 }
+                spotifyElapsedMs = 0;
                 spotifyController.loadUri(`spotify:track:${trackId}`);
                 spotifyController.seek(0);
                 spotifyController.play();
                 activeSpotifyTrack = trackId;
-                isSpotifyPlaying = true;
-                setSpotifyPlaybackState(true, trackId);
+                armSpotifyLoading(trackId);
                 return;
             }
 
@@ -2171,27 +2253,25 @@
                     return;
                 }
                 spotifyController = controller;
+                if (typeof controller.addListener === 'function') {
+                    controller.addListener('playback_update', handleSpotifyPlaybackUpdate);
+                }
                 pendingSpotifyTrack = null;
                 controller.loadUri(`spotify:track:${currentTrackId}`);
                 controller.seek(0);
                 controller.play();
                 activeSpotifyTrack = currentTrackId;
-                isSpotifyPlaying = true;
-                setSpotifyPlaybackState(true, currentTrackId);
+                armSpotifyLoading(currentTrackId);
             });
         }
 
         function setSpotifyPlaybackState(playing, trackId) {
             hideSoundbarLoading('spotify');
             isAudioPlaying = playing;
+            isSpotifyPlaying = playing;
             if (playing) isPlaybackStopped = false;
-            if (playing) startSpotifyProgressTimer();
-            else {
-                if (spotifyPlaybackStartedAt) spotifyElapsedMs = Date.now() - spotifyPlaybackStartedAt;
-                spotifyPlaybackStartedAt = null;
-                stopSoundbarProgressTimer();
-                updateSoundbarProgress(spotifyElapsedMs);
-            }
+            stopSoundbarProgressTimer();
+            updateSoundbarProgress(spotifyElapsedMs);
             document.getElementById('soundStatusIcon').className = `fa-solid fa-${playing ? 'pause' : 'play'} text-sm`;
             document.getElementById('soundbarPauseIcon').className = `fa-solid fa-${playing ? 'pause' : 'play'} text-xs`;
             document.getElementById('soundbarPauseBtn').setAttribute('aria-label', playing ? 'Pause playback' : 'Resume playback');
@@ -2255,6 +2335,11 @@
                 return;
             }
             if (activeAudioProvider === 'spotify') {
+                if (spotifyPlaybackPending) {
+                    // Cancel a playback request that has not started yet.
+                    cancelSpotifyPending();
+                    return;
+                }
                 if (!spotifyController) {
                     if (pendingSpotifyTrack) {
                         // A request still waiting on the player API is
@@ -2270,13 +2355,11 @@
                 }
                 if (isSpotifyPlaying) {
                     spotifyController.pause();
-                    isSpotifyPlaying = false;
                     setSpotifyPlaybackState(false, activeSpotifyTrack);
                 } else {
                     isPlaybackStopped = false;
                     spotifyController.play();
-                    isSpotifyPlaying = true;
-                    setSpotifyPlaybackState(true, activeSpotifyTrack);
+                    armSpotifyLoading(currentTrackId);
                 }
                 return;
             }
@@ -2333,8 +2416,7 @@
                 spotifyController.seek(0);
                 spotifyController.play();
                 activeSpotifyTrack = currentTrackId;
-                isSpotifyPlaying = true;
-                setSpotifyPlaybackState(true, currentTrackId);
+                armSpotifyLoading(currentTrackId);
                 return;
             }
 
@@ -2373,7 +2455,7 @@
             isAudioPlaying = false;
             isPlaybackStopped = false;
             spotifyElapsedMs = 0;
-            spotifyPlaybackStartedAt = null;
+            clearSpotifyLoading();
             trackDurationMs = 0;
             currentTrackName = defaultTrackName;
             currentTrackId = defaultTrackId;
@@ -2460,12 +2542,11 @@
 
             notice?.classList.add('hidden');
             pendingSpotifyTrack = null;
-            // Switching providers clears Spotify-owned loading feedback too.
-            hideSoundbarLoading('spotify');
-            if (isSpotifyPlaying && spotifyController) {
+            if ((isSpotifyPlaying || spotifyPlaybackPending) && spotifyController) {
                 spotifyController.pause();
-                isSpotifyPlaying = false;
             }
+            clearSpotifyLoading();
+            isSpotifyPlaying = false;
             isAudioPlaying = false;
 
             const recording = mediaCatalog.find(media => media.type === 'listen' && media.provider === 'soundcloud' && media.id === id);
