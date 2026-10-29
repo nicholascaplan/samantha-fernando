@@ -269,6 +269,40 @@ test('reselecting a cancelled Spotify track shows loading feedback for the new r
   await expect(page.locator('#soundbarLoading')).toBeVisible();
 });
 
+test('a request waiting on the controller callback stays pending and cancellable', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__spotifyCreateCalls = 0;
+    // The API arrives, but createController never calls its callback: the
+    // request spends the whole test in the controller-creation window.
+    window.__spotifyIFrameApi = {
+      createController: () => { window.__spotifyCreateCalls += 1; },
+    };
+    localStorage.setItem('analyticsConsent', 'rejected');
+  });
+  await page.route('https://open.spotify.com/embed/iframe-api/v1', route =>
+    route.fulfill({
+      contentType: 'application/javascript',
+      body: 'window.onSpotifyIframeApiReady(window.__spotifyIFrameApi);',
+    }),
+  );
+  await page.route('https://w.soundcloud.com/**', route => route.abort());
+  await installPausedClock(page);
+  await page.goto('/listen/');
+
+  await page.locator('#worksContainer [data-spotify-track="2wNL47uCuwDpbOqCIpbSTS"]').click();
+  await expect.poll(() => page.evaluate(() => window.__spotifyCreateCalls)).toBe(1);
+  // Still pending: loading feedback and the piece name stay visible, and
+  // the button still offers to cancel the request.
+  await expect(page.locator('#soundbarLoading')).toBeVisible();
+  await expect(page.locator('#soundbarLabel')).toHaveText(/Balconies/);
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Cancel playback request');
+  // Cancelling ends the request instead of requesting the track again.
+  await page.locator('#soundbarPauseBtn').click();
+  await expect(page.locator('#soundbarLoading')).toBeHidden();
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Resume playback');
+  await expect.poll(() => page.evaluate(() => window.__spotifyCreateCalls)).toBe(1);
+});
+
 test('surfaces the unavailable message when the SoundCloud script fails to load', async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem('analyticsConsent', 'rejected');

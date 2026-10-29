@@ -2155,9 +2155,17 @@
             const container = document.createElement('div');
             container.className = 'spotify-player';
             document.body.appendChild(container);
+            // The request stays pending - cancellable, with its loading
+            // feedback - until the controller callback starts playback.
+            // Clearing the pending state earlier would leave the Cancel
+            // button requesting the track again instead of cancelling.
+            pendingSpotifyTrack = trackId;
+            setPendingPlaybackUI();
+            showSoundbarLoading('spotify');
             spotifyReady.createController(container, { width: 1, height: 1 }, controller => {
                 spotifyController = controller;
                 if (requestToken !== playbackRequestToken || activeAudioProvider !== 'spotify') return;
+                pendingSpotifyTrack = null;
                 controller.loadUri(`spotify:track:${currentTrackId}`);
                 controller.seek(0);
                 controller.play();
