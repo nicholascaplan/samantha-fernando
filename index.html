@@ -375,15 +375,18 @@
         }
         #soundbar { position: fixed; bottom: 0; width: min(34rem, calc(100vw - 2rem)); box-sizing: border-box; display: block; padding: 0.5rem 7rem 0.625rem 1.5rem; color: #f5f5f5; transition: opacity 0.3s ease, transform 0.3s ease; }
         #soundbarTrackInfo { position: relative; min-width: 0; width: 100%; display: grid; gap: 0.2rem; }
-        #soundbarLabel { min-width: 0; overflow: hidden; text-overflow: ellipsis; text-align: center; }
-        #soundbarProgress { width: 100%; height: 0.35rem; overflow: hidden; border: 1px solid rgba(180, 83, 9, 0.3); border-radius: 9999px; background: rgba(139, 129, 117, 0.35); }
+        /* Explicit rows let the loading message overlap the progress/time
+           rows without disturbing the grid's auto-placement. */
+        #soundbarLabel { grid-row: 1; grid-column: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; text-align: center; }
+        #soundbarProgress { grid-row: 2; grid-column: 1; width: 100%; height: 0.35rem; overflow: hidden; border: 1px solid rgba(180, 83, 9, 0.3); border-radius: 9999px; background: rgba(139, 129, 117, 0.35); }
         #soundbarProgressFill { width: 0; height: 100%; border-radius: inherit; background: #b45309; box-shadow: 0 0 0.4rem rgba(180, 83, 9, 0.65); transition: width 0.2s linear; }
-        #soundbarTimes { display: flex; justify-content: space-between; font-variant-numeric: tabular-nums; color: #d4d4d4; }
-        /* The loading message overlays the track info instead of adding a
-           row, so the bar never grows or jumps when it appears or disappears. */
-        #soundbarLoading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 0.35rem; text-align: center; font-size: 10px; }
+        #soundbarTimes { grid-row: 3; grid-column: 1; display: flex; justify-content: space-between; font-variant-numeric: tabular-nums; color: #d4d4d4; }
+        /* The loading message takes over the progress/time rows while the
+           piece name stays visible: the bar never grows or jumps, and the
+           title remains on screen while its request is pending. */
+        #soundbarLoading { grid-row: 2 / span 2; grid-column: 1; display: flex; align-items: center; justify-content: center; gap: 0.35rem; text-align: center; font-size: 10px; }
         #soundbarLoading.hidden { display: none; }
-        #soundbar.loading #soundbarLabel, #soundbar.loading #soundbarProgress, #soundbar.loading #soundbarTimes { visibility: hidden; }
+        #soundbar.loading #soundbarProgress, #soundbar.loading #soundbarTimes { visibility: hidden; }
         .loading-spinner { width: 0.55rem; height: 0.55rem; flex: none; border-radius: 50%; border: 1.5px solid rgba(245, 245, 245, 0.3); border-top-color: #f6bf7b; animation: soundbar-loading-spin 1s linear infinite; }
         .light-mode .loading-spinner { border-color: rgba(24, 33, 31, 0.2); border-top-color: #944900; }
         @keyframes soundbar-loading-spin { to { transform: rotate(360deg); } }
@@ -1908,17 +1911,15 @@
         let soundcloudInitialisation = null;
         let playbackRequestToken = 0;
         // Feedback for playback requests that have not started yet: a "Loading
-        // audio…" message appears only once playback has been pending for more
-        // than SOUNDCLOUD_LOADING_DELAY_MS, and a request that has not started
-        // within SOUNDCLOUD_PLAYBACK_TIMEOUT_MS surfaces the unavailable message.
-        const SOUNDCLOUD_LOADING_DELAY_MS = 500;
+        // audio…" message is part of the pending presentation from the moment
+        // of the request, and a request that has not started within
+        // SOUNDCLOUD_PLAYBACK_TIMEOUT_MS surfaces the unavailable message.
         const SOUNDCLOUD_PLAYBACK_TIMEOUT_MS = 15000;
         // The widget API cannot attribute PLAY events to a specific play()
         // call, so a cancellation is recorded as the track's latest intent and
         // PLAY events are ignored only until a newer request is armed.
         let armedSoundCloudPlaybackId = null;
         let cancelledSoundCloudPlaybackId = null;
-        let soundCloudLoadingTimer = null;
         let soundCloudPlaybackWatchdog = null;
 
         // A pending request must not read as playing: until the player
@@ -1949,8 +1950,6 @@
 
         function clearSoundCloudLoading() {
             armedSoundCloudPlaybackId = null;
-            window.clearTimeout(soundCloudLoadingTimer);
-            soundCloudLoadingTimer = null;
             window.clearTimeout(soundCloudPlaybackWatchdog);
             soundCloudPlaybackWatchdog = null;
             hideSoundbarLoading('soundcloud');
@@ -1963,9 +1962,9 @@
             cancelledSoundCloudPlaybackId = null;
             setPlaybackState(true);
             setPendingPlaybackUI();
-            soundCloudLoadingTimer = window.setTimeout(() => {
-                showSoundbarLoading('soundcloud');
-            }, SOUNDCLOUD_LOADING_DELAY_MS);
+            // Loading feedback is part of the pending presentation: it
+            // appears with the request, not as a later pop-in.
+            showSoundbarLoading('soundcloud');
             soundCloudPlaybackWatchdog = window.setTimeout(() => {
                 if (!armedSoundCloudPlaybackId) return;
                 showTrackUnavailable();
@@ -2124,13 +2123,9 @@
                 setPendingPlaybackUI();
                 // A pending request shows the loading feedback too, not only
                 // the cancellable label.
-                window.setTimeout(() => {
-                    // Only the live request may show its loading feedback: a
-                    // timer from a superseded request must not fire early.
-                    if (requestToken === playbackRequestToken && pendingSpotifyTrack === trackId) {
-                        showSoundbarLoading('spotify');
-                    }
-                }, SOUNDCLOUD_LOADING_DELAY_MS);
+                // Loading feedback is part of the pending presentation: it
+                // appears with the request, not as a later pop-in.
+                showSoundbarLoading('spotify');
                 loadSpotifyApi();
                 return;
             }

@@ -71,21 +71,19 @@ test('defers SoundCloud requests until playback is requested', async ({ page }) 
   await expect.poll(() => soundCloudRequests.length).toBeGreaterThan(0);
 });
 
-test('shows a loading message only when playback stays pending beyond half a second', async ({ page }) => {
+test('shows loading feedback with the piece name as soon as playback is requested', async ({ page }) => {
   await mockSoundCloud(page);
   await installPausedClock(page);
   await page.goto('/listen/');
 
   await lookUpCard(page).click();
   await expect(page.locator('#soundbar')).toBeVisible();
-  await expect(page.locator('#soundbarLoading')).toBeHidden();
-
-  await page.clock.runFor(400);
-  await expect(page.locator('#soundbarLoading')).toBeHidden();
-
-  await page.clock.runFor(200);
+  // One-step reveal: the loading feedback is part of the pending
+  // presentation, and the piece name stays visible underneath it.
   await expect(page.locator('#soundbarLoading')).toBeVisible();
   await expect(page.locator('#soundbarLoading')).toHaveText('Loading audio…');
+  await expect(page.locator('#soundbarLabel')).toBeVisible();
+  await expect(page.locator('#soundbarLabel')).toHaveText(/Look Up/);
 
   await fireWidgetEvent(page, 'READY');
   await expect.poll(() => page.evaluate(() => window.__soundCloudCalls)).toContainEqual([
@@ -94,15 +92,17 @@ test('shows a loading message only when playback stays pending beyond half a sec
   ]);
   await fireWidgetEvent(page, 'PLAY');
   await expect(page.locator('#soundbarLoading')).toBeHidden();
+  await expect(page.locator('#soundbarLabel')).toBeVisible();
 });
 
-test('never shows the loading message when playback starts promptly', async ({ page }) => {
+test('a promptly started playback still clears the loading feedback', async ({ page }) => {
   await mockSoundCloud(page);
   await installPausedClock(page);
   await page.goto('/listen/');
 
   await lookUpCard(page).click();
   await expect(page.locator('#soundbar')).toBeVisible();
+  await expect(page.locator('#soundbarLoading')).toBeVisible();
 
   await page.clock.runFor(400);
   await fireWidgetEvent(page, 'READY');
@@ -111,6 +111,7 @@ test('never shows the loading message when playback starts promptly', async ({ p
 
   await page.clock.runFor(2000);
   await expect(page.locator('#soundbarLoading')).toBeHidden();
+  await expect(page.locator('#soundbarLabel')).toBeVisible();
   await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
 });
 
@@ -246,7 +247,7 @@ test('selecting Spotify cancels a pending SoundCloud request', async ({ page }) 
   await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
 });
 
-test('reselecting a cancelled Spotify track restarts the loading feedback delay', async ({ page }) => {
+test('reselecting a cancelled Spotify track shows loading feedback for the new request', async ({ page }) => {
   await page.addInitScript(() => {
     window.__spotifyCalls = [];
     localStorage.setItem('analyticsConsent', 'rejected');
@@ -259,55 +260,12 @@ test('reselecting a cancelled Spotify track restarts the loading feedback delay'
 
   const card = page.locator('#worksContainer [data-spotify-track="2wNL47uCuwDpbOqCIpbSTS"]');
   await card.click();
+  await expect(page.locator('#soundbarLoading')).toBeVisible();
   await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Cancel playback request');
-  await page.clock.runFor(400);
-  // Cancel the first request, then select the same track again: the old
-  // request's loading timer must not fire for the new request.
+  // Cancel, then select the same track again: feedback belongs to the new request.
   await page.locator('#soundbarPauseBtn').click();
+  await expect(page.locator('#soundbarLoading')).toBeHidden();
   await card.click();
-  await page.clock.runFor(150); // 550ms after the first click, 150ms after the new request
-  await expect(page.locator('#soundbarLoading')).toBeHidden();
-  await page.clock.runFor(400); // 950ms after the first click, 550ms after the new request
-  await expect(page.locator('#soundbarLoading')).toBeVisible();
-});
-
-test('switching to SoundCloud clears a visible Spotify loading message', async ({ page }) => {
-  await mockSoundCloud(page);
-  await page.addInitScript(() => {
-    window.__spotifyCalls = [];
-    localStorage.setItem('analyticsConsent', 'rejected');
-  });
-  await page.route('https://open.spotify.com/embed/iframe-api/v1', () => new Promise(() => {}));
-  await installPausedClock(page);
-  await page.goto('/listen/');
-
-  await page.locator('#worksContainer [data-spotify-track="2wNL47uCuwDpbOqCIpbSTS"]').click();
-  await page.clock.runFor(600);
-  await expect(page.locator('#soundbarLoading')).toBeVisible();
-
-  await lookUpCard(page).click();
-  await expect(page.locator('#soundbarLoading')).toBeHidden();
-});
-
-test('selecting another Spotify track restarts the loading feedback delay', async ({ page }) => {
-  await page.addInitScript(() => {
-    window.__spotifyCalls = [];
-    localStorage.setItem('analyticsConsent', 'rejected');
-  });
-  await page.route('https://open.spotify.com/embed/iframe-api/v1', () => new Promise(() => {}));
-  await installPausedClock(page);
-  await page.goto('/listen/');
-
-  await page.locator('#worksContainer [data-spotify-track="2wNL47uCuwDpbOqCIpbSTS"]').click();
-  await page.clock.runFor(600);
-  await expect(page.locator('#soundbarLoading')).toBeVisible();
-
-  // A different track: the inherited message clears and the delay restarts.
-  await page.locator('#worksContainer [data-spotify-track="3YV79qjiJLOgYjjEzTsVEy"]').click();
-  await expect(page.locator('#soundbarLoading')).toBeHidden();
-  await page.clock.runFor(400);
-  await expect(page.locator('#soundbarLoading')).toBeHidden();
-  await page.clock.runFor(150);
   await expect(page.locator('#soundbarLoading')).toBeVisible();
 });
 
