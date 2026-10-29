@@ -2125,7 +2125,18 @@
             armedSpotifyTrackId = trackId;
             spotifyPlaybackPending = true;
             isSpotifyPlaying = true;
-            setSpotifyPlaybackState(true, activeSpotifyTrack || currentTrackId);
+            // Pending is not playback: no playing affordance (card icon,
+            // soundbar icons, waves) may appear before a player event
+            // confirms; the request presents as cancellable instead.
+            isAudioPlaying = false;
+            stopSoundbarProgressTimer();
+            updateSoundbarProgress(spotifyElapsedMs);
+            document.getElementById('soundStatusIcon').className = 'fa-solid fa-play text-sm';
+            document.getElementById('soundbarPauseIcon').className = 'fa-solid fa-play text-xs';
+            document.getElementById('soundbarLabel').textContent = currentTrackName;
+            document.getElementById('soundbar').classList.remove('hidden');
+            document.getElementById('waveContainer').classList.add('paused');
+            updatePlaybackIcons();
             setPendingPlaybackUI();
             // Loading feedback is part of the pending presentation: it
             // appears with the request, not as a later pop-in.

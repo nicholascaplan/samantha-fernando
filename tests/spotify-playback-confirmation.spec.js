@@ -58,6 +58,9 @@ test('keeps the soundbar position at zero until the player reports playback', as
   await expect(page.locator('#soundbar')).toBeVisible();
   // A pending request reads as cancellable, never as playing.
   await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Cancel playback request');
+  await expect(page.locator('#soundbarPauseIcon')).toHaveClass(/fa-play/);
+  await expect(page.locator('#soundStatusIcon')).toHaveClass(/fa-play/);
+  await expect(page.locator('#waveContainer')).toHaveClass(/paused/);
 
   // No wall-clock timer may stand in for real playback: without any
   // playback_update event the position stays exactly where it started.
