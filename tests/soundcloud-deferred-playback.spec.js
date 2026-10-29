@@ -36,6 +36,18 @@ async function mockSoundCloud(page) {
   );
 }
 
+// Install the fake clock already paused at a fixed offset from the seed.
+// pauseAt(new Date()) races the browser-side clock: install seeds from the
+// Node clock, the running clock can pass a Node-sampled target before pauseAt
+// arrives, and pauseAt refuses to move backwards ("Cannot fast-forward to the
+// past"). A 30s pause margin absorbs any realistic round-trip while a browser
+// stuck longer still fails the test.
+async function installPausedClock(page) {
+  const start = new Date();
+  await page.clock.install({ time: start });
+  await page.clock.pauseAt(new Date(start.getTime() + 30_000));
+}
+
 const lookUpCard = page => page.locator('#worksContainer [data-track="look-up"]');
 const fireWidgetEvent = (page, event) =>
   page.evaluate(evt => window.__soundCloudPlayers.soundcloudPlayerLookUp.handlers[evt]?.(), event);
@@ -61,8 +73,7 @@ test('defers SoundCloud requests until playback is requested', async ({ page }) 
 
 test('shows a loading message only when playback stays pending beyond half a second', async ({ page }) => {
   await mockSoundCloud(page);
-  await page.clock.install();
-  await page.clock.pauseAt(new Date());
+  await installPausedClock(page);
   await page.goto('/listen/');
 
   await lookUpCard(page).click();
@@ -87,8 +98,7 @@ test('shows a loading message only when playback stays pending beyond half a sec
 
 test('never shows the loading message when playback starts promptly', async ({ page }) => {
   await mockSoundCloud(page);
-  await page.clock.install();
-  await page.clock.pauseAt(new Date());
+  await installPausedClock(page);
   await page.goto('/listen/');
 
   await lookUpCard(page).click();
@@ -106,8 +116,7 @@ test('never shows the loading message when playback starts promptly', async ({ p
 
 test('surfaces the unavailable message when playback never starts', async ({ page }) => {
   await mockSoundCloud(page);
-  await page.clock.install();
-  await page.clock.pauseAt(new Date());
+  await installPausedClock(page);
   await page.goto('/listen/');
 
   await lookUpCard(page).click();
@@ -124,8 +133,7 @@ test('surfaces the unavailable message when playback never starts', async ({ pag
 
 test('cancelling pending playback from the soundbar clears the loading state', async ({ page }) => {
   await mockSoundCloud(page);
-  await page.clock.install();
-  await page.clock.pauseAt(new Date());
+  await installPausedClock(page);
   await page.goto('/listen/');
 
   await lookUpCard(page).click();
@@ -148,8 +156,7 @@ test('cancelling pending playback from the soundbar clears the loading state', a
 
 test('reselecting a pending track cancels the playback request', async ({ page }) => {
   await mockSoundCloud(page);
-  await page.clock.install();
-  await page.clock.pauseAt(new Date());
+  await installPausedClock(page);
   await page.goto('/listen/');
 
   await lookUpCard(page).click();
@@ -168,8 +175,7 @@ test('reselecting a pending track cancels the playback request', async ({ page }
 
 test('reselecting a cancelled track starts playback and a stale PLAY is ignored', async ({ page }) => {
   await mockSoundCloud(page);
-  await page.clock.install();
-  await page.clock.pauseAt(new Date());
+  await installPausedClock(page);
   await page.goto('/listen/');
 
   await lookUpCard(page).click();
@@ -213,8 +219,7 @@ test('selecting Spotify cancels a pending SoundCloud request', async ({ page }) 
       body: 'window.onSpotifyIframeApiReady(window.__spotifyIFrameApi);',
     }),
   );
-  await page.clock.install();
-  await page.clock.pauseAt(new Date());
+  await installPausedClock(page);
   await page.goto('/listen/');
 
   // Start a SoundCloud request (players still initialising), then switch to Spotify.
@@ -326,8 +331,7 @@ test('still plays when the SoundCloud API arrives after the player iframes would
 
 test('pauses the player when the watchdog expires after play was requested', async ({ page }) => {
   await mockSoundCloud(page);
-  await page.clock.install();
-  await page.clock.pauseAt(new Date());
+  await installPausedClock(page);
   await page.goto('/listen/');
 
   await lookUpCard(page).click();
