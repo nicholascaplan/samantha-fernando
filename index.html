@@ -1716,7 +1716,8 @@
             // Shown fixed above the soundbar on playback failure; keep the
             // notice outside the transformed tab containers so `fixed` is
             // anchored to the viewport, not a tab section.
-            document.body.appendChild(document.getElementById('audioAvailabilityMessage'));
+            const availabilityNotice = document.getElementById('audioAvailabilityMessage');
+            if (availabilityNotice) document.body.appendChild(availabilityNotice);
             initialisePerformanceMotion();
             if (document.getElementById('worksContainer')) {
                 // Retired view fragments land on their catalogue pages.
