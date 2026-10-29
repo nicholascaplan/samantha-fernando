@@ -2,7 +2,7 @@
 
 ## Production
 
-- Repository: https://github.com/nicholascaplan/samantha-fernando
+- Repository: https://github.com/nickcaplan/samantha-fernando
 - Canonical domain: https://www.samanthafernando.com/
 - Hosting: GitHub Pages, deployed from `main` by `.github/workflows/pages.yml`.
 - DNS provider: Namecheap.
@@ -17,14 +17,22 @@ Pushes to `main`, Sanity publish webhooks, manual dispatch and the daily schedul
 To rebuild the current `main` without a code change:
 
 ```sh
-gh workflow run pages.yml --repo nicholascaplan/samantha-fernando --ref main
-gh run list --repo nicholascaplan/samantha-fernando --workflow pages.yml --limit 5
-gh run watch <run-id> --repo nicholascaplan/samantha-fernando --exit-status
+gh workflow run pages.yml --repo nickcaplan/samantha-fernando --ref main
+gh run list --repo nickcaplan/samantha-fernando --workflow pages.yml --limit 5
+gh run watch <run-id> --repo nickcaplan/samantha-fernando --exit-status
 ```
 
 Confirm both the test and deploy jobs succeed. Check the content-build logs for fallback warnings if a Sanity edit is missing. Builds use current published content, not drafts; fallback behaviour is documented in [Sanity operations](sanity.md).
 
 The published artifact contains root `index.html`, the exact generated page directories in `scripts/lib/pages.mjs`, `CNAME`, `robots.txt`, `sitemap.xml` and public `assets/`. `scripts/lib/public-output.mjs` rejects unexpected files, symlinks and stale routes rather than publishing them. Never add documentation, Studio files, tests, package files, repository metadata, source templates or maintainer notes. If a removed route causes an audit failure locally, inspect and remove only that obsolete generated file before rebuilding; CI starts from a clean checkout.
+
+## Pull Request Previews
+
+- Netlify builds a deploy preview for every pull request against `main`; the preview URL appears as a comment and check on the pull request.
+- Configuration lives in `netlify.toml`: previews inherit the general `[build]` command (`npm ci && npm run build:css && npm run build:content`, publish `_site/`, Node 22); the production context runs only the redirect writer in `[context.production]`.
+- The Netlify production address (https://samanthafernando.netlify.app) only redirects to the canonical domain; GitHub Pages remains the live host and no custom domain is attached on Netlify.
+- Branch deploys are disabled beyond the production branch `main` (deploy previews for pull requests are a separate context and still build), and the Netlify Drawer and Powered by Netlify badge are switched off.
+- The older manual snapshot project (heartfelt-speculoos-87c44e.netlify.app) predates the Git connection and is not part of this flow.
 
 ## Domain And DNS Precautions
 
@@ -34,7 +42,7 @@ The expected GitHub Pages DNS configuration is:
 
 | Host | Type | Target |
 |---|---|---|
-| `www` | CNAME | `nicholascaplan.github.io` |
+| `www` | CNAME | `nickcaplan.github.io` |
 | `@` | A | `185.199.108.153` |
 | `@` | A | `185.199.109.153` |
 | `@` | A | `185.199.110.153` |
