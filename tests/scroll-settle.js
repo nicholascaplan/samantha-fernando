@@ -24,7 +24,16 @@ async function waitForScrollSettle(page, selector, quietMs = 500) {
           lastTop = top;
           lastMove = now;
         }
-        if (now - lastMove >= quiet) return resolve(true);
+        if (now - lastMove >= quiet) {
+          // Test-only instrumentation: the actual settle decision stamped on
+          // the browser clock at the sole resolution point, so specs can
+          // assert quiet-window timing entirely on page time - no Node or
+          // IPC lag in the measured value. Specs reset this before each
+          // attempt and fail loudly if it is missing afterwards. Never read
+          // by the site itself.
+          window.__scrollSettleTestResolvedAt = performance.now();
+          return resolve(true);
+        }
         requestAnimationFrame(check);
       };
       requestAnimationFrame(check);
