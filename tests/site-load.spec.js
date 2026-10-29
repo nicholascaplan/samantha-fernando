@@ -466,9 +466,18 @@ test('keeps the Biography portrait viewport-sized at 200% root text @mobile', as
     expect(portraitBox.width).toBeLessThanOrEqual(170);
     expect(portraitBox.width).toBeGreaterThan(100);
 
-    // The opening paragraph must still wrap beside the float, not drop below it.
-    const firstParagraphBox = await page.locator('#tab-bio article > p').first().boundingBox();
-    expect(firstParagraphBox.y).toBeLessThan(portraitBox.y + portraitBox.height);
+    // The opening text must still render beside the float, not drop below it.
+    // A paragraph's bounding box stays beside the float even when its lines do
+    // not fit, so measure the first rendered text fragment instead.
+    const firstLine = await page.locator('#tab-bio article > p').first().evaluate((p) => {
+      const range = document.createRange();
+      range.selectNodeContents(p.firstChild);
+      const rect = range.getClientRects()[0];
+      return rect ? { x: rect.x, y: rect.y } : null;
+    });
+    expect(firstLine).not.toBeNull();
+    expect(firstLine.y).toBeLessThan(portraitBox.y + portraitBox.height);
+    expect(firstLine.x).toBeLessThan(portraitBox.x);
   }
 });
 
