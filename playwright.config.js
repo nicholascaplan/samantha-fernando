@@ -31,6 +31,7 @@ module.exports = defineConfig({
     {
       name: 'firefox',
       grepInvert: /@mobile/,
+      workers: 1, // TEMP DIAGNOSTIC ONLY: single-variable concurrency probe; do not merge
       use: { ...devices['Desktop Firefox'] },
     },
     {
