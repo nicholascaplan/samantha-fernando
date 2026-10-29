@@ -373,7 +373,8 @@ test('does not report a script failure for a request the visitor already cancell
   await page.goto('/listen/');
   await lookUpCard(page).click();
   await expect(page.locator('#soundbar')).toBeVisible();
-  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
+  // A pending request reads as cancellable, never as playing.
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Cancel playback request');
 
   await lookUpCard(page).click();
   await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Resume playback');
@@ -393,4 +394,25 @@ test('does not report a script failure for a request the visitor already cancell
   await scriptFailed;
   await page.evaluate(() => window.__scriptFailureHandled);
   await expect(page.locator('#audioAvailabilityMessage')).toBeHidden();
+});
+
+test('the soundbar does not move when the loading message appears or clears', async ({ page }) => {
+  await mockSoundCloud(page);
+  await installPausedClock(page);
+  await page.goto('/listen/');
+
+  await lookUpCard(page).click();
+  const requested = await page.locator('#soundbar').boundingBox();
+
+  await page.clock.runFor(600);
+  await expect(page.locator('#soundbarLoading')).toBeVisible();
+  const loading = await page.locator('#soundbar').boundingBox();
+
+  await fireWidgetEvent(page, 'READY');
+  await fireWidgetEvent(page, 'PLAY');
+  await expect(page.locator('#soundbarLoading')).toBeHidden();
+  const playing = await page.locator('#soundbar').boundingBox();
+
+  expect(loading).toEqual(requested);
+  expect(playing).toEqual(requested);
 });
