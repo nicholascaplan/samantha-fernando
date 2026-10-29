@@ -169,6 +169,9 @@ test('surfaces the unavailable message when playback never starts', async ({ pag
   );
   await expect(page.locator('#soundbarLoading')).toBeHidden();
   await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Resume playback');
+  // The failure is surfaced where the visitor is: fixed above the soundbar,
+  // never a notice scrolled out of view in the catalogue flow.
+  await expect(page.locator('#audioAvailabilityMessage')).toHaveCSS('position', 'fixed');
 });
 
 test('cancelling pending playback from the soundbar clears the loading state', async ({ page }) => {
