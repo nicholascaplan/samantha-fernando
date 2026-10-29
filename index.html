@@ -754,6 +754,11 @@
             #tab-works #worksSearchInput { padding-top: 0.65rem; padding-bottom: 0.65rem; font-size: 0.8rem; }
         }
 
+        /* Keep sibling display headings consistent and whole with enlarged phone text. */
+        @media (max-width: 767px) {
+            main :is(h1, h2).font-display { font-size: 1.375rem; letter-spacing: .025em; }
+        }
+
         .performances-groups { border-top: 1px solid #404040; padding-top: 2rem; }
         .performances-groups h2 { font-family: inherit; font-size: 1.75rem; margin-bottom: 1.5rem; }
         .performances-groups h3, .past-performances summary { font-size: 1rem; font-weight: 600; }
