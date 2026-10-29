@@ -271,6 +271,46 @@ test('reselecting a cancelled Spotify track restarts the loading feedback delay'
   await expect(page.locator('#soundbarLoading')).toBeVisible();
 });
 
+test('switching to SoundCloud clears a visible Spotify loading message', async ({ page }) => {
+  await mockSoundCloud(page);
+  await page.addInitScript(() => {
+    window.__spotifyCalls = [];
+    localStorage.setItem('analyticsConsent', 'rejected');
+  });
+  await page.route('https://open.spotify.com/embed/iframe-api/v1', () => new Promise(() => {}));
+  await installPausedClock(page);
+  await page.goto('/listen/');
+
+  await page.locator('#worksContainer [data-spotify-track="2wNL47uCuwDpbOqCIpbSTS"]').click();
+  await page.clock.runFor(600);
+  await expect(page.locator('#soundbarLoading')).toBeVisible();
+
+  await lookUpCard(page).click();
+  await expect(page.locator('#soundbarLoading')).toBeHidden();
+});
+
+test('selecting another Spotify track restarts the loading feedback delay', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__spotifyCalls = [];
+    localStorage.setItem('analyticsConsent', 'rejected');
+  });
+  await page.route('https://open.spotify.com/embed/iframe-api/v1', () => new Promise(() => {}));
+  await installPausedClock(page);
+  await page.goto('/listen/');
+
+  await page.locator('#worksContainer [data-spotify-track="2wNL47uCuwDpbOqCIpbSTS"]').click();
+  await page.clock.runFor(600);
+  await expect(page.locator('#soundbarLoading')).toBeVisible();
+
+  // A different track: the inherited message clears and the delay restarts.
+  await page.locator('#worksContainer [data-spotify-track="3YV79qjiJLOgYjjEzTsVEy"]').click();
+  await expect(page.locator('#soundbarLoading')).toBeHidden();
+  await page.clock.runFor(400);
+  await expect(page.locator('#soundbarLoading')).toBeHidden();
+  await page.clock.runFor(150);
+  await expect(page.locator('#soundbarLoading')).toBeVisible();
+});
+
 test('surfaces the unavailable message when the SoundCloud script fails to load', async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem('analyticsConsent', 'rejected');

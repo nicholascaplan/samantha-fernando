@@ -2115,6 +2115,9 @@
             pendingSoundCloudPlaybackId = null;
             pendingSoundCloudPlaybackStartsAtZero = false;
             clearSoundCloudLoading();
+            // A new Spotify request must not inherit a previous request's
+            // visible loading message: it restarts its own delay.
+            hideSoundbarLoading('spotify');
             pauseSoundCloudPlayers();
             if (!spotifyReady) {
                 pendingSpotifyTrack = trackId;
@@ -2448,6 +2451,8 @@
 
             notice?.classList.add('hidden');
             pendingSpotifyTrack = null;
+            // Switching providers clears Spotify-owned loading feedback too.
+            hideSoundbarLoading('spotify');
             if (isSpotifyPlaying && spotifyController) {
                 spotifyController.pause();
                 isSpotifyPlaying = false;
