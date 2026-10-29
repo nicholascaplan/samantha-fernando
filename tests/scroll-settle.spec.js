@@ -72,6 +72,7 @@ test('restarts the quiet window when the anchor moves during the wait', async ({
   await page.evaluate(() => {
     window.__scrollSettleTestResolvedAt = null;
     window.__stoppedAt = null;
+    window.__lastMovedAt = null;
     const anchor = document.createElement('div');
     anchor.id = 'moving-anchor';
     document.body.appendChild(anchor);
@@ -86,20 +87,28 @@ test('restarts the quiet window when the anchor moves during the wait', async ({
       // Alternating 1px translate changes getBoundingClientRect().top every
       // frame - exactly the signal the helper watches.
       anchor.style.transform = `translateY(${frame % 2}px)`;
+      window.__lastMovedAt = performance.now();
       requestAnimationFrame(step);
     };
     requestAnimationFrame(step);
   });
   await waitForScrollSettle(page, '#moving-anchor', 200);
   const t = await page.evaluate(() => ({
+    lastMovedAt: window.__lastMovedAt ?? null,
     stoppedAt: window.__stoppedAt ?? null,
     settledAt: window.__scrollSettleTestResolvedAt ?? null,
   }));
+  expect(t.lastMovedAt, 'anchor movement was not recorded').not.toBeNull();
   expect(t.stoppedAt, 'anchor movement did not stop').not.toBeNull();
   expect(t.settledAt, 'helper resolved without a browser-side settle stamp').not.toBeNull();
   // The quiet window must run after the last movement, not from the first
-  // sample. A helper that never restarts its window resolves ~200ms into
-  // the 600ms movement and fails this by a wide margin; 150 leaves ~50ms
-  // of slack for the frame gap between the last movement and the sample.
-  expect(t.settledAt - t.stoppedAt).toBeGreaterThanOrEqual(150);
+  // sample. Asserted against the last ACTUAL transform change, not the
+  // stop-stamp tick: the helper observes a change at its next sample, so
+  // its lastMove >= lastMovedAt and it settles at >= lastMove + 200ms,
+  // giving settledAt - lastMovedAt >= 200ms with no frame-rate assumption
+  // (an arbitrarily slow frame cannot make the correct helper fail this).
+  // A helper that never restarts its window resolves ~200ms into the
+  // 600ms movement and fails by a wide margin; 150 leaves margin for
+  // clock quantization only.
+  expect(t.settledAt - t.lastMovedAt).toBeGreaterThanOrEqual(150);
 });
