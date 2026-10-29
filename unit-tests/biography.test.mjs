@@ -47,6 +47,15 @@ test('renders the structure of the committed Biography fallback', () => {
   }
 })
 
+test('shows the birth year beneath the heading in fallback and rendered output', () => {
+  const line = '<p class="mt-1 font-serif italic text-neutral-400">b. 1984</p>'
+  const out = renderBiography(fixture, {portraitSrc: 'assets/sam-1-1200.webp'})
+  assert.ok(out.includes(line), 'rendered output has the birth year line')
+  assert.ok(fallbackRegion().includes(line), 'fallback has the birth year line')
+  const headingAt = out.indexOf(fixture.heading)
+  assert.ok(headingAt !== -1 && out.indexOf(line) > headingAt, 'birth year follows the heading')
+})
+
 test('renders marks with the same classes as the fallback', () => {
   const out = renderBiography(fixture, {portraitSrc: 'assets/x.webp'})
   assert.ok(out.includes('<strong class="text-neutral-100">bold</strong>'))
