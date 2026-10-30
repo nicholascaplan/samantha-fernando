@@ -383,9 +383,16 @@ test('a stale controller callback cannot replace the live controller', async ({ 
     ['seek', 0],
     ['play'],
   ]);
+  // A click while the request is pending cancels it: the live controller is
+  // torn down outright (destroyed, never paused), and the bar goes idle.
   await page.locator('#soundbarPauseBtn').click();
-  const liveCallsAfter = await page.evaluate(() => window.__spotifyPending[1].controller.calls);
-  expect(liveCallsAfter[liveCallsAfter.length - 1]).toEqual(['pause']);
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Resume playback');
+  const after = await page.evaluate(() => ({
+    destroyed: window.__spotifyPending[1].controller.destroyed,
+    calls: window.__spotifyPending[1].controller.calls,
+  }));
+  expect(after.destroyed).toBe(true);
+  expect(after.calls[after.calls.length - 1]).toEqual(['play']);
 });
 
 test('surfaces the unavailable message when the SoundCloud script fails to load', async ({ page }) => {
