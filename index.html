@@ -2390,10 +2390,15 @@
             currentTrackId = trackId;
             activeAudioProvider = 'spotify';
             isPlaybackStopped = false;
-            if (activeSpotifyTrack !== trackId) spotifyElapsedMs = 0;
-            // The total is unknown until the embed reports it: show no total
-            // rather than a guessed 30 seconds that the first report rewrites.
-            trackDurationMs = 0;
+            // A different track or a fresh replay after a stop starts from
+            // zero; a same-track pause or resume keeps both its position and
+            // its known total. For a genuinely new request the total is
+            // unknown until the embed reports it: show no total rather than
+            // a guessed 30 seconds that the first report rewrites.
+            if (!wasActiveSelection || activeSpotifyTrack !== trackId || wasStopped) {
+                spotifyElapsedMs = 0;
+                trackDurationMs = 0;
+            }
             updateSoundbarProgress(spotifyElapsedMs);
             setSoundbarLabel(currentTrackName);
             document.getElementById('soundbar').classList.remove('hidden');

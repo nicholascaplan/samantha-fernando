@@ -125,6 +125,22 @@ test('mirrors a real pause and resumes from the reported position', async ({ pag
   await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
 });
 
+test('resuming from the track card keeps the known position and total', async ({ page }) => {
+  await mockSpotify(page);
+  await page.goto('/listen/');
+
+  await balconiesCard(page).click();
+  await fireSpotifyUpdate(page, { isPaused: false, isBuffering: false, position: 5000, duration: 30000 });
+  await fireSpotifyUpdate(page, { isPaused: true, isBuffering: false, position: 5234, duration: 30000 });
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Resume playback');
+
+  // Resuming from the card re-enters playSpotifyTrack: before any new player
+  // report the bar keeps the last known position and total, not a blanked one.
+  await balconiesCard(page).click();
+  await expect(page.locator('#soundbarProgress')).toHaveAttribute('aria-valuenow', '5234');
+  await expect(page.locator('#soundbarProgress')).toHaveAttribute('aria-valuemax', '30000');
+});
+
 test('treats a real pause at the end as finished and replays from the start', async ({ page }) => {
   await mockSpotify(page);
   await page.goto('/listen/');
