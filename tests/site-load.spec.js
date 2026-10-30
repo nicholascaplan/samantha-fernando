@@ -456,6 +456,52 @@ test('uses a compact portrait on mobile Biography @mobile', async ({ page }) => 
   await expect(page.locator('#tab-bio aside > figure')).toBeHidden();
 });
 
+test('keeps the Biography portrait viewport-sized at 200% root text @mobile', async ({ page }) => {
+  for (const width of [390, 320]) {
+    await page.setViewportSize({ width, height: 844 });
+    await page.goto('/biography/');
+    // Enlarge the root font size itself: real 200% browser text scales rem-based
+    // geometry, unlike a container font-size override.
+    await page.addStyleTag({ content: 'html { font-size: 200%; }' });
+
+    const portrait = page.locator('.bio-mobile-portrait');
+    await expect(portrait).toBeVisible();
+    const portraitBox = await portrait.boundingBox();
+    expect(portraitBox.width).toBeLessThanOrEqual(170);
+    expect(portraitBox.width).toBeGreaterThan(100);
+
+    // The opening text must still render beside the float, not drop below it.
+    // A paragraph's bounding box stays beside the float even when its lines do
+    // not fit, so measure the first rendered text fragment instead.
+    const firstLine = await page.locator('#tab-bio article > p').first().evaluate((p) => {
+      const range = document.createRange();
+      range.selectNodeContents(p.firstChild);
+      const rect = range.getClientRects()[0];
+      return rect ? { x: rect.x, y: rect.y } : null;
+    });
+    expect(firstLine).not.toBeNull();
+    expect(firstLine.y).toBeLessThan(portraitBox.y + portraitBox.height);
+    expect(firstLine.x).toBeLessThan(portraitBox.x);
+  }
+});
+
+test('enlarges the mobile Biography portrait and shows the birth year @mobile', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/biography/');
+
+  const portrait = page.locator('.bio-mobile-portrait');
+  await expect(portrait).toBeVisible();
+  const box = await portrait.boundingBox();
+  expect(box.width).toBeGreaterThan(130);
+  expect(box.width).toBeLessThanOrEqual(160);
+
+  const birthYear = page.locator('#tab-bio article').getByText('b. 1984', { exact: true });
+  await expect(birthYear).toBeVisible();
+  const headingBox = await page.locator('#tab-bio article').getByRole('heading', { name: 'Samantha Fernando' }).boundingBox();
+  const birthYearBox = await birthYear.boundingBox();
+  expect(birthYearBox.y).toBeGreaterThanOrEqual(headingBox.y + headingBox.height - 1);
+});
+
 test('aligns Works and Listen CTAs with card content on mobile @mobile', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/works/');

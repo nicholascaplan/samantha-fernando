@@ -52,6 +52,7 @@ export function renderBiography(doc, {portraitSrc}) {
                     <div>
                         <span class="text-xs font-mono text-amber-500 tracking-widest uppercase">${esc(doc.eyebrow)}</span>
                         <h2 class="text-3xl sm:text-5xl font-serif font-light text-neutral-100 mt-2 leading-tight">${esc(doc.heading)}</h2>
+                        <p class="mt-1 font-serif italic text-neutral-400">b. 1984</p>
                     </div>
                     <div class="bio-mobile-portrait" aria-hidden="true">
                         <img src="${esc(portraitSrc)}" alt="" width="${width}" height="${height}" loading="lazy"${objectPosition}>
