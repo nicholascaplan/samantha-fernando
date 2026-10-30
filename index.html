@@ -2174,7 +2174,15 @@
             playbackRequestToken += 1;
             pendingSpotifyTrack = null;
             clearSpotifyLoading();
-            spotifyController?.pause?.();
+            // A pause sent before playback begins may not stop a play() the
+            // embed has already queued: end the controller's event stream the
+            // same way a cancellation does, so a late start cannot leave audio
+            // playing behind the failure notice.
+            if (spotifyController) {
+                spotifyController.pause?.();
+                spotifyController.destroy?.();
+                spotifyController = null;
+            }
             setSpotifyPlaybackState(false, activeSpotifyTrack || currentTrackId);
             const recording = mediaCatalog.find(media => media.type === 'listen' && media.provider === 'spotify' && media.id === (activeSpotifyTrack || currentTrackId));
             const notice = document.getElementById('audioAvailabilityMessage');

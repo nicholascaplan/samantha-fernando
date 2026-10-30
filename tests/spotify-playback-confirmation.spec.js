@@ -539,3 +539,38 @@ test('a stale controller callback cannot replace the live controller', async ({ 
     ['play'],
   ]);
 });
+
+test('a failure after the watchdog tears down the controller and a late report cannot revive the bar', async ({ page }) => {
+  await mockSpotify(page);
+  await installPausedClock(page);
+  await page.goto('/listen/');
+
+  await balconiesCard(page).click();
+  await expect
+    .poll(() => page.evaluate(() => Boolean(window.__spotifyHandlers.playback_update)))
+    .toBe(true);
+
+  // The startup watchdog fires before the player reports anything: the
+  // failure path must end the controller's stream, not only pause it.
+  await page.clock.runFor(16000);
+  await expect(page.locator('#audioAvailabilityMessage')).toBeVisible();
+  await expect.poll(() => page.evaluate(() => window.__spotifyCalls)).toContainEqual(['destroy']);
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Resume playback');
+
+  // A late playback report from the torn-down controller cannot revive the bar.
+  await page.evaluate(() =>
+    window.__spotifyHandlers.playback_update({
+      data: { playingURI: 'spotify:track:2wNL47uCuwDpbOqCIpbSTS', isPaused: false, isBuffering: false, position: 1000, duration: 30000 },
+    }),
+  );
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Resume playback');
+  await expect(page.locator('#soundbarProgress')).toHaveAttribute('aria-valuenow', '0');
+  await expect(page.locator('#audioAvailabilityMessage')).toBeVisible();
+
+  // Resuming after the failure starts a fresh request through the usual path.
+  await page.locator('#soundbarPauseBtn').click();
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Cancel playback request');
+  await expect
+    .poll(() => page.evaluate(() => window.__spotifyCalls.filter(call => call[0] === 'loadUri').length))
+    .toBe(2);
+});
