@@ -817,3 +817,40 @@ test('failure notice after a cancelled request names the new track, not the canc
     'https://open.spotify.com/track/3YV79qjiJLOgYjjEzTsVEy',
   );
 });
+
+test('glides the progress fill between the player\'s one-per-second reports', async ({ page }) => {
+  await mockSpotify(page);
+  await installPausedClock(page);
+  await page.goto('/listen/');
+
+  await balconiesCard(page).click();
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Cancel playback request');
+
+  const widthPercent = () => page.locator('#soundbarProgressFill').evaluate(el => parseFloat(el.style.width));
+
+  // The first real report lands the fill exactly on the player's position.
+  await fireSpotifyUpdate(page, { isPaused: false, isBuffering: false, position: 1000, duration: 20000 });
+  await expect(page.locator('#soundbarElapsedTime')).toHaveText('0:01');
+  await expect.poll(widthPercent).toBeCloseTo(5, 1);
+
+  // Half a second passes with no new report: the fill glides ahead on the
+  // wall clock instead of holding at the last one-second step. The glide
+  // renders on animation frames (~16ms apart), so the last rendered frame
+  // may lag the fake clock's edge by up to one frame - 0.08 width-% of a
+  // 20s track - but the fill must never run ahead of the wall clock.
+  await page.clock.runFor(500);
+  const oneFramePercent = (16 / 20000) * 100;
+  await expect.poll(widthPercent).toBeGreaterThan(7.5 - oneFramePercent - 0.02);
+  expect(await widthPercent()).toBeLessThanOrEqual(7.5 + 1e-6);
+
+  // The next real report re-anchors the fill exactly on the player's truth.
+  await fireSpotifyUpdate(page, { isPaused: false, isBuffering: false, position: 2000, duration: 20000 });
+  await expect(page.locator('#soundbarElapsedTime')).toHaveText('0:02');
+  await expect.poll(widthPercent).toBeCloseTo(10, 1);
+
+  // Pause snaps the fill to the reported position and stops the glide: the
+  // bar never runs ahead of where playback actually stopped.
+  await fireSpotifyUpdate(page, { isPaused: true, isBuffering: false, position: 2600, duration: 20000 });
+  await page.clock.runFor(500);
+  await expect.poll(widthPercent).toBeCloseTo(13, 1);
+});

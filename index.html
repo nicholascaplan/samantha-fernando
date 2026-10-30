@@ -410,6 +410,9 @@
         body { padding-bottom: var(--soundbar-offset, 0px); }
         #soundbarProgress { grid-row: 3; grid-column: 1; width: 100%; height: 0.35rem; overflow: hidden; border: 1px solid rgba(246, 191, 123, 0.45); border-radius: 9999px; background: rgba(246, 191, 123, 0.2); }
         #soundbarProgressFill { width: 0; height: 100%; border-radius: inherit; background: #f6bf7b; box-shadow: 0 0 0.4rem rgba(246, 191, 123, 0.65); transition: width 0.2s linear; }
+        /* While playing, the fill is repositioned every animation frame from
+           the latest player report; a CSS transition would fight that. */
+        #soundbarProgressFill.smooth { transition: none; }
         #soundbarTimes { grid-row: 4; grid-column: 1; display: flex; justify-content: space-between; font-variant-numeric: tabular-nums; color: #eecfa3; }
         /* The loading message takes over the progress/time rows while the
            piece name stays visible: the bar never grows or jumps, and the
@@ -1956,6 +1959,12 @@
         let spotifyPlaybackWatchdog = null;
         const SPOTIFY_PLAYBACK_TIMEOUT_MS = 15000;
         let soundbarProgressTimer = null;
+        let soundbarProgressRaf = null;
+        // The latest real position report from the player: Spotify sends about
+        // one report a second and SoundCloud is polled every 0.5s. While
+        // playing, the fill renders ahead of this sample on the wall clock so
+        // the bar glides between reports instead of stepping once per report.
+        let progressSample = null;
         const readySoundCloudPlayers = new Set();
         let pendingSoundCloudPlaybackId = null;
         let pendingSoundCloudPlaybackStartsAtZero = false;
@@ -2139,6 +2148,46 @@
             progressBar.setAttribute('aria-valuetext', safeDuration
                 ? `${formatPlaybackTime(safePosition)} of ${formatPlaybackTime(safeDuration)}`
                 : formatPlaybackTime(safePosition));
+            // Every call is a real report: re-anchor the smoothing loop. A
+            // paused or stopped bar snaps to this exact position instead.
+            progressSample = { positionMs: safePosition, durationMs: safeDuration, atMs: performance.now() };
+            if (isAudioPlaying) {
+                startSoundbarProgressSmoothing();
+            } else {
+                stopSoundbarProgressSmoothing();
+            }
+        }
+
+        // Glides the fill between real player reports: without this the bar
+        // visibly steps once per report (~1s for Spotify, 0.5s for
+        // SoundCloud). The loop re-anchors on every report so it cannot
+        // drift, renders only the fill (time readouts and aria keep the
+        // player's cadence), and clamps at the duration so it never runs
+        // past the end of the track.
+        function renderSmoothedProgress() {
+            if (!isAudioPlaying || !progressSample) {
+                soundbarProgressRaf = null;
+                return;
+            }
+            const displayMs = progressSample.durationMs
+                ? Math.min(progressSample.durationMs, progressSample.positionMs + (performance.now() - progressSample.atMs))
+                : progressSample.positionMs + (performance.now() - progressSample.atMs);
+            const progress = progressSample.durationMs ? Math.min(100, (displayMs / progressSample.durationMs) * 100) : 0;
+            document.getElementById('soundbarProgressFill').style.width = `${progress}%`;
+            soundbarProgressRaf = window.requestAnimationFrame(renderSmoothedProgress);
+        }
+
+        function startSoundbarProgressSmoothing() {
+            document.getElementById('soundbarProgressFill').classList.add('smooth');
+            if (soundbarProgressRaf === null) soundbarProgressRaf = window.requestAnimationFrame(renderSmoothedProgress);
+        }
+
+        function stopSoundbarProgressSmoothing() {
+            if (soundbarProgressRaf !== null) {
+                window.cancelAnimationFrame(soundbarProgressRaf);
+                soundbarProgressRaf = null;
+            }
+            document.getElementById('soundbarProgressFill').classList.remove('smooth');
         }
 
         function stopSoundbarProgressTimer() {
@@ -2667,6 +2716,12 @@
             }
 
             stopSoundbarProgressTimer();
+            // Pause freezes the true position: re-anchor the bar to the
+            // player's own report so no interpolated frame leaves the fill
+            // ahead of where playback actually stopped.
+            soundcloudPlayers[currentTrackId]?.getPosition(position => {
+                if (!isAudioPlaying) updateSoundbarProgress(position);
+            });
             document.getElementById('waveContainer').classList.add('paused');
             document.getElementById('soundStatusIcon').className = 'fa-solid fa-play text-sm';
             document.getElementById('soundbarPauseIcon').className = 'fa-solid fa-play text-xs';
