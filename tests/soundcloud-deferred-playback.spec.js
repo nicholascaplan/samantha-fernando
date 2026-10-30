@@ -683,3 +683,38 @@ test('returning to a SoundCloud track that another selection displaced starts it
     ['play', 'soundcloudPlayerLookUp'],
   ]);
 });
+
+test('a request that confirms quickly never shows the loading message', async ({ page }) => {
+  await mockSoundCloud(page);
+  await page.goto('/listen/');
+
+  await lookUpCard(page).click();
+  await expect.poll(() => page.evaluate(() => Boolean(window.__soundCloudPlayers?.soundcloudPlayerLookUp))).toBe(true);
+  // Confirm within the 0.3s grace window: the message stays hidden and the
+  // progress rows are never displaced.
+  await fireWidgetEvent(page, 'READY');
+  await fireWidgetEvent(page, 'PLAY');
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
+  await expect(page.locator('#soundbarLoading')).toBeHidden();
+  await expect(page.locator('#soundbarProgress')).toBeVisible();
+});
+
+test('a request still pending after the grace window shows the loading message without moving the title', async ({ page }) => {
+  await mockSoundCloud(page);
+  await page.goto('/listen/');
+
+  await lookUpCard(page).click();
+  await expect.poll(() => page.evaluate(() => Boolean(window.__soundCloudPlayers?.soundcloudPlayerLookUp))).toBe(true);
+  // READY alone does not confirm playback: the request stays pending, and
+  // after the grace window the message appears with the title in place and
+  // the progress rows displaced.
+  await fireWidgetEvent(page, 'READY');
+  await expect(page.locator('#soundbarLoading')).toBeVisible();
+  await expect(page.locator('#soundbarLabel')).toHaveText(/Look Up/);
+  await expect(page.locator('#soundbarProgress')).toBeHidden();
+  // A later confirmation clears the message and restores the rows.
+  await fireWidgetEvent(page, 'PLAY');
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
+  await expect(page.locator('#soundbarLoading')).toBeHidden();
+  await expect(page.locator('#soundbarProgress')).toBeVisible();
+});
