@@ -150,12 +150,12 @@ test('shows loading feedback with the piece name as soon as playback is requeste
   await expect(page.locator('#soundbarLoading')).toHaveText('Loading audio…');
   await expect(page.locator('#soundbarProgress')).toBeHidden();
   await expect(page.locator('#soundbarTimes')).toBeHidden();
-  await expect(page.locator('#soundbarLabel')).toBeVisible();
-  await expect(page.locator('#soundbarLabel')).toHaveText(/Balconies/);
+  await expect(page.locator('#soundbarTitle')).toBeVisible();
+  await expect(page.locator('#soundbarTitle')).toHaveText(/Balconies/);
 
   await fireSpotifyUpdate(page, { isPaused: false, isBuffering: false, position: 0, duration: 30000 });
   await expect(page.locator('#soundbarLoading')).toBeHidden();
-  await expect(page.locator('#soundbarLabel')).toBeVisible();
+  await expect(page.locator('#soundbarTitle')).toBeVisible();
   await expect(page.locator('#audioAvailabilityMessage')).toBeHidden();
 });
 
@@ -715,7 +715,8 @@ test('returning to a track that another selection displaced starts it from the b
   await fireSpotifyUpdate(page, { isPaused: false, isBuffering: false, position: 8000, duration: 30000 });
 
   await balconiesCard(page).click();
-  await expect(page.locator('#soundbarLabel')).toHaveText('Balconies · Olivia de Prato');
+  await expect(page.locator('#soundbarTitle')).toHaveText('Balconies');
+  await expect(page.locator('#soundbarPerformer')).toHaveText('Olivia de Prato');
 
   // A fresh request: reload and seek to zero, never a mid-track resume.
   expect(await page.evaluate(() => window.__spotifyCalls)).toEqual([

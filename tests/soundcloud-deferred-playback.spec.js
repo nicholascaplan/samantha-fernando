@@ -100,8 +100,8 @@ test('shows loading feedback with the piece name as soon as playback is requeste
   await expect(page.locator('#soundbarLoading')).toHaveText('Loading audio…');
   await expect(page.locator('#soundbarProgress')).toBeHidden();
   await expect(page.locator('#soundbarTimes')).toBeHidden();
-  await expect(page.locator('#soundbarLabel')).toBeVisible();
-  await expect(page.locator('#soundbarLabel')).toHaveText(/Look Up/);
+  await expect(page.locator('#soundbarTitle')).toBeVisible();
+  await expect(page.locator('#soundbarTitle')).toHaveText(/Look Up/);
 
   await fireWidgetEvent(page, 'READY');
   await expect.poll(() => page.evaluate(() => window.__soundCloudCalls)).toContainEqual([
@@ -110,7 +110,7 @@ test('shows loading feedback with the piece name as soon as playback is requeste
   ]);
   await fireWidgetEvent(page, 'PLAY');
   await expect(page.locator('#soundbarLoading')).toBeHidden();
-  await expect(page.locator('#soundbarLabel')).toBeVisible();
+  await expect(page.locator('#soundbarTitle')).toBeVisible();
 });
 
 test('a promptly started playback still clears the loading feedback', async ({ page }) => {
@@ -148,7 +148,7 @@ test('a promptly started playback still clears the loading feedback', async ({ p
 
   await page.clock.runFor(2000);
   await expect(page.locator('#soundbarLoading')).toBeHidden();
-  await expect(page.locator('#soundbarLabel')).toBeVisible();
+  await expect(page.locator('#soundbarTitle')).toBeVisible();
   await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
 });
 
@@ -268,7 +268,8 @@ test('selecting Spotify cancels a pending SoundCloud request', async ({ page }) 
   await lookUpCard(page).click();
   await expect(page.locator('#soundbar')).toBeVisible();
   await page.locator('#worksContainer [data-spotify-track="2wNL47uCuwDpbOqCIpbSTS"]').click();
-  await expect(page.locator('#soundbarLabel')).toHaveText('Balconies · Olivia de Prato');
+  await expect(page.locator('#soundbarTitle')).toHaveText('Balconies');
+  await expect(page.locator('#soundbarPerformer')).toHaveText('Olivia de Prato');
 
   // The Spotify player confirms its request, so its own startup watchdog stays quiet.
   await expect
@@ -294,7 +295,8 @@ test('selecting Spotify cancels a pending SoundCloud request', async ({ page }) 
 
   await page.clock.runFor(16000);
   await expect(page.locator('#audioAvailabilityMessage')).toBeHidden();
-  await expect(page.locator('#soundbarLabel')).toHaveText('Balconies · Olivia de Prato');
+  await expect(page.locator('#soundbarTitle')).toHaveText('Balconies');
+  await expect(page.locator('#soundbarPerformer')).toHaveText('Olivia de Prato');
   await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
 });
 
@@ -345,7 +347,7 @@ test('a request waiting on the controller callback stays pending and cancellable
   // Still pending: loading feedback and the piece name stay visible, and
   // the button still offers to cancel the request.
   await expect(page.locator('#soundbarLoading')).toBeVisible();
-  await expect(page.locator('#soundbarLabel')).toHaveText(/Balconies/);
+  await expect(page.locator('#soundbarTitle')).toHaveText(/Balconies/);
   await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Cancel playback request');
   // Cancelling ends the request instead of requesting the track again.
   await page.locator('#soundbarPauseBtn').click();
@@ -617,7 +619,8 @@ test('a Spotify request waiting on the player API shows and honours cancellation
   // label now belongs to the Spotify request and must mean cancellation.
   await lookUpCard(page).click();
   await page.locator('#worksContainer [data-spotify-track="2wNL47uCuwDpbOqCIpbSTS"]').click();
-  await expect(page.locator('#soundbarLabel')).toHaveText('Balconies · Olivia de Prato');
+  await expect(page.locator('#soundbarTitle')).toHaveText('Balconies');
+  await expect(page.locator('#soundbarPerformer')).toHaveText('Olivia de Prato');
   await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Cancel playback request');
 
   // The pending request shows loading feedback, not only the label.
@@ -672,7 +675,7 @@ test('switching to SoundCloud ends a playing Spotify controller and its events',
   // torn down, not merely paused.
   await lookUpCard(page).click();
   await expect.poll(() => page.evaluate(() => window.__spotifyCalls)).toContainEqual(['destroy']);
-  await expect(page.locator('#soundbarLabel')).toHaveText(/Look Up/);
+  await expect(page.locator('#soundbarTitle')).toHaveText(/Look Up/);
 
   // A start the Spotify embed had already queued cannot touch the SoundCloud bar.
   const callsAtSwitch = await page.evaluate(() => window.__spotifyCalls.length);
@@ -681,7 +684,7 @@ test('switching to SoundCloud ends a playing Spotify controller and its events',
       data: { playingURI: 'spotify:track:2wNL47uCuwDpbOqCIpbSTS', isPaused: false, isBuffering: false, position: 2000, duration: 30000 },
     }),
   );
-  await expect(page.locator('#soundbarLabel')).toHaveText(/Look Up/);
+  await expect(page.locator('#soundbarTitle')).toHaveText(/Look Up/);
   expect(await page.evaluate(() => window.__spotifyCalls.length)).toBe(callsAtSwitch);
 });
 
@@ -703,10 +706,12 @@ test('returning to a SoundCloud track that another selection displaced starts it
   await expect.poll(() => page.evaluate(() => Boolean(window.__soundCloudPlayers?.soundcloudPlayerIlluminations))).toBe(true);
   await fireFor('soundcloudPlayerIlluminations', 'READY');
   await fireFor('soundcloudPlayerIlluminations', 'PLAY');
-  await expect(page.locator('#soundbarLabel')).toHaveText('4 Illuminations · Xasax Saxophone Quartet at Royaumont Abbey');
+  await expect(page.locator('#soundbarTitle')).toHaveText('4 Illuminations');
+  await expect(page.locator('#soundbarPerformer')).toHaveText('Xasax Saxophone Quartet at Royaumont Abbey');
 
   await lookUpCard(page).click();
-  await expect(page.locator('#soundbarLabel')).toHaveText('Look Up · 4 voices, viola da gamba and electronics');
+  await expect(page.locator('#soundbarTitle')).toHaveText('Look Up');
+  await expect(page.locator('#soundbarPerformer')).toHaveText('4 voices, viola da gamba and electronics');
   const calls = await page.evaluate(() => window.__soundCloudCalls);
   // Every selection, including the returning one, starts from the beginning.
   expect(calls.filter(([name]) => name === 'seekTo')).toEqual([
@@ -747,7 +752,7 @@ test('a request still pending after the grace window shows the loading message w
   // the progress rows displaced.
   await fireWidgetEvent(page, 'READY');
   await expect(page.locator('#soundbarLoading')).toBeVisible();
-  await expect(page.locator('#soundbarLabel')).toHaveText(/Look Up/);
+  await expect(page.locator('#soundbarTitle')).toHaveText(/Look Up/);
   await expect(page.locator('#soundbarProgress')).toBeHidden();
   // A later confirmation clears the message and restores the rows.
   await fireWidgetEvent(page, 'PLAY');

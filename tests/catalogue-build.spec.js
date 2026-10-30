@@ -95,7 +95,8 @@ test('new SoundCloud recording supplies its player configuration and can be the 
   await page.goto('/');
   await page.locator('#ambientSoundBtn').click();
   await expect.poll(() => page.evaluate(() => window.__calls)).toContainEqual(['soundcloud', 'soundcloudPlayer-new-recording']);
-  await expect(page.locator('#soundbarLabel')).toHaveText('New public recording');
+  await expect(page.locator('#soundbarTitle')).toHaveText('New public recording');
+  await expect(page.locator('#soundbarPerformer')).toHaveText('');
   await expect(page.locator('#soundcloudPlayer-new-recording')).toHaveAttribute('src', /samanthafernando%2Fnew-recording/);
   await page.locator('#soundbarStopBtn').click();
   await expect(page.locator('#soundbar')).toBeHidden();
@@ -111,7 +112,8 @@ test('new Spotify URL supplies the playback ID and header default without a hard
   await page.goto('/');
   await page.locator('#ambientSoundBtn').click();
   await expect.poll(() => page.evaluate(() => window.__calls)).toContainEqual(['spotify', 'spotify:track:7lmUNPa9oAkmYwdo88guI4']);
-  await expect(page.locator('#soundbarLabel')).toHaveText('New Spotify recording');
+  await expect(page.locator('#soundbarTitle')).toHaveText('New Spotify recording');
+  await expect(page.locator('#soundbarPerformer')).toHaveText('');
 });
 
 test('CMS quotes and markup render as text, with functional media actions in both themes', async ({page}) => {
