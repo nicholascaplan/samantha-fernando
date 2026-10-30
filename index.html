@@ -2850,10 +2850,13 @@
 
             notice?.classList.add('hidden');
             pendingSpotifyTrack = null;
-            if ((isSpotifyPlaying || spotifyPlaybackPending) && spotifyController) {
-                // A replaced Spotify request is terminal, not paused: a start
-                // the embed already queued must not play behind the
-                // SoundCloud bar. Returning to the track starts it fresh.
+            if (spotifyController) {
+                // Any replaced Spotify controller is terminal, not paused: a
+                // returning visitor starts the track from the beginning on a
+                // fresh embed, so a surviving paused controller has no resume
+                // role - and its late queued events must never repaint the
+                // bar. Pause/resume keeps its controller only while Spotify
+                // stays the active provider.
                 spotifyController.pause?.();
                 spotifyController.destroy?.();
                 spotifyController = null;

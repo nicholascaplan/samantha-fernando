@@ -738,6 +738,82 @@ test('switching to SoundCloud ends a playing Spotify controller and its events',
   expect(await page.evaluate(() => window.__spotifyCalls.length)).toBe(callsAtSwitch);
 });
 
+test('switching to SoundCloud ends a paused Spotify controller, and its late events cannot repaint the bar', async ({ page }) => {
+  await mockSoundCloud(page);
+  await page.addInitScript(() => {
+    window.__spotifyCalls = [];
+    window.__spotifyControllers = [];
+    window.__spotifyIFrameApi = {
+      createController: (_container, _options, callback) => {
+        const record = { handlers: {} };
+        const controller = {
+          loadUri: uri => window.__spotifyCalls.push(['loadUri', uri]),
+          seek: position => window.__spotifyCalls.push(['seek', position]),
+          play: () => window.__spotifyCalls.push(['play']),
+          pause: () => window.__spotifyCalls.push(['pause']),
+          destroy: () => window.__spotifyCalls.push(['destroy']),
+          addListener: (event, handler) => { record.handlers[event] = handler; },
+        };
+        record.controller = controller;
+        window.__spotifyControllers.push(record);
+        callback(controller);
+      },
+    };
+    localStorage.setItem('analyticsConsent', 'rejected');
+  });
+  await page.route('https://open.spotify.com/embed/iframe-api/v1', route =>
+    route.fulfill({
+      contentType: 'application/javascript',
+      body: 'window.onSpotifyIframeApiReady(window.__spotifyIFrameApi);',
+    }),
+  );
+  await page.goto('/listen/');
+
+  // Pause a playing Spotify track at a known position.
+  await page.locator('#worksContainer [data-spotify-track="2wNL47uCuwDpbOqCIpbSTS"]').click();
+  await expect.poll(() => page.evaluate(() => window.__spotifyControllers.length)).toBe(1);
+  await page.evaluate(() =>
+    window.__spotifyControllers[0].handlers.playback_update({
+      data: { playingURI: 'spotify:track:2wNL47uCuwDpbOqCIpbSTS', isPaused: false, isBuffering: false, position: 1000, duration: 30000 },
+    }),
+  );
+  await page.locator('#soundbarPauseBtn').click();
+  await page.evaluate(() =>
+    window.__spotifyControllers[0].handlers.playback_update({
+      data: { playingURI: 'spotify:track:2wNL47uCuwDpbOqCIpbSTS', isPaused: true, isBuffering: false, position: 20000, duration: 30000 },
+    }),
+  );
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Resume playback');
+
+  // Switching to SoundCloud ends the paused controller: a returning visitor
+  // starts the track fresh, so the controller has no resume role to keep.
+  await lookUpCard(page).click();
+  await expect.poll(() => page.evaluate(() => window.__spotifyCalls)).toContainEqual(['destroy']);
+  await expect(page.locator('#soundbarTitle')).toHaveText(/Look Up/);
+
+  // Returning to the track starts it fresh on a new controller.
+  await page.locator('#worksContainer [data-spotify-track="2wNL47uCuwDpbOqCIpbSTS"]').click();
+  await expect.poll(() => page.evaluate(() => window.__spotifyControllers.length)).toBe(2);
+  await expect(page.locator('#soundbarElapsedTime')).toHaveText('0:00');
+  await page.evaluate(() =>
+    window.__spotifyControllers[1].handlers.playback_update({
+      data: { playingURI: 'spotify:track:2wNL47uCuwDpbOqCIpbSTS', isPaused: false, isBuffering: false, position: 5000, duration: 30000 },
+    }),
+  );
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
+  await expect(page.locator('#soundbarProgress')).toHaveAttribute('aria-valuenow', '5000');
+
+  // A paused event queued by the old controller's session cannot repaint the
+  // fresh playback as paused at the stale position.
+  await page.evaluate(() =>
+    window.__spotifyControllers[0].handlers.playback_update({
+      data: { playingURI: 'spotify:track:2wNL47uCuwDpbOqCIpbSTS', isPaused: true, isBuffering: false, position: 20000, duration: 30000 },
+    }),
+  );
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
+  await expect(page.locator('#soundbarProgress')).toHaveAttribute('aria-valuenow', '5000');
+});
+
 test('returning to a SoundCloud track that another selection displaced starts it from the beginning', async ({ page }) => {
   await mockSoundCloud(page);
   await page.goto('/listen/');
