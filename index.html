@@ -2052,6 +2052,9 @@
         function armSoundCloudLoading(id) {
             if (armedSoundCloudPlaybackId === id) return;
             clearSoundCloudLoading();
+            // A new SoundCloud play request invalidates any pause position
+            // answer still in flight from the previous request.
+            playbackRequestToken += 1;
             armedSoundCloudPlaybackId = id;
             cancelledSoundCloudPlaybackId = null;
             setPlaybackState(true);
@@ -2586,6 +2589,7 @@
 
             if (armedSoundCloudPlaybackId === currentTrackId) {
                 // Cancel a playback request that has not started yet.
+                playbackRequestToken += 1;
                 pendingSoundCloudPlaybackId = null;
                 pendingSoundCloudPlaybackStartsAtZero = false;
                 clearSoundCloudLoading();
@@ -2742,11 +2746,12 @@
             // then applies the fresh position.
             if (progressSample) updateSoundbarProgress(progressSample.positionMs, progressSample.durationMs);
             const pauseTrackId = currentTrackId;
+            const pauseRequestToken = playbackRequestToken;
             soundcloudPlayers[pauseTrackId]?.getPosition(position => {
-                // A selection made while the position request was in flight
-                // owns the bar now: only a still-current SoundCloud pause may
-                // re-anchor it.
-                if (!isAudioPlaying && activeAudioProvider === 'soundcloud' && currentTrackId === pauseTrackId) updateSoundbarProgress(position);
+                // A play request, cancel or stop made while the position
+                // request was in flight owns the bar now: only a still-
+                // current SoundCloud pause may re-anchor it.
+                if (playbackRequestToken === pauseRequestToken && !isAudioPlaying && activeAudioProvider === 'soundcloud' && currentTrackId === pauseTrackId) updateSoundbarProgress(position);
             });
             document.getElementById('waveContainer').classList.add('paused');
             document.getElementById('soundStatusIcon').className = 'fa-solid fa-play text-sm';
@@ -2776,6 +2781,7 @@
 
             if (activeAudioProvider === 'soundcloud' && id === currentTrackId && isAudioPlaying && armedSoundCloudPlaybackId === id) {
                 // Cancel a playback request that has not started yet.
+                playbackRequestToken += 1;
                 pendingSoundCloudPlaybackId = null;
                 pendingSoundCloudPlaybackStartsAtZero = false;
                 clearSoundCloudLoading();

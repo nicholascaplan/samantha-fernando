@@ -7,6 +7,9 @@ async function mockSoundCloud(page, { position = 0 } = {}) {
     window.__soundCloudCalls = [];
     const Widget = element => {
       const handlers = {};
+      // PAUSE is a transition event: the real widget does not fire it when
+      // pausing an already-paused player (as Stop does after a pause).
+      let playing = false;
       const player = {
         bind: (event, handler) => { handlers[event] = handler; },
         getDuration: callback => callback(60_000),
@@ -21,10 +24,12 @@ async function mockSoundCloud(page, { position = 0 } = {}) {
         },
         pause: () => {
           window.__soundCloudCalls.push(['pause', element.id]);
-          handlers.PAUSE?.();
+          if (playing) handlers.PAUSE?.();
+          playing = false;
         },
         play: () => {
           window.__soundCloudCalls.push(['play', element.id]);
+          playing = true;
         },
         seekTo: position => window.__soundCloudCalls.push(['seekTo', element.id, position]),
       };
@@ -807,6 +812,42 @@ test('a SoundCloud pause snaps the fill to the last player report before the pos
   // The fresh position applies when the answer finally arrives.
   await page.evaluate(() => window.__deferredPositions.soundcloudPlayerLookUp?.(4800));
   await expect.poll(widthPercent).toBeCloseTo((4800 / 60000) * 100, 1);
+});
+
+test('a stale pause position cannot repaint the bar after Stop', async ({ page }) => {
+  await mockSoundCloud(page, { position: 5000 });
+  // A SoundCloud default keeps the stopped recording current after Stop,
+  // which is the only state where the guards alone (provider + track id +
+  // not playing) still match the outstanding pause request.
+  await page.route('**/listen/', async route => {
+    const response = await route.fetch();
+    const body = (await response.text()).replace(
+      '"defaultRecording":"spotify-3YV79qjiJLOgYjjEzTsVEy"',
+      '"defaultRecording":"soundcloud-look-up"',
+    );
+    await route.fulfill({ response, body });
+  });
+  await page.goto('/listen/');
+
+  await lookUpCard(page).click();
+  await expect.poll(() => page.evaluate(() => Boolean(window.__soundCloudPlayers?.soundcloudPlayerLookUp))).toBe(true);
+  await fireWidgetEvent(page, 'READY');
+  await fireWidgetEvent(page, 'PLAY');
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
+
+  // Hold the position answer, then pause and stop before it arrives.
+  await page.evaluate(() => { window.__deferPositions = true; });
+  await lookUpCard(page).click();
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Resume playback');
+  await page.locator('#soundbarStopBtn').click();
+  await expect(page.locator('#soundbar')).toBeHidden();
+  expect(await page.locator('#soundbarProgressFill').evaluate(el => el.style.width)).toBe('0%');
+
+  // The outstanding answer belongs to the paused request, not the stopped
+  // bar: it must not repaint the fill or the elapsed time over the reset.
+  await page.evaluate(() => window.__deferredPositions.soundcloudPlayerLookUp?.(30000));
+  await expect.poll(() => page.locator('#soundbarProgressFill').evaluate(el => el.style.width)).toBe('0%');
+  expect(await page.locator('#soundbarElapsedTime').evaluate(el => el.textContent)).toBe('0:00');
 });
 
 test('reselecting the paused recording resumes where it paused', async ({ page }) => {
