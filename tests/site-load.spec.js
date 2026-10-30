@@ -862,6 +862,44 @@ test('soundbar keeps stable geometry across track names, loading and enlarged te
   expect(await barHeight()).toBe(narrowHeight);
 });
 
+test('soundbar keeps usable text room at 320px with 200% text', async ({ page }) => {
+  // A visitor combining a narrow phone with a 200% text setting: the bar's
+  // chrome (padding, control cluster) is sized in px so the enlarged text
+  // rows keep real room instead of being crushed by a scaled-up frame.
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.goto('/');
+  await page.locator('#ambientSoundBtn').click();
+  await expect(page.locator('#soundbar')).toBeVisible();
+  await page.evaluate(() => { document.documentElement.style.fontSize = '200%'; });
+
+  const metrics = await page.evaluate(() => {
+    const bar = document.getElementById('soundbar').getBoundingClientRect();
+    const info = document.getElementById('soundbarTrackInfo').getBoundingClientRect();
+    const controls = document.getElementById('soundbarControls').getBoundingClientRect();
+    const firstButton = document.querySelector('#soundbarControls button').getBoundingClientRect();
+    return {
+      barWidth: bar.width,
+      barHeight: bar.height,
+      infoWidth: info.width,
+      infoBottom: info.bottom,
+      controlsLeft: controls.left,
+      controlsTop: controls.top,
+      infoRight: info.right,
+      buttonWidth: firstButton.width,
+      buttonHeight: firstButton.height,
+    };
+  });
+  // The piece name column keeps enough room for several characters of the
+  // enlarged text, the controls never overlap it (here: wrapped to their own
+  // row below), and the buttons grow with the visitor's text setting while
+  // staying at least the standard 28px touch size of the normal layout.
+  expect(metrics.infoWidth).toBeGreaterThanOrEqual(96);
+  expect(metrics.controlsTop).toBeGreaterThanOrEqual(metrics.infoBottom);
+  expect(metrics.controlsLeft).toBeGreaterThanOrEqual(metrics.infoRight - metrics.infoWidth);
+  expect(metrics.buttonWidth).toBeGreaterThanOrEqual(28);
+  expect(metrics.buttonHeight).toBeGreaterThanOrEqual(28);
+});
+
 test('soundbar is anchored to the viewport bottom on mobile @mobile', async ({ page }) => {
   await page.goto('/');
   await page.locator('#ambientSoundBtn').click();

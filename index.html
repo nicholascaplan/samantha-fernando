@@ -373,8 +373,13 @@
         @media (hover: none) {
             [data-tooltip]::after { display: none; }
         }
-        #soundbar { position: fixed; bottom: 0; width: min(34rem, calc(100vw - 2rem)); box-sizing: border-box; display: block; min-height: 6rem; padding: 0.75rem 7rem 0.75rem 2rem; background: #6e3500; border-color: rgba(246, 191, 123, 0.35); color: #fdf3e3; transition: opacity 0.3s ease, transform 0.3s ease; }
-        #soundbarTrackInfo { position: relative; min-width: 0; width: 100%; display: grid; gap: 0.25rem; }
+        /* The bar is a wrapping flex row: the piece name flexes and the
+           controls sit in flow after it, so a visitor's enlarged text setting
+           grows text and controls together - when both no longer fit side by
+           side the controls wrap to their own row below instead of crushing
+           the name. Only the frame itself (width, padding) is fixed in px. */
+        #soundbar { position: fixed; bottom: 0; width: min(544px, calc(100vw - 32px)); box-sizing: border-box; display: flex; flex-wrap: wrap; align-items: center; column-gap: 12px; row-gap: 0.25rem; min-height: 96px; padding: 12px 20px; background: #6e3500; border-color: rgba(246, 191, 123, 0.35); color: #fdf3e3; transition: opacity 0.3s ease, transform 0.3s ease; }
+        #soundbarTrackInfo { position: relative; flex: 1 1 8rem; min-width: 0; display: grid; gap: 0.25rem; }
         /* Explicit rows let the loading message overlap the progress/time
            rows without disturbing the grid's auto-placement. */
         /* The title and the performer credit get their own reserved rows, so the
@@ -418,7 +423,7 @@
         @media (prefers-reduced-motion: reduce) {
             .loading-spinner { animation: none; }
         }
-        #soundbarControls { position: absolute; right: 1.25rem; top: 50%; display: flex; gap: 0.2rem; transform: translateY(-50%); }
+        #soundbarControls { margin-left: auto; display: flex; gap: 0.2rem; flex: none; }
         #soundbarControls button { color: #f6bf7b; }
         #soundbarControls button:hover { background: rgba(246, 191, 123, 0.18); }
         /* In light mode the cream glass surface disappears against the cream
@@ -431,10 +436,6 @@
         .light-mode #soundbarProgress { border-color: rgba(246, 191, 123, 0.45); background: rgba(246, 191, 123, 0.2); }
         .light-mode #soundbarProgressFill { background: #f6bf7b; box-shadow: 0 0 0.4rem rgba(246, 191, 123, 0.65); }
         .light-mode .loading-spinner { border-color: rgba(246, 191, 123, 0.35); border-top-color: #f6bf7b; }
-        @media (max-width: 420px) {
-            #soundbar { padding: 0.75rem 6.5rem 0.75rem 1.25rem; }
-            #soundbarControls { right: 0.75rem; }
-        }
         #soundbar.hidden { display: none; }
         .soundcloud-player { position: fixed; width: 32px; height: 32px; opacity: 0; pointer-events: none; }
         .spotify-player { position: fixed; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
