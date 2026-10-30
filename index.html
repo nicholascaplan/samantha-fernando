@@ -2626,7 +2626,14 @@
             notice?.classList.add('hidden');
             pendingSpotifyTrack = null;
             if ((isSpotifyPlaying || spotifyPlaybackPending) && spotifyController) {
-                spotifyController.pause();
+                // A replaced Spotify request is terminal, not paused: a start
+                // the embed already queued must not play behind the
+                // SoundCloud bar. Returning to the track starts it fresh.
+                spotifyController.pause?.();
+                spotifyController.destroy?.();
+                spotifyController = null;
+                activeSpotifyTrack = null;
+                spotifyElapsedMs = 0;
             }
             clearSpotifyLoading();
             isSpotifyPlaying = false;

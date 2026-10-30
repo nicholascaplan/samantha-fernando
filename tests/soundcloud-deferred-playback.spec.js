@@ -592,3 +592,58 @@ test('a Spotify request waiting on the player API shows and honours cancellation
   await expect(page.locator('#soundbarLoading')).toBeHidden();
   await expect(page.locator('#audioAvailabilityMessage')).toBeHidden();
 });
+
+test('switching to SoundCloud ends a playing Spotify controller and its events', async ({ page }) => {
+  await mockSoundCloud(page);
+  await page.addInitScript(() => {
+    window.__spotifyCalls = [];
+    window.__spotifyHandlers = {};
+    window.__spotifyIFrameApi = {
+      createController: (_container, _options, callback) => callback({
+        loadUri: uri => window.__spotifyCalls.push(['loadUri', uri]),
+        seek: position => window.__spotifyCalls.push(['seek', position]),
+        play: () => window.__spotifyCalls.push(['play']),
+        pause: () => window.__spotifyCalls.push(['pause']),
+        destroy: () => window.__spotifyCalls.push(['destroy']),
+        addListener: (event, handler) => {
+          window.__spotifyHandlers[event] = handler;
+        },
+      }),
+    };
+    localStorage.setItem('analyticsConsent', 'rejected');
+  });
+  await page.route('https://open.spotify.com/embed/iframe-api/v1', route =>
+    route.fulfill({
+      contentType: 'application/javascript',
+      body: 'window.onSpotifyIframeApiReady(window.__spotifyIFrameApi);',
+    }),
+  );
+  await page.goto('/listen/');
+
+  await page.locator('#worksContainer [data-spotify-track="2wNL47uCuwDpbOqCIpbSTS"]').click();
+  await expect
+    .poll(() => page.evaluate(() => Boolean(window.__spotifyHandlers.playback_update)))
+    .toBe(true);
+  await page.evaluate(() =>
+    window.__spotifyHandlers.playback_update({
+      data: { playingURI: 'spotify:track:2wNL47uCuwDpbOqCIpbSTS', isPaused: false, isBuffering: false, position: 1000, duration: 30000 },
+    }),
+  );
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
+
+  // Switching to SoundCloud replaces the Spotify request: its controller is
+  // torn down, not merely paused.
+  await lookUpCard(page).click();
+  await expect.poll(() => page.evaluate(() => window.__spotifyCalls)).toContainEqual(['destroy']);
+  await expect(page.locator('#soundbarLabel')).toHaveText(/Look Up/);
+
+  // A start the Spotify embed had already queued cannot touch the SoundCloud bar.
+  const callsAtSwitch = await page.evaluate(() => window.__spotifyCalls.length);
+  await page.evaluate(() =>
+    window.__spotifyHandlers.playback_update({
+      data: { playingURI: 'spotify:track:2wNL47uCuwDpbOqCIpbSTS', isPaused: false, isBuffering: false, position: 2000, duration: 30000 },
+    }),
+  );
+  await expect(page.locator('#soundbarLabel')).toHaveText(/Look Up/);
+  expect(await page.evaluate(() => window.__spotifyCalls.length)).toBe(callsAtSwitch);
+});
