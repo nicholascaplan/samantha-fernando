@@ -828,14 +828,7 @@ test('a stale pause position cannot repaint the bar after Stop', async ({ page }
   // A SoundCloud default keeps the stopped recording current after Stop,
   // which is the only state where the guards alone (provider + track id +
   // not playing) still match the outstanding pause request.
-  await page.route('**/listen/', async route => {
-    const response = await route.fetch();
-    const body = (await response.text()).replace(
-      '"defaultRecording":"spotify-3YV79qjiJLOgYjjEzTsVEy"',
-      '"defaultRecording":"soundcloud-look-up"',
-    );
-    await route.fulfill({ response, body });
-  });
+  await serveSoundCloudDefault(page);
   await page.goto('/listen/');
 
   await lookUpCard(page).click();
@@ -861,14 +854,7 @@ test('a stale pause position cannot repaint the bar after Stop', async ({ page }
 
 test('a position answer minted by Stop itself cannot repaint the stopped bar', async ({ page }) => {
   await mockSoundCloud(page, { position: 5000 });
-  await page.route('**/listen/', async route => {
-    const response = await route.fetch();
-    const body = (await response.text()).replace(
-      '"defaultRecording":"spotify-3YV79qjiJLOgYjjEzTsVEy"',
-      '"defaultRecording":"soundcloud-look-up"',
-    );
-    await route.fulfill({ response, body });
-  });
+  await serveSoundCloudDefault(page);
   await page.goto('/listen/');
 
   await lookUpCard(page).click();
