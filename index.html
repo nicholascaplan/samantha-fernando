@@ -2391,7 +2391,9 @@
             activeAudioProvider = 'spotify';
             isPlaybackStopped = false;
             if (activeSpotifyTrack !== trackId) spotifyElapsedMs = 0;
-            trackDurationMs = 30000;
+            // The total is unknown until the embed reports it: show no total
+            // rather than a guessed 30 seconds that the first report rewrites.
+            trackDurationMs = 0;
             updateSoundbarProgress(spotifyElapsedMs);
             setSoundbarLabel(currentTrackName);
             document.getElementById('soundbar').classList.remove('hidden');

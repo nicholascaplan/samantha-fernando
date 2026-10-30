@@ -83,7 +83,9 @@ test('keeps the soundbar position at zero until the player reports playback', as
   await page.waitForTimeout(1200);
   await expect(page.locator('#soundbarProgress')).toHaveAttribute('aria-valuenow', '0');
   await expect(page.locator('#soundbarElapsedTime')).toHaveText('0:00');
-  await expect(page.locator('#soundbarDurationTime')).toHaveText('0:30');
+  // No guessed total: the duration stays unknown until the player reports it.
+  await expect(page.locator('#soundbarDurationTime')).toBeHidden();
+  await expect(page.locator('#soundbarProgress')).toHaveAttribute('aria-valuemax', '0');
 });
 
 test('drives the soundbar position and duration from playback_update events', async ({ page }) => {

@@ -736,8 +736,9 @@ test('Spotify loads the selected first track from the beginning', async ({ page 
     'spotify:track:2wNL47uCuwDpbOqCIpbSTS',
   ]);
   await expect.poll(() => page.evaluate(() => window.__spotifyCalls)).toContainEqual(['seek', 0]);
-  await expect(page.locator('#soundbarDurationTime')).toHaveText('0:30');
-  await expect(page.locator('#soundbarProgress')).toHaveAttribute('aria-valuemax', '30000');
+  // No guessed total: the duration stays unknown until the player reports it.
+  await expect(page.locator('#soundbarDurationTime')).toBeHidden();
+  await expect(page.locator('#soundbarProgress')).toHaveAttribute('aria-valuemax', '0');
 });
 
 test('SoundCloud and Spotify playback are mutually exclusive', async ({ page }) => {
