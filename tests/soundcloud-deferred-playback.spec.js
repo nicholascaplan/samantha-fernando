@@ -361,7 +361,9 @@ test('a stale controller callback cannot replace the live controller', async ({ 
     const live = window.__spotifyPending[1];
     live.callback(live.controller);
   });
-  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
+  // The request is live on the new controller and stays pending: playback
+  // is confirmed only by a playback_update event, never by the callback.
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Cancel playback request');
   await page.evaluate(() => {
     const stale = window.__spotifyPending[0];
     stale.callback(stale.controller);
