@@ -574,3 +574,22 @@ test('a failure after the watchdog tears down the controller and a late report c
     .poll(() => page.evaluate(() => window.__spotifyCalls.filter(call => call[0] === 'loadUri').length))
     .toBe(2);
 });
+
+test('cancelling a re-armed pending request resets the bar position to zero', async ({ page }) => {
+  await mockSpotify(page);
+  await page.goto('/listen/');
+
+  await balconiesCard(page).click();
+  await fireSpotifyUpdate(page, { isPaused: false, isBuffering: false, position: 5234, duration: 30000 });
+  await fireSpotifyUpdate(page, { isPaused: true, isBuffering: false, position: 5234, duration: 30000 });
+  await expect(page.locator('#soundbarProgress')).toHaveAttribute('aria-valuenow', '5234');
+
+  // Re-arm the paused track, then cancel before the player confirms: the
+  // torn-down controller's position must not linger on the bar.
+  await balconiesCard(page).click();
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Cancel playback request');
+  await page.locator('#soundbarPauseBtn').click();
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Resume playback');
+  await expect(page.locator('#soundbarProgress')).toHaveAttribute('aria-valuenow', '0');
+  await expect(page.locator('#soundbarElapsedTime')).toHaveText('0:00');
+});

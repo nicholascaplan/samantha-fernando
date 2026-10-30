@@ -2164,6 +2164,9 @@
                 spotifyController.destroy?.();
                 spotifyController = null;
             }
+            // The next request starts a fresh controller from the beginning:
+            // the bar must not offer to resume a position that no longer exists.
+            spotifyElapsedMs = 0;
             setSpotifyPlaybackState(false, activeSpotifyTrack || currentTrackId);
         }
 
