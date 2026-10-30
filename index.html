@@ -2163,8 +2163,14 @@
             setPendingPlaybackUI();
             showSoundbarLoading('spotify');
             spotifyReady.createController(container, { width: 1, height: 1 }, controller => {
+                if (requestToken !== playbackRequestToken || activeAudioProvider !== 'spotify') {
+                    // A stale callback must not become the live controller:
+                    // destroy the orphaned embed and its container.
+                    controller.destroy?.();
+                    container.remove();
+                    return;
+                }
                 spotifyController = controller;
-                if (requestToken !== playbackRequestToken || activeAudioProvider !== 'spotify') return;
                 pendingSpotifyTrack = null;
                 controller.loadUri(`spotify:track:${currentTrackId}`);
                 controller.seek(0);

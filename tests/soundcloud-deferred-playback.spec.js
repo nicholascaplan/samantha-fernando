@@ -303,6 +303,75 @@ test('a request waiting on the controller callback stays pending and cancellable
   await expect.poll(() => page.evaluate(() => window.__spotifyCreateCalls)).toBe(1);
 });
 
+test('a stale controller callback cannot replace the live controller', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__spotifyPending = [];
+    // createController holds its callback until the test resolves it.
+    window.__spotifyIFrameApi = {
+      createController: (_container, _options, callback) => {
+        const controller = {
+          calls: [],
+          destroyed: false,
+          loadUri: uri => controller.calls.push(['loadUri', uri]),
+          seek: position => controller.calls.push(['seek', position]),
+          play: () => controller.calls.push(['play']),
+          pause: () => controller.calls.push(['pause']),
+          destroy: () => { controller.destroyed = true; },
+        };
+        window.__spotifyPending.push({ controller, callback });
+      },
+    };
+    localStorage.setItem('analyticsConsent', 'rejected');
+  });
+  await page.route('https://open.spotify.com/embed/iframe-api/v1', route =>
+    route.fulfill({
+      contentType: 'application/javascript',
+      body: 'window.onSpotifyIframeApiReady(window.__spotifyIFrameApi);',
+    }),
+  );
+  await page.route('https://w.soundcloud.com/**', route => route.abort());
+  await installPausedClock(page);
+  await page.goto('/listen/');
+
+  const card = page.locator('#worksContainer [data-spotify-track="2wNL47uCuwDpbOqCIpbSTS"]');
+  await card.click();
+  await expect.poll(() => page.evaluate(() => window.__spotifyPending.length)).toBe(1);
+  // Cancel, then reselect: a second controller creation starts while the
+  // first callback is still held.
+  await page.locator('#soundbarPauseBtn').click();
+  await card.click();
+  await expect.poll(() => page.evaluate(() => window.__spotifyPending.length)).toBe(2);
+
+  // The live callback lands first, the stale one late.
+  await page.evaluate(() => {
+    const live = window.__spotifyPending[1];
+    live.callback(live.controller);
+  });
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
+  await page.evaluate(() => {
+    const stale = window.__spotifyPending[0];
+    stale.callback(stale.controller);
+  });
+
+  // The stale controller is destroyed, never stored: commands and state
+  // keep belonging to the live controller.
+  const state = await page.evaluate(() => ({
+    staleDestroyed: window.__spotifyPending[0].controller.destroyed,
+    staleCalls: window.__spotifyPending[0].controller.calls,
+    liveCalls: window.__spotifyPending[1].controller.calls,
+  }));
+  expect(state.staleDestroyed).toBe(true);
+  expect(state.staleCalls).toEqual([]);
+  expect(state.liveCalls).toEqual([
+    ['loadUri', 'spotify:track:2wNL47uCuwDpbOqCIpbSTS'],
+    ['seek', 0],
+    ['play'],
+  ]);
+  await page.locator('#soundbarPauseBtn').click();
+  const liveCallsAfter = await page.evaluate(() => window.__spotifyPending[1].controller.calls);
+  expect(liveCallsAfter[liveCallsAfter.length - 1]).toEqual(['pause']);
+});
+
 test('surfaces the unavailable message when the SoundCloud script fails to load', async ({ page }) => {
   await page.addInitScript(() => {
     localStorage.setItem('analyticsConsent', 'rejected');
