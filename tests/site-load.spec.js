@@ -810,7 +810,10 @@ test('soundbar is anchored to the viewport bottom with readable theme colours', 
 test('soundbar keeps stable geometry across track names, loading and enlarged text', async ({ page }) => {
   await page.setViewportSize({ width: 412, height: 915 });
   await page.goto('/');
-  await page.locator('#ambientSoundBtn').click();
+  // Reveal the bar without starting playback: the ambient button starts the
+  // real Spotify embed, whose first asynchronous playback_update re-applies
+  // the current track label and can land between this test's label pokes.
+  await page.evaluate(() => document.getElementById('soundbar').classList.remove('hidden'));
 
   const soundbar = page.locator('#soundbar');
   await expect(soundbar).toBeVisible();
