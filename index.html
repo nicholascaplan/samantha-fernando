@@ -395,13 +395,19 @@
            not a notice scrolled out of view in the catalogue flow. */
         #audioAvailabilityMessage:not(.hidden) {
             position: fixed;
-            bottom: 5.5rem;
+            bottom: max(5.5rem, calc(var(--soundbar-offset, 0px) + 0.5rem));
+            max-height: calc(100vh - var(--soundbar-offset, 0px) - 2rem);
+            overflow-y: auto;
             left: 50%;
             transform: translateX(-50%);
             z-index: 50;
             max-width: min(90vw, 32rem);
             box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
         }
+        /* The bar is fixed over the page: reserve its rendered height at the
+           page bottom so the last content (e.g. the footer links) always
+           scrolls clear of it, however tall enlarged text makes it. */
+        body { padding-bottom: var(--soundbar-offset, 0px); }
         #soundbarProgress { grid-row: 3; grid-column: 1; width: 100%; height: 0.35rem; overflow: hidden; border: 1px solid rgba(246, 191, 123, 0.45); border-radius: 9999px; background: rgba(246, 191, 123, 0.2); }
         #soundbarProgressFill { width: 0; height: 100%; border-radius: inherit; background: #f6bf7b; box-shadow: 0 0 0.4rem rgba(246, 191, 123, 0.65); transition: width 0.2s linear; }
         #soundbarTimes { grid-row: 4; grid-column: 1; display: flex; justify-content: space-between; font-variant-numeric: tabular-nums; color: #eecfa3; }
@@ -1993,6 +1999,17 @@
                 performerEl.textContent = '';
             }
         }
+
+        // The fixed bar overlays the page: publish its rendered height so the
+        // failure notice and the page bottom edge track it - including when
+        // enlarged text wraps the bar onto a second row, and zero when hidden.
+        const soundbarElement = document.getElementById('soundbar');
+        const updateSoundbarOffset = () => {
+            const height = soundbarElement.classList.contains('hidden') ? 0 : soundbarElement.getBoundingClientRect().height;
+            document.documentElement.style.setProperty('--soundbar-offset', `${height}px`);
+        };
+        new ResizeObserver(updateSoundbarOffset).observe(soundbarElement);
+        updateSoundbarOffset();
 
         let soundbarLoadingOwner = null;
         function showSoundbarLoading(owner) {

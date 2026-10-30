@@ -900,6 +900,92 @@ test('soundbar keeps usable text room at 320px with 200% text', async ({ page })
   expect(metrics.buttonHeight).toBeGreaterThanOrEqual(28);
 });
 
+test('failure notice and page end stay clear of the fixed soundbar', async ({ page }) => {
+  const offsetVar = () => page.evaluate(() =>
+    parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--soundbar-offset')));
+  const geometry = () => page.evaluate(() => {
+    const bar = document.getElementById('soundbar').getBoundingClientRect();
+    const notice = document.getElementById('audioAvailabilityMessage').getBoundingClientRect();
+    return { barTop: bar.top, barHeight: bar.height, noticeBottom: notice.bottom };
+  });
+  const showNotice = () => page.evaluate(() => {
+    const notice = document.getElementById('audioAvailabilityMessage');
+    notice.textContent = 'This recording is not currently available to embed from Spotify.';
+    notice.classList.remove('hidden');
+  });
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/listen/');
+  await rejectAnalyticsCookies(page);
+
+  // Hidden bar: no reservation, the notice keeps its normal offset.
+  expect(await offsetVar()).toBe(0);
+  await expect(page.locator('body')).toHaveCSS('padding-bottom', '0px');
+
+  // Shown, unwrapped: the reservation and the notice track the bar's height.
+  await page.evaluate(() => document.getElementById('soundbar').classList.remove('hidden'));
+  await expect(page.locator('#soundbar')).toBeVisible();
+  await expect.poll(offsetVar).toBeGreaterThan(0);
+  let geo = await geometry();
+  expect(await offsetVar()).toBeCloseTo(geo.barHeight, 0);
+  await showNotice();
+  geo = await geometry();
+  expect(geo.noticeBottom).toBeLessThanOrEqual(geo.barTop + 0.5);
+
+  // Wrapped at 320px with 200% text: the notice still clears the taller bar.
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.evaluate(() => { document.documentElement.style.fontSize = '200%'; });
+  await expect.poll(async () => (await geometry()).barHeight).toBeGreaterThan(150);
+  geo = await geometry();
+  expect(await offsetVar()).toBeCloseTo(geo.barHeight, 0);
+  expect(geo.noticeBottom).toBeLessThanOrEqual(geo.barTop + 0.5);
+  // ...and the whole message stays on screen rather than clipping off the top.
+  expect(await page.evaluate(() =>
+    document.getElementById('audioAvailabilityMessage').getBoundingClientRect().top
+  )).toBeGreaterThanOrEqual(0);
+  // The capped message scrolls internally, so its full text stays reachable.
+  const scroll = await page.evaluate(() => {
+    const notice = document.getElementById('audioAvailabilityMessage');
+    const before = notice.scrollTop;
+    notice.scrollTop = notice.scrollHeight;
+    const endLine = document.createRange();
+    endLine.selectNodeContents(notice);
+    return {
+      scrollable: notice.scrollHeight > notice.clientHeight,
+      moved: notice.scrollTop > before,
+      endBottom: endLine.getBoundingClientRect().bottom,
+      boxBottom: notice.getBoundingClientRect().bottom,
+    };
+  });
+  expect(scroll.scrollable).toBe(true);
+  expect(scroll.moved).toBe(true);
+  expect(scroll.endBottom).toBeLessThanOrEqual(scroll.boxBottom + 0.5);
+
+  // Back to normal text: the reservation shrinks with the bar.
+  await page.evaluate(() => { document.documentElement.style.fontSize = ''; });
+  await expect.poll(offsetVar).toBeLessThan(150);
+  geo = await geometry();
+  expect(await offsetVar()).toBeCloseTo(geo.barHeight, 0);
+
+  // The page end scrolls clear: the last footer link is never trapped under
+  // the bar at maximum scroll, even wrapped at 320px with 200% text.
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.evaluate(() => { document.documentElement.style.fontSize = '200%'; });
+  await expect.poll(async () => (await geometry()).barHeight).toBeGreaterThan(150);
+  // Scroll to the end after the enlarged-text reflow settles.
+  await expect.poll(async () => page.evaluate(() => {
+    window.scrollTo(0, document.documentElement.scrollHeight);
+    return Math.round(scrollY + innerHeight - document.documentElement.scrollHeight);
+  })).toBe(0);
+  const reach = await page.evaluate(() => {
+    const bar = document.getElementById('soundbar').getBoundingClientRect();
+    const links = [...document.querySelectorAll('footer a')];
+    const last = links[links.length - 1].getBoundingClientRect();
+    return { lastLinkBottom: last.bottom, barTop: bar.top };
+  });
+  expect(reach.lastLinkBottom).toBeLessThanOrEqual(reach.barTop + 0.5);
+});
+
 test('soundbar is anchored to the viewport bottom on mobile @mobile', async ({ page }) => {
   await page.goto('/');
   await page.locator('#ambientSoundBtn').click();
