@@ -2651,6 +2651,30 @@
                 return;
             }
 
+            if (activeAudioProvider === 'soundcloud' && id === currentTrackId && !isPlaybackStopped) {
+                // Paused mid-track: selecting the same recording resumes it
+                // where it paused. Only returning to a track that another
+                // selection displaced starts it from the beginning.
+                notice?.classList.add('hidden');
+                isPlaybackStopped = false;
+                armSoundCloudLoading(id);
+                if (!player) {
+                    pendingSoundCloudPlaybackId = id;
+                    pendingSoundCloudPlaybackStartsAtZero = false;
+                    const requestedSoundCloudTrackId = id;
+                    initialiseSoundCloudPlayers().catch(() => {
+                        if (activeAudioProvider === 'soundcloud' && armedSoundCloudPlaybackId === requestedSoundCloudTrackId) showTrackUnavailable();
+                    });
+                    return;
+                }
+                if (readySoundCloudPlayers.has(id)) player.play();
+                else {
+                    pendingSoundCloudPlaybackId = id;
+                    pendingSoundCloudPlaybackStartsAtZero = false;
+                }
+                return;
+            }
+
             notice?.classList.add('hidden');
             pendingSpotifyTrack = null;
             if ((isSpotifyPlaying || spotifyPlaybackPending) && spotifyController) {

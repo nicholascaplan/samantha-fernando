@@ -739,3 +739,49 @@ test('a request still pending after the grace window shows the loading message w
   await expect(page.locator('#soundbarLoading')).toBeHidden();
   await expect(page.locator('#soundbarProgress')).toBeVisible();
 });
+
+test('reselecting the paused recording resumes where it paused', async ({ page }) => {
+  await mockSoundCloud(page);
+  await page.goto('/listen/');
+
+  await lookUpCard(page).click();
+  await expect.poll(() => page.evaluate(() => Boolean(window.__soundCloudPlayers?.soundcloudPlayerLookUp))).toBe(true);
+  await fireWidgetEvent(page, 'READY');
+  await fireWidgetEvent(page, 'PLAY');
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
+
+  // Pause from the card, then select the same recording again.
+  await lookUpCard(page).click();
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Resume playback');
+  const callsAtPause = await page.evaluate(() => window.__soundCloudCalls.length);
+  await lookUpCard(page).click();
+
+  // The same selection resumes: play with no seek back to the beginning.
+  const resumed = await page.evaluate(from => window.__soundCloudCalls.slice(from), callsAtPause);
+  expect(resumed).toEqual([['play', 'soundcloudPlayerLookUp']]);
+  await fireWidgetEvent(page, 'PLAY');
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
+});
+
+test('reselecting after stop starts the recording from the beginning', async ({ page }) => {
+  await mockSoundCloud(page);
+  await page.goto('/listen/');
+
+  await lookUpCard(page).click();
+  await expect.poll(() => page.evaluate(() => Boolean(window.__soundCloudPlayers?.soundcloudPlayerLookUp))).toBe(true);
+  await fireWidgetEvent(page, 'READY');
+  await fireWidgetEvent(page, 'PLAY');
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
+
+  await page.locator('#soundbarStopBtn').click();
+  const callsAtStop = await page.evaluate(() => window.__soundCloudCalls.length);
+  await lookUpCard(page).click();
+
+  const calls = await page.evaluate(from => window.__soundCloudCalls
+    .slice(from)
+    .filter(([name]) => name === 'seekTo' || name === 'play'), callsAtStop);
+  expect(calls).toEqual([
+    ['seekTo', 'soundcloudPlayerLookUp', 0],
+    ['play', 'soundcloudPlayerLookUp'],
+  ]);
+});
