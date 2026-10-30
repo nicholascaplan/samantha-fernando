@@ -2524,7 +2524,14 @@
             pendingSoundCloudPlaybackStartsAtZero = false;
             clearSoundCloudLoading();
             cancelledSoundCloudPlaybackId = currentTrackId;
-            spotifyController?.pause();
+            // Stop is terminal for the Spotify request too: end the
+            // controller's stream so a queued start cannot play behind a
+            // stopped bar.
+            if (spotifyController) {
+                spotifyController.pause?.();
+                spotifyController.destroy?.();
+                spotifyController = null;
+            }
             pauseSoundCloudPlayers();
             activeSpotifyTrack = null;
             isSpotifyPlaying = false;

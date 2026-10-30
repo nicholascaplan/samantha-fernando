@@ -593,3 +593,24 @@ test('cancelling a re-armed pending request resets the bar position to zero', as
   await expect(page.locator('#soundbarProgress')).toHaveAttribute('aria-valuenow', '0');
   await expect(page.locator('#soundbarElapsedTime')).toHaveText('0:00');
 });
+
+test('stopping playback ends the Spotify controller and its events', async ({ page }) => {
+  await mockSpotify(page);
+  await page.goto('/listen/');
+
+  await balconiesCard(page).click();
+  await fireSpotifyUpdate(page, { isPaused: false, isBuffering: false, position: 1000, duration: 30000 });
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
+
+  await page.locator('#soundbarStopBtn').click();
+  await expect(page.locator('#soundbar')).toBeHidden();
+  await expect.poll(() => page.evaluate(() => window.__spotifyCalls)).toContainEqual(['destroy']);
+
+  // An event from the stopped controller cannot restart anything.
+  await page.evaluate(() =>
+    window.__spotifyHandlers.playback_update({
+      data: { playingURI: 'spotify:track:2wNL47uCuwDpbOqCIpbSTS', isPaused: false, isBuffering: false, position: 2000, duration: 30000 },
+    }),
+  );
+  await expect(page.locator('#soundbar')).toBeHidden();
+});
