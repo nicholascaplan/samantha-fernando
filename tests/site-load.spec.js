@@ -12,6 +12,10 @@ async function mockPlaybackProviders(page) {
           seek: position => window.__spotifyCalls.push(['seek', position]),
           play: () => window.__spotifyCalls.push(['play']),
           pause: () => window.__spotifyCalls.push(['pause']),
+          addListener: (event, handler) => {
+            window.__spotifyHandlers = window.__spotifyHandlers || {};
+            window.__spotifyHandlers[event] = handler;
+          },
         };
         callback(controller);
       },
@@ -709,8 +713,10 @@ test('soundbar progress display is present and non-interactive', async ({ page }
 
   const progress = page.locator('#soundbarProgress');
   await expect(progress).toHaveAttribute('role', 'progressbar');
-  await expect(progress).toHaveAttribute('aria-valuenow', '0');
-  await expect(progress).toHaveAttribute('aria-valuemax', '0');
+  // No track is loaded: the bar is indeterminate, so it carries no
+  // determinate range attributes (aria-valuemax/aria-valuenow).
+  await expect(progress).not.toHaveAttribute('aria-valuenow', /.+/);
+  await expect(progress).not.toHaveAttribute('aria-valuemax', /.+/);
   await expect(page.locator('#soundbarProgress button, #soundbarProgress input')).toHaveCount(0);
   await expect(page.locator('#soundbarElapsedTime')).toHaveText('0:00');
   await expect(page.locator('#soundbarDurationTime')).toBeHidden();
@@ -722,7 +728,8 @@ test('soundbar progress display is present and non-interactive', async ({ page }
 test('soundbar starts with the default track name', async ({ page }) => {
   await page.goto('/');
 
-  await expect(page.locator('#soundbarLabel')).toHaveText('Everything Passes, Everything is Connected · The Crossing');
+  await expect(page.locator('#soundbarTitle')).toHaveText('Everything Passes, Everything is Connected');
+  await expect(page.locator('#soundbarPerformer')).toHaveText('The Crossing');
   await page.getByRole('link', { name: 'Listen', exact: true }).first().click();
   await expect(page.locator('#worksContainer [data-spotify-track="3YV79qjiJLOgYjjEzTsVEy"]')).toBeVisible();
 });
@@ -770,14 +777,17 @@ test('Spotify loads the selected first track from the beginning', async ({ page 
 
   await page.locator('#worksContainer [data-spotify-track="2wNL47uCuwDpbOqCIpbSTS"]').click();
 
-  await expect(page.locator('#soundbarLabel')).toHaveText('Balconies · Olivia de Prato');
+  await expect(page.locator('#soundbarTitle')).toHaveText('Balconies');
+  await expect(page.locator('#soundbarPerformer')).toHaveText('Olivia de Prato');
   await expect.poll(() => page.evaluate(() => window.__spotifyCalls)).toContainEqual([
     'loadUri',
     'spotify:track:2wNL47uCuwDpbOqCIpbSTS',
   ]);
   await expect.poll(() => page.evaluate(() => window.__spotifyCalls)).toContainEqual(['seek', 0]);
-  await expect(page.locator('#soundbarDurationTime')).toHaveText('0:30');
-  await expect(page.locator('#soundbarProgress')).toHaveAttribute('aria-valuemax', '30000');
+  // No guessed total: the duration stays unknown until the player reports
+  // it, so the bar carries no determinate range attributes at all.
+  await expect(page.locator('#soundbarDurationTime')).toBeHidden();
+  await expect(page.locator('#soundbarProgress')).not.toHaveAttribute('aria-valuemax', /.+/);
 });
 
 test('SoundCloud and Spotify playback are mutually exclusive', async ({ page }) => {
@@ -791,7 +801,8 @@ test('SoundCloud and Spotify playback are mutually exclusive', async ({ page }) 
   await expect.poll(() => page.evaluate(() => Boolean(window.__soundCloudPlayers?.soundcloudPlayerLookUp))).toBe(true);
   await page.evaluate(() => window.__soundCloudPlayers.soundcloudPlayerLookUp.handlers.READY());
 
-  await expect(page.locator('#soundbarLabel')).toHaveText('Look Up · 4 voices, viola da gamba and electronics');
+  await expect(page.locator('#soundbarTitle')).toHaveText('Look Up');
+  await expect(page.locator('#soundbarPerformer')).toHaveText('4 voices, viola da gamba and electronics');
   await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
   await expect.poll(() => page.evaluate(() => window.__spotifyCalls)).toContainEqual(['pause']);
   await expect.poll(() => page.evaluate(() => window.__soundCloudCalls)).toContainEqual(['play', 'soundcloudPlayerLookUp']);
@@ -806,9 +817,14 @@ test('SoundCloud queued playback responds to pause and finish events', async ({ 
   await page.locator('#worksContainer [data-track="look-up"]').click();
   await expect.poll(() => page.evaluate(() => Boolean(window.__soundCloudPlayers?.soundcloudPlayerLookUp))).toBe(true);
   await page.evaluate(() => window.__soundCloudPlayers.soundcloudPlayerLookUp.handlers.READY());
+  // Wait for the player's own play() acknowledgement before trusting the
+  // bar: the request path presents the playing label optimistically, so the
+  // label alone cannot prove the queued playback actually started.
+  await expect.poll(() => page.evaluate(() => window.__soundCloudCalls)).toContainEqual(['play', 'soundcloudPlayerLookUp']);
   await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
 
   await page.locator('#soundbarPauseBtn').click();
+  await expect.poll(() => page.evaluate(() => window.__soundCloudCalls)).toContainEqual(['pause', 'soundcloudPlayerLookUp']);
   await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Resume playback');
 
   await page.evaluate(() => window.__soundCloudPlayers.soundcloudPlayerLookUp.handlers.FINISH());
@@ -822,7 +838,8 @@ test('header Listen opens the soundbar for the default track', async ({ page }) 
   await page.locator('#ambientSoundBtn').click();
 
   await expect(page.locator('#soundbar')).toBeVisible();
-  await expect(page.locator('#soundbarLabel')).toHaveText('Everything Passes, Everything is Connected · The Crossing');
+  await expect(page.locator('#soundbarTitle')).toHaveText('Everything Passes, Everything is Connected');
+  await expect(page.locator('#soundbarPerformer')).toHaveText('The Crossing');
 });
 
 test('soundbar is anchored to the viewport bottom with readable theme colours', async ({ page }) => {
@@ -833,12 +850,198 @@ test('soundbar is anchored to the viewport bottom with readable theme colours', 
   const soundbar = page.locator('#soundbar');
   await expect(soundbar).toBeVisible();
   await expect(soundbar).toHaveCSS('bottom', '0px');
-  await expect(soundbar).toHaveCSS('color', 'rgb(245, 245, 245)');
-  await expect(page.locator('#soundbarTimes')).toHaveCSS('color', 'rgb(212, 212, 212)');
+  await expect(soundbar).toHaveCSS('color', 'rgb(253, 243, 227)');
+  await expect(soundbar).toHaveCSS('background-color', 'rgb(110, 53, 0)');
+  await expect(page.locator('#soundbarTimes')).toHaveCSS('color', 'rgb(238, 207, 163)');
 
   await page.locator('#themeToggleBtn').click();
-  await expect(soundbar).toHaveCSS('color', 'rgb(24, 33, 31)');
-  await expect(page.locator('#soundbarTimes')).toHaveCSS('color', 'rgb(93, 101, 95)');
+  // Both themes keep the amber-lit bar so it contrasts with the page:
+  // cream text on a deep amber surface.
+  await expect(soundbar).toHaveCSS('color', 'rgb(253, 243, 227)');
+  await expect(soundbar).toHaveCSS('background-color', 'rgb(110, 53, 0)');
+  await expect(page.locator('#soundbarTimes')).toHaveCSS('color', 'rgb(238, 207, 163)');
+});
+
+test('soundbar keeps stable geometry across track names, loading and enlarged text', async ({ page }) => {
+  await page.setViewportSize({ width: 412, height: 915 });
+  await page.goto('/');
+  // Reveal the bar without starting playback: the ambient button starts the
+  // real Spotify embed, whose first asynchronous playback_update re-applies
+  // the current track label and can land between this test's label pokes.
+  await page.evaluate(() => document.getElementById('soundbar').classList.remove('hidden'));
+
+  const soundbar = page.locator('#soundbar');
+  await expect(soundbar).toBeVisible();
+  const barHeight = async () => Math.round((await soundbar.boundingBox()).height);
+
+  // The approved layout reserves one row for the title and one for the
+  // performer credit: the bar and its controls never move when the
+  // selection changes or the loading message comes and goes.
+  const baseHeight = await barHeight();
+  await page.evaluate(() => setSoundbarLabel('Everything Passes, Everything is Connected · The Crossing, unaccompanied choir'));
+  expect(await barHeight()).toBe(baseHeight);
+  await page.evaluate(() => setSoundbarLabel('Recollections'));
+  expect(await barHeight()).toBe(baseHeight);
+  await expect(page.locator('#soundbarPerformer')).toHaveText('');
+  await page.evaluate(() => {
+    setSoundbarLabel('The Journey Between Us - Reflection 1 · Mixed ensemble');
+    document.getElementById('soundbar').classList.add('loading');
+    document.getElementById('soundbarLoading').classList.remove('hidden');
+  });
+  expect(await barHeight()).toBe(baseHeight);
+
+  // Enlarged root text scales the reserved rows; the states still match.
+  await page.evaluate(() => {
+    document.getElementById('soundbar').classList.remove('loading');
+    document.getElementById('soundbarLoading').classList.add('hidden');
+    document.documentElement.style.fontSize = '200%';
+  });
+  const enlargedHeight = await barHeight();
+  expect(enlargedHeight).toBeGreaterThan(baseHeight);
+  await page.evaluate(() => setSoundbarLabel('Everything Passes, Everything is Connected · The Crossing, unaccompanied choir'));
+  expect(await barHeight()).toBe(enlargedHeight);
+  await page.evaluate(() => setSoundbarLabel('Recollections'));
+  expect(await barHeight()).toBe(enlargedHeight);
+
+  // Narrow 320px phones: the reserved rows truncate harder but the bar and
+  // controls stay put exactly as at wider widths.
+  await page.evaluate(() => { document.documentElement.style.fontSize = ''; });
+  await page.setViewportSize({ width: 320, height: 568 });
+  const narrowHeight = await barHeight();
+  await page.evaluate(() => setSoundbarLabel('Everything Passes, Everything is Connected · The Crossing, unaccompanied choir'));
+  expect(await barHeight()).toBe(narrowHeight);
+  await page.evaluate(() => setSoundbarLabel('Recollections'));
+  expect(await barHeight()).toBe(narrowHeight);
+  await page.evaluate(() => {
+    setSoundbarLabel('The Journey Between Us - Reflection 1 · Mixed ensemble');
+    document.getElementById('soundbar').classList.add('loading');
+    document.getElementById('soundbarLoading').classList.remove('hidden');
+  });
+  expect(await barHeight()).toBe(narrowHeight);
+});
+
+test('soundbar keeps usable text room at 320px with 200% text', async ({ page }) => {
+  // A visitor combining a narrow phone with a 200% text setting: the bar's
+  // chrome (padding, control cluster) is sized in px so the enlarged text
+  // rows keep real room instead of being crushed by a scaled-up frame.
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.goto('/');
+  await page.locator('#ambientSoundBtn').click();
+  await expect(page.locator('#soundbar')).toBeVisible();
+  await page.evaluate(() => { document.documentElement.style.fontSize = '200%'; });
+
+  const metrics = await page.evaluate(() => {
+    const bar = document.getElementById('soundbar').getBoundingClientRect();
+    const info = document.getElementById('soundbarTrackInfo').getBoundingClientRect();
+    const controls = document.getElementById('soundbarControls').getBoundingClientRect();
+    const firstButton = document.querySelector('#soundbarControls button').getBoundingClientRect();
+    return {
+      barWidth: bar.width,
+      barHeight: bar.height,
+      infoWidth: info.width,
+      infoBottom: info.bottom,
+      controlsLeft: controls.left,
+      controlsTop: controls.top,
+      infoRight: info.right,
+      buttonWidth: firstButton.width,
+      buttonHeight: firstButton.height,
+    };
+  });
+  // The piece name column keeps enough room for several characters of the
+  // enlarged text, the controls never overlap it (here: wrapped to their own
+  // row below), and the buttons grow with the visitor's text setting while
+  // staying at least the standard 28px touch size of the normal layout.
+  expect(metrics.infoWidth).toBeGreaterThanOrEqual(96);
+  expect(metrics.controlsTop).toBeGreaterThanOrEqual(metrics.infoBottom);
+  expect(metrics.controlsLeft).toBeGreaterThanOrEqual(metrics.infoRight - metrics.infoWidth);
+  expect(metrics.buttonWidth).toBeGreaterThanOrEqual(28);
+  expect(metrics.buttonHeight).toBeGreaterThanOrEqual(28);
+});
+
+test('failure notice and page end stay clear of the fixed soundbar', async ({ page }) => {
+  const offsetVar = () => page.evaluate(() =>
+    parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--soundbar-offset')));
+  const geometry = () => page.evaluate(() => {
+    const bar = document.getElementById('soundbar').getBoundingClientRect();
+    const notice = document.getElementById('audioAvailabilityMessage').getBoundingClientRect();
+    return { barTop: bar.top, barHeight: bar.height, noticeBottom: notice.bottom };
+  });
+  const showNotice = () => page.evaluate(() => {
+    const notice = document.getElementById('audioAvailabilityMessage');
+    notice.textContent = 'This recording is not currently available to embed from Spotify.';
+    notice.classList.remove('hidden');
+  });
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/listen/');
+  await rejectAnalyticsCookies(page);
+
+  // Hidden bar: no reservation, the notice keeps its normal offset.
+  expect(await offsetVar()).toBe(0);
+  await expect(page.locator('body')).toHaveCSS('padding-bottom', '0px');
+
+  // Shown, unwrapped: the reservation and the notice track the bar's height.
+  await page.evaluate(() => document.getElementById('soundbar').classList.remove('hidden'));
+  await expect(page.locator('#soundbar')).toBeVisible();
+  await expect.poll(offsetVar).toBeGreaterThan(0);
+  let geo = await geometry();
+  expect(await offsetVar()).toBeCloseTo(geo.barHeight, 0);
+  await showNotice();
+  geo = await geometry();
+  expect(geo.noticeBottom).toBeLessThanOrEqual(geo.barTop + 0.5);
+
+  // Wrapped at 320px with 200% text: the notice still clears the taller bar.
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.evaluate(() => { document.documentElement.style.fontSize = '200%'; });
+  await expect.poll(async () => (await geometry()).barHeight).toBeGreaterThan(150);
+  geo = await geometry();
+  expect(await offsetVar()).toBeCloseTo(geo.barHeight, 0);
+  expect(geo.noticeBottom).toBeLessThanOrEqual(geo.barTop + 0.5);
+  // ...and the whole message stays on screen rather than clipping off the top.
+  expect(await page.evaluate(() =>
+    document.getElementById('audioAvailabilityMessage').getBoundingClientRect().top
+  )).toBeGreaterThanOrEqual(0);
+  // The capped message scrolls internally, so its full text stays reachable.
+  const scroll = await page.evaluate(() => {
+    const notice = document.getElementById('audioAvailabilityMessage');
+    const before = notice.scrollTop;
+    notice.scrollTop = notice.scrollHeight;
+    const endLine = document.createRange();
+    endLine.selectNodeContents(notice);
+    return {
+      scrollable: notice.scrollHeight > notice.clientHeight,
+      moved: notice.scrollTop > before,
+      endBottom: endLine.getBoundingClientRect().bottom,
+      boxBottom: notice.getBoundingClientRect().bottom,
+    };
+  });
+  expect(scroll.scrollable).toBe(true);
+  expect(scroll.moved).toBe(true);
+  expect(scroll.endBottom).toBeLessThanOrEqual(scroll.boxBottom + 0.5);
+
+  // Back to normal text: the reservation shrinks with the bar.
+  await page.evaluate(() => { document.documentElement.style.fontSize = ''; });
+  await expect.poll(offsetVar).toBeLessThan(150);
+  geo = await geometry();
+  expect(await offsetVar()).toBeCloseTo(geo.barHeight, 0);
+
+  // The page end scrolls clear: the last footer link is never trapped under
+  // the bar at maximum scroll, even wrapped at 320px with 200% text.
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.evaluate(() => { document.documentElement.style.fontSize = '200%'; });
+  await expect.poll(async () => (await geometry()).barHeight).toBeGreaterThan(150);
+  // Scroll to the end after the enlarged-text reflow settles.
+  await expect.poll(async () => page.evaluate(() => {
+    window.scrollTo(0, document.documentElement.scrollHeight);
+    return Math.round(scrollY + innerHeight - document.documentElement.scrollHeight);
+  })).toBe(0);
+  const reach = await page.evaluate(() => {
+    const bar = document.getElementById('soundbar').getBoundingClientRect();
+    const links = [...document.querySelectorAll('footer a')];
+    const last = links[links.length - 1].getBoundingClientRect();
+    return { lastLinkBottom: last.bottom, barTop: bar.top };
+  });
+  expect(reach.lastLinkBottom).toBeLessThanOrEqual(reach.barTop + 0.5);
 });
 
 test('soundbar is anchored to the viewport bottom on mobile @mobile', async ({ page }) => {
@@ -872,6 +1075,15 @@ for (const provider of ['soundcloud', 'spotify']) {
     } else {
       await page.evaluate(() => window.onSpotifyIframeApiReady(window.__spotifyIFrameApi));
       await page.locator('#worksContainer [data-spotify-track="2wNL47uCuwDpbOqCIpbSTS"]').click();
+      // The Spotify player confirms the request; only then does the bar show playing.
+      await expect
+        .poll(() => page.evaluate(() => Boolean(window.__spotifyHandlers?.playback_update)))
+        .toBe(true);
+      await page.evaluate(() =>
+        window.__spotifyHandlers.playback_update({
+          data: { isPaused: false, isBuffering: false, position: 0, duration: 30000 },
+        }),
+      );
     }
     await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
     const calls = await page.evaluate(() => JSON.stringify([window.__soundCloudCalls, window.__spotifyCalls]));
@@ -914,7 +1126,8 @@ test('stop playback removes and hides the soundbar immediately', async ({ page }
   await page.locator('#soundbarStopBtn').click();
 
   await expect(page.locator('#soundbar')).toBeHidden();
-  await expect(page.locator('#soundbarLabel')).toHaveText('Everything Passes, Everything is Connected · The Crossing');
+  await expect(page.locator('#soundbarTitle')).toHaveText('Everything Passes, Everything is Connected');
+  await expect(page.locator('#soundbarPerformer')).toHaveText('The Crossing');
   await expect(page.locator('#soundbarElapsedTime')).toHaveText('0:00');
 });
 

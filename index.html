@@ -373,31 +373,82 @@
         @media (hover: none) {
             [data-tooltip]::after { display: none; }
         }
-        #soundbar { position: fixed; bottom: 0; width: min(34rem, calc(100vw - 2rem)); box-sizing: border-box; display: block; padding: 0.5rem 7rem 0.625rem 1.5rem; color: #f5f5f5; transition: opacity 0.3s ease, transform 0.3s ease; }
-        #soundbarTrackInfo { min-width: 0; width: 100%; display: grid; gap: 0.2rem; }
-        #soundbarLabel { min-width: 0; overflow: hidden; text-overflow: ellipsis; text-align: center; }
-        #soundbarProgress { width: 100%; height: 0.35rem; overflow: hidden; border: 1px solid rgba(180, 83, 9, 0.3); border-radius: 9999px; background: rgba(139, 129, 117, 0.35); }
-        #soundbarProgressFill { width: 0; height: 100%; border-radius: inherit; background: #b45309; box-shadow: 0 0 0.4rem rgba(180, 83, 9, 0.65); transition: width 0.2s linear; }
-        #soundbarTimes { display: flex; justify-content: space-between; font-variant-numeric: tabular-nums; color: #d4d4d4; }
-        #soundbarLoading { display: flex; align-items: center; justify-content: center; gap: 0.35rem; text-align: center; font-size: 10px; }
+        /* The bar is a wrapping flex row: the piece name flexes and the
+           controls sit in flow after it, so a visitor's enlarged text setting
+           grows text and controls together - when both no longer fit side by
+           side the controls wrap to their own row below instead of crushing
+           the name. Only the frame itself (width, padding) is fixed in px. */
+        #soundbar { position: fixed; bottom: 0; width: min(544px, calc(100vw - 32px)); box-sizing: border-box; display: flex; flex-wrap: wrap; align-items: center; column-gap: 12px; row-gap: 0.25rem; min-height: 96px; padding: 12px 20px; background: #6e3500; border-color: rgba(246, 191, 123, 0.35); color: #fdf3e3; transition: opacity 0.3s ease, transform 0.3s ease; }
+        #soundbarTrackInfo { position: relative; flex: 1 1 8rem; min-width: 0; display: grid; gap: 0.25rem; }
+        /* Explicit rows let the loading message overlap the progress/time
+           rows without disturbing the grid's auto-placement. */
+        /* The title and the performer credit get their own reserved rows, so the
+           bar and its controls stay exactly in place whatever the piece is
+           called: each line truncates independently instead of wrapping, and
+           an empty credit still occupies its row. */
+        /* rem sizing so both rows enlarge with the visitor's text setting;
+           the reserved performer row keeps its height whether or not a
+           credit exists, so the bar never moves. */
+        #soundbarTitle { grid-row: 1; grid-column: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; font-size: 0.8125rem; line-height: 1.25; }
+        #soundbarPerformer { grid-row: 2; grid-column: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; font-size: 0.6875rem; line-height: 1.27; min-height: 1.27em; opacity: 0.85; }
+        /* Playback failure surfaces where the visitor is: the fixed soundbar,
+           not a notice scrolled out of view in the catalogue flow. */
+        #audioAvailabilityMessage:not(.hidden) {
+            position: fixed;
+            bottom: max(5.5rem, calc(var(--soundbar-offset, 0px) + 0.5rem));
+            max-height: calc(100vh - var(--soundbar-offset, 0px) - 2rem);
+            overflow-y: auto;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 50;
+            max-width: min(90vw, 32rem);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        /* The bar is fixed over the page: reserve its rendered height at the
+           page bottom so the last content (e.g. the footer links) always
+           scrolls clear of it, however tall enlarged text makes it. */
+        body { padding-bottom: var(--soundbar-offset, 0px); }
+        #soundbarProgress { grid-row: 3; grid-column: 1; width: 100%; height: 0.35rem; overflow: hidden; border: 1px solid rgba(246, 191, 123, 0.45); border-radius: 9999px; background: rgba(246, 191, 123, 0.2); }
+        #soundbarProgressFill { width: 0; height: 100%; border-radius: inherit; background: #f6bf7b; box-shadow: 0 0 0.4rem rgba(246, 191, 123, 0.65); transition: width 0.2s linear; }
+        /* While playing, the fill is repositioned every animation frame from
+           the latest player report; a CSS transition would fight that. */
+        #soundbarProgressFill.smooth { transition: none; }
+        #soundbarTimes { grid-row: 4; grid-column: 1; display: flex; justify-content: space-between; font-variant-numeric: tabular-nums; color: #eecfa3; }
+        /* The loading message takes over the progress/time rows while the
+           piece name stays visible: the bar never grows or jumps, and the
+           title remains on screen while its request is pending. */
+        #soundbarLoading { grid-row: 3 / span 2; grid-column: 1; display: flex; align-items: center; justify-content: center; gap: 0.35rem; text-align: center; font-size: 10px; }
         #soundbarLoading.hidden { display: none; }
-        .loading-spinner { width: 0.55rem; height: 0.55rem; flex: none; border-radius: 50%; border: 1.5px solid rgba(245, 245, 245, 0.3); border-top-color: #f6bf7b; animation: soundbar-loading-spin 1s linear infinite; }
-        .light-mode .loading-spinner { border-color: rgba(24, 33, 31, 0.2); border-top-color: #944900; }
+        /* Loading feedback is for a wait the listener can actually feel: a
+           request that confirms within 0.3s never shows the message, so fast
+           starts never flash. The reveal keeps the hidden state out of the
+           accessibility tree until it appears. */
+        #soundbar.loading #soundbarLoading { animation: soundbar-loading-reveal 0.15s ease 0.3s backwards; }
+        @keyframes soundbar-loading-reveal { from { opacity: 0; visibility: hidden; } to { opacity: 1; visibility: visible; } }
+        /* The rows yield as soon as the request starts: a 0:00 bar that
+           vanishes when the message arrives reads as a flash, so the rows
+           area simply stays empty (layout preserved) until playback confirms
+           and the bar appears with its real position. */
+        #soundbar.loading #soundbarProgress, #soundbar.loading #soundbarTimes { visibility: hidden; }
+        .loading-spinner { width: 0.55rem; height: 0.55rem; flex: none; border-radius: 50%; border: 1.5px solid rgba(246, 191, 123, 0.35); border-top-color: #f6bf7b; animation: soundbar-loading-spin 1s linear infinite; }
         @keyframes soundbar-loading-spin { to { transform: rotate(360deg); } }
         @media (prefers-reduced-motion: reduce) {
             .loading-spinner { animation: none; }
+            #soundbarProgressFill { transition: none; }
         }
-        #soundbarControls { position: absolute; right: 1.25rem; top: 50%; display: flex; gap: 0.2rem; transform: translateY(-50%); }
+        #soundbarControls { margin-left: auto; display: flex; gap: 0.2rem; flex: none; }
         #soundbarControls button { color: #f6bf7b; }
-        #soundbarControls button:hover { background: rgba(180, 83, 9, 0.24); }
-        .light-mode #soundbar { color: #18211f; }
-        .light-mode #soundbarTimes { color: #5d655f; }
-        .light-mode #soundbarControls button { color: #944900; }
-        .light-mode #soundbarControls button:hover { background: #f0e7d6; }
-        @media (max-width: 420px) {
-            #soundbar { padding: 0.5rem 6.5rem 0.625rem 1rem; }
-            #soundbarControls { right: 0.75rem; }
-        }
+        #soundbarControls button:hover { background: rgba(246, 191, 123, 0.18); }
+        /* In light mode the cream glass surface disappears against the cream
+           page, so the bar keeps the dark, amber-lit treatment it has in dark
+           mode: strong contrast with the page, same palette. */
+        .light-mode #soundbar { background: #6e3500; border-color: rgba(246, 191, 123, 0.35); color: #fdf3e3; }
+        .light-mode #soundbarTimes { color: #eecfa3; }
+        .light-mode #soundbarControls button { color: #f6bf7b; }
+        .light-mode #soundbarControls button:hover { background: rgba(246, 191, 123, 0.18); }
+        .light-mode #soundbarProgress { border-color: rgba(246, 191, 123, 0.45); background: rgba(246, 191, 123, 0.2); }
+        .light-mode #soundbarProgressFill { background: #f6bf7b; box-shadow: 0 0 0.4rem rgba(246, 191, 123, 0.65); }
+        .light-mode .loading-spinner { border-color: rgba(246, 191, 123, 0.35); border-top-color: #f6bf7b; }
         #soundbar.hidden { display: none; }
         .soundcloud-player { position: fixed; width: 32px; height: 32px; opacity: 0; pointer-events: none; }
         .spotify-player { position: fixed; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
@@ -989,8 +1040,9 @@
 
     <div id="soundbar" class="hidden fixed bottom-0 left-1/2 -translate-x-1/2 z-40 rounded-full glass-panel shadow-lg text-xs whitespace-nowrap">
         <div id="soundbarTrackInfo">
-            <span id="soundbarLabel" class="text-[13px] font-semibold">Everything Passes, Everything is Connected · The Crossing</span>
-            <div id="soundbarProgress" role="progressbar" aria-label="Track progress" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0">
+            <span id="soundbarTitle" class="font-semibold">Everything Passes, Everything is Connected</span>
+            <span id="soundbarPerformer">The Crossing</span>
+            <div id="soundbarProgress" role="progressbar" aria-label="Track progress" aria-valuemin="0">
                 <div id="soundbarProgressFill"></div>
             </div>
             <div id="soundbarTimes" class="text-[10px]">
@@ -1697,6 +1749,11 @@
         }
 
         function initialisePage() {
+            // Shown fixed above the soundbar on playback failure; keep the
+            // notice outside the transformed tab containers so `fixed` is
+            // anchored to the viewport, not a tab section.
+            const availabilityNotice = document.getElementById('audioAvailabilityMessage');
+            if (availabilityNotice) document.body.appendChild(availabilityNotice);
             initialisePerformanceMotion();
             if (document.getElementById('worksContainer')) {
                 // Retired view fragments land on their catalogue pages.
@@ -1887,7 +1944,7 @@
         const defaultTrackName = defaultRecording?.playbackLabel || defaultRecording?.title || '';
         let currentTrackName = defaultTrackName;
         let currentTrackId = defaultTrackId;
-        document.getElementById('soundbarLabel').textContent = defaultTrackName;
+        setSoundbarLabel(defaultTrackName);
         let spotifyController = null;
         let spotifyReady = null;
         let spotifyApiLoading = false;
@@ -1897,8 +1954,22 @@
         let activeAudioProvider = defaultRecording?.provider || null;
         let trackDurationMs = 0;
         let spotifyElapsedMs = 0;
-        let spotifyPlaybackStartedAt = null;
+        // Spotify playback state is confirmed only by the player's own
+        // playback_update events: a request stays pending until the first
+        // event arrives, the soundbar position moves only with reported
+        // positions, and a request that never starts surfaces the
+        // unavailable message instead of pretending to play.
+        let spotifyPlaybackPending = false;
+        let armedSpotifyTrackId = null;
+        let spotifyPlaybackWatchdog = null;
+        const SPOTIFY_PLAYBACK_TIMEOUT_MS = 15000;
         let soundbarProgressTimer = null;
+        let soundbarProgressRaf = null;
+        // The latest real position report from the player: Spotify sends about
+        // one report a second and SoundCloud is polled every 0.5s. While
+        // playing, the fill renders ahead of this sample on the wall clock so
+        // the bar glides between reports instead of stepping once per report.
+        let progressSample = null;
         const readySoundCloudPlayers = new Set();
         let pendingSoundCloudPlaybackId = null;
         let pendingSoundCloudPlaybackStartsAtZero = false;
@@ -1906,37 +1977,95 @@
         let soundcloudInitialisation = null;
         let playbackRequestToken = 0;
         // Feedback for playback requests that have not started yet: a "Loading
-        // audio…" message appears only once playback has been pending for more
-        // than SOUNDCLOUD_LOADING_DELAY_MS, and a request that has not started
-        // within SOUNDCLOUD_PLAYBACK_TIMEOUT_MS surfaces the unavailable message.
-        const SOUNDCLOUD_LOADING_DELAY_MS = 500;
+        // audio…" message is part of the pending presentation from the moment
+        // of the request, and a request that has not started within
+        // SOUNDCLOUD_PLAYBACK_TIMEOUT_MS surfaces the unavailable message.
         const SOUNDCLOUD_PLAYBACK_TIMEOUT_MS = 15000;
         // The widget API cannot attribute PLAY events to a specific play()
         // call, so a cancellation is recorded as the track's latest intent and
         // PLAY events are ignored only until a newer request is armed.
         let armedSoundCloudPlaybackId = null;
         let cancelledSoundCloudPlaybackId = null;
-        let soundCloudLoadingTimer = null;
         let soundCloudPlaybackWatchdog = null;
+
+        // A pending request must not read as playing: until the player
+        // confirms playback, the control cancels the request instead.
+        function setPendingPlaybackUI() {
+            const button = document.getElementById('soundbarPauseBtn');
+            button.setAttribute('aria-label', 'Cancel playback request');
+            button.title = 'Cancel playback request';
+            document.getElementById('waveContainer').classList.add('paused');
+        }
+
+        // The loading element is shared: only the provider that is currently
+        // showing it may hide it, so one provider's cleanup cannot clobber the
+        // other's pending feedback. It is visible iff an owner is set.
+        function setSoundbarLabel(fullLabel) {
+            const titleEl = document.getElementById('soundbarTitle');
+            const performerEl = document.getElementById('soundbarPerformer');
+            if (!titleEl || !performerEl) return;
+            const sep = fullLabel.indexOf(' · ');
+            if (sep > 0) {
+                titleEl.textContent = fullLabel.slice(0, sep);
+                performerEl.textContent = fullLabel.slice(sep + 3);
+            } else {
+                titleEl.textContent = fullLabel;
+                performerEl.textContent = '';
+            }
+        }
+
+        // The fixed bar overlays the page: publish its rendered height so the
+        // failure notice and the page bottom edge track it - including when
+        // enlarged text wraps the bar onto a second row, and zero when hidden.
+        const soundbarElement = document.getElementById('soundbar');
+        const updateSoundbarOffset = () => {
+            const height = soundbarElement.classList.contains('hidden') ? 0 : soundbarElement.getBoundingClientRect().height;
+            document.documentElement.style.setProperty('--soundbar-offset', `${height}px`);
+        };
+        new ResizeObserver(updateSoundbarOffset).observe(soundbarElement);
+        updateSoundbarOffset();
+
+        let soundbarLoadingOwner = null;
+        function showSoundbarLoading(owner) {
+            soundbarLoadingOwner = owner;
+            const soundbar = document.getElementById('soundbar');
+            document.getElementById('soundbarLoading')?.classList.remove('hidden');
+            if (soundbar) {
+                // Every request restarts the reveal delay: re-adding the class
+                // synchronously would coalesce and keep the old animation
+                // clock, showing the message too early for the new request.
+                soundbar.classList.remove('loading');
+                void soundbar.offsetWidth;
+                soundbar.classList.add('loading');
+            }
+        }
+        function hideSoundbarLoading(owner) {
+            if (soundbarLoadingOwner !== owner) return;
+            soundbarLoadingOwner = null;
+            document.getElementById('soundbarLoading')?.classList.add('hidden');
+            document.getElementById('soundbar')?.classList.remove('loading');
+        }
 
         function clearSoundCloudLoading() {
             armedSoundCloudPlaybackId = null;
-            window.clearTimeout(soundCloudLoadingTimer);
-            soundCloudLoadingTimer = null;
             window.clearTimeout(soundCloudPlaybackWatchdog);
             soundCloudPlaybackWatchdog = null;
-            document.getElementById('soundbarLoading')?.classList.add('hidden');
+            hideSoundbarLoading('soundcloud');
         }
 
         function armSoundCloudLoading(id) {
             if (armedSoundCloudPlaybackId === id) return;
             clearSoundCloudLoading();
+            // A new SoundCloud play request invalidates any pause position
+            // answer still in flight from the previous request.
+            playbackRequestToken += 1;
             armedSoundCloudPlaybackId = id;
             cancelledSoundCloudPlaybackId = null;
             setPlaybackState(true);
-            soundCloudLoadingTimer = window.setTimeout(() => {
-                document.getElementById('soundbarLoading')?.classList.remove('hidden');
-            }, SOUNDCLOUD_LOADING_DELAY_MS);
+            setPendingPlaybackUI();
+            // Loading feedback is part of the pending presentation: it
+            // appears with the request, not as a later pop-in.
+            showSoundbarLoading('soundcloud');
             soundCloudPlaybackWatchdog = window.setTimeout(() => {
                 if (!armedSoundCloudPlaybackId) return;
                 showTrackUnavailable();
@@ -1989,7 +2118,10 @@
             const script = document.createElement('script');
             script.src = 'https://open.spotify.com/embed/iframe-api/v1';
             script.async = true;
-            script.onerror = () => { spotifyApiLoading = false; };
+            script.onerror = () => {
+                spotifyApiLoading = false;
+                if (pendingSpotifyTrack) showSpotifyUnavailable();
+            };
             document.head.appendChild(script);
         }
 
@@ -1999,7 +2131,7 @@
             if (pendingSpotifyTrack) {
                 const trackId = pendingSpotifyTrack;
                 pendingSpotifyTrack = null;
-                playSpotifyTrack(trackId);
+                playSpotifyTrack(trackId, { apiDispatch: true });
             }
         };
 
@@ -2019,11 +2151,77 @@
             const durationTime = document.getElementById('soundbarDurationTime');
             durationTime.textContent = safeDuration ? formatPlaybackTime(safeDuration) : '';
             durationTime.classList.toggle('hidden', !safeDuration);
-            progressBar.setAttribute('aria-valuemax', String(safeDuration));
-            progressBar.setAttribute('aria-valuenow', String(Math.min(safePosition, safeDuration)));
+            // A known total makes the bar determinate; without one the ARIA
+            // range attributes come off entirely (aria-valuemax must be
+            // greater than aria-valuemin, and aria-valuenow applies only
+            // when the value is known).
+            if (safeDuration) {
+                progressBar.setAttribute('aria-valuemax', String(safeDuration));
+                progressBar.setAttribute('aria-valuenow', String(Math.min(safePosition, safeDuration)));
+            } else {
+                progressBar.removeAttribute('aria-valuemax');
+                progressBar.removeAttribute('aria-valuenow');
+            }
             progressBar.setAttribute('aria-valuetext', safeDuration
                 ? `${formatPlaybackTime(safePosition)} of ${formatPlaybackTime(safeDuration)}`
                 : formatPlaybackTime(safePosition));
+            // Every call is a real report: re-anchor the smoothing loop. A
+            // paused or stopped bar snaps to this exact position instead.
+            progressSample = { positionMs: safePosition, durationMs: safeDuration, atMs: performance.now() };
+            if (isAudioPlaying) {
+                startSoundbarProgressSmoothing();
+            } else {
+                stopSoundbarProgressSmoothing();
+            }
+        }
+
+        // Glides the fill between real player reports: without this the bar
+        // visibly steps once per report (~1s for Spotify, 0.5s for
+        // SoundCloud). The loop re-anchors on every report so it cannot
+        // drift, renders only the fill (time readouts and aria keep the
+        // player's cadence), and clamps at the duration so it never runs
+        // past the end of the track.
+        function renderSmoothedProgress() {
+            if (!isAudioPlaying || !progressSample) {
+                soundbarProgressRaf = null;
+                return;
+            }
+            // The preference can change mid-playback: honour it on the next
+            // frame rather than gliding on, and snap back to the player's
+            // last real report.
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                stopSoundbarProgressSmoothing();
+                updateSoundbarProgress(progressSample.positionMs, progressSample.durationMs);
+                return;
+            }
+            const displayMs = progressSample.durationMs
+                ? Math.min(progressSample.durationMs, progressSample.positionMs + (performance.now() - progressSample.atMs))
+                : progressSample.positionMs + (performance.now() - progressSample.atMs);
+            const progress = progressSample.durationMs ? Math.min(100, (displayMs / progressSample.durationMs) * 100) : 0;
+            document.getElementById('soundbarProgressFill').style.width = `${progress}%`;
+            soundbarProgressRaf = window.requestAnimationFrame(renderSmoothedProgress);
+        }
+
+        function startSoundbarProgressSmoothing() {
+            // Reduced motion: no continuous glide - the fill moves only on
+            // the player's own reports.
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+            document.getElementById('soundbarProgressFill').classList.add('smooth');
+            if (soundbarProgressRaf === null) soundbarProgressRaf = window.requestAnimationFrame(renderSmoothedProgress);
+        }
+
+        function stopSoundbarProgressSmoothing() {
+            if (soundbarProgressRaf !== null) {
+                window.cancelAnimationFrame(soundbarProgressRaf);
+                soundbarProgressRaf = null;
+            }
+            const fill = document.getElementById('soundbarProgressFill');
+            // A snap written this turn has not rendered yet: flush it while
+            // .smooth still disables the width transition, or restoring the
+            // transition animates from the last rendered glide position and
+            // the bar visibly slides back instead of snapping.
+            void fill.offsetWidth;
+            fill.classList.remove('smooth');
         }
 
         function stopSoundbarProgressTimer() {
@@ -2052,99 +2250,282 @@
             });
         }
 
-        function startSpotifyProgressTimer() {
-            stopSoundbarProgressTimer();
-            spotifyPlaybackStartedAt = Date.now() - spotifyElapsedMs;
-            soundbarProgressTimer = window.setInterval(() => {
-                if (!isSpotifyPlaying || activeAudioProvider !== 'spotify') return;
-                spotifyElapsedMs = Date.now() - spotifyPlaybackStartedAt;
-                if (trackDurationMs && spotifyElapsedMs >= trackDurationMs) {
-                    spotifyElapsedMs = trackDurationMs;
-                    isPlaybackStopped = true;
-                    spotifyController?.pause();
-                    isSpotifyPlaying = false;
-                    setSpotifyPlaybackState(false, activeSpotifyTrack);
-                    return;
-                }
-                updateSoundbarProgress(spotifyElapsedMs);
-            }, 500);
+        function clearSpotifyLoading() {
+            spotifyPlaybackPending = false;
+            armedSpotifyTrackId = null;
+            window.clearTimeout(spotifyPlaybackWatchdog);
+            spotifyPlaybackWatchdog = null;
+            hideSoundbarLoading('spotify');
         }
 
-        function playSpotifyTrack(trackId) {
+        function armSpotifyLoading(trackId) {
+            // A re-entered request (the API was still loading) keeps the
+            // pending clock it already had rather than starting over. It also
+            // keeps a running reveal: restarting the animation hides a visible
+            // message for another delay, so only an unowned message is reshown.
+            if (armedSpotifyTrackId === trackId) {
+                if (spotifyPlaybackPending && soundbarLoadingOwner !== 'spotify') showSoundbarLoading('spotify');
+                return;
+            }
+            clearSpotifyLoading();
+            armedSpotifyTrackId = trackId;
+            spotifyPlaybackPending = true;
+            isSpotifyPlaying = true;
+            // Pending is not playback: no playing affordance (card icon,
+            // soundbar icons, waves) may appear before a player event
+            // confirms; the request presents as cancellable instead.
+            isAudioPlaying = false;
+            stopSoundbarProgressTimer();
+            updateSoundbarProgress(spotifyElapsedMs);
+            document.getElementById('soundStatusIcon').className = 'fa-solid fa-play text-sm';
+            document.getElementById('soundbarPauseIcon').className = 'fa-solid fa-play text-xs';
+            setSoundbarLabel(currentTrackName);
+            document.getElementById('soundbar').classList.remove('hidden');
+            document.getElementById('waveContainer').classList.add('paused');
+            updatePlaybackIcons();
+            setPendingPlaybackUI();
+            // Loading feedback is part of the pending presentation: it
+            // appears with the request, not as a later pop-in.
+            showSoundbarLoading('spotify');
+            spotifyPlaybackWatchdog = window.setTimeout(() => {
+                if (spotifyPlaybackPending) showSpotifyUnavailable();
+            }, SPOTIFY_PLAYBACK_TIMEOUT_MS);
+        }
+
+        function cancelSpotifyPending() {
+            // Invalidate any controller callback still waiting on this request.
+            playbackRequestToken += 1;
+            clearSpotifyLoading();
+            pendingSpotifyTrack = null;
+            // Isolate the cancelled generation: the Spotify embed gives no
+            // event-ordering guarantee, so a late report from a reused
+            // controller could be mistaken for a re-armed request's
+            // confirmation. Destroying the controller and dropping the
+            // reference ends its event stream; the identity-checked listener
+            // catches anything already queued. A reselect starts a fresh
+            // controller through the usual creation path.
+            if (spotifyController) {
+                spotifyController.destroy?.();
+                spotifyController = null;
+            }
+            // The destroyed controller's track is no longer active: a later
+            // request's failure must not resolve to it instead of the
+            // current request.
+            activeSpotifyTrack = null;
+            // The next request starts a fresh controller from the beginning:
+            // the bar must not offer to resume a position that no longer exists.
+            spotifyElapsedMs = 0;
+            setSpotifyPlaybackState(false, activeSpotifyTrack || currentTrackId);
+        }
+
+        function showSpotifyUnavailable() {
+            // Failure ends the request: a late API-ready callback or a late
+            // controller callback must not start playback after the failure
+            // was surfaced.
+            playbackRequestToken += 1;
+            pendingSpotifyTrack = null;
+            clearSpotifyLoading();
+            // A pause sent before playback begins may not stop a play() the
+            // embed has already queued: end the controller's event stream the
+            // same way a cancellation does, so a late start cannot leave audio
+            // playing behind the failure notice.
+            if (spotifyController) {
+                spotifyController.pause?.();
+                spotifyController.destroy?.();
+                spotifyController = null;
+            }
+            // The destroyed controller's track is no longer active: if this
+            // failure belongs to a newer request, the notice and card state
+            // must name that request, not the stale track.
+            activeSpotifyTrack = null;
+            // The destroyed controller's position no longer exists.
+            spotifyElapsedMs = 0;
+            setSpotifyPlaybackState(false, activeSpotifyTrack || currentTrackId);
+            const recording = mediaCatalog.find(media => media.type === 'listen' && media.provider === 'spotify' && media.id === (activeSpotifyTrack || currentTrackId));
+            const notice = document.getElementById('audioAvailabilityMessage');
+            if (notice) {
+                notice.textContent = 'Spotify could not start playback in the embedded player. ';
+                if (recording?.url) {
+                    const link = document.createElement('a');
+                    link.href = recording.url;
+                    link.target = '_blank';
+                    link.rel = 'noopener';
+                    link.className = 'underline';
+                    link.textContent = 'Play on Spotify';
+                    notice.appendChild(link);
+                }
+                notice.classList.remove('hidden');
+            }
+        }
+
+        function handleSpotifyPlaybackUpdate(event) {
+            if (activeAudioProvider !== 'spotify') return;
+            const data = event?.data;
+            if (!data) return;
+            // Events about another (previously loaded) track are stale: they
+            // must not confirm or move the current track's bar.
+            const expectedUri = `spotify:track:${armedSpotifyTrackId || activeSpotifyTrack || currentTrackId}`;
+            if (data.playingURI && data.playingURI !== expectedUri) return;
+            if (data.isPaused === false) {
+                // Confirmation must belong to a live request: an event after a
+                // cancellation or stop is stale and must not revive the bar.
+                if (!spotifyPlaybackPending && !isSpotifyPlaying) return;
+                // A buffering report is not playback: a pending request stays
+                // pending (and the watchdog keeps running) until the player
+                // reports actual playback.
+                if (spotifyPlaybackPending && data.isBuffering === true) return;
+                clearSpotifyLoading();
+                if (typeof data.position === 'number') spotifyElapsedMs = data.position;
+                if (typeof data.duration === 'number' && data.duration > 0) trackDurationMs = data.duration;
+                setSpotifyPlaybackState(true, activeSpotifyTrack || currentTrackId);
+                return;
+            }
+            // A visitor-initiated pause clears isSpotifyPlaying before the
+            // player's own paused update arrives, so accept that update
+            // whenever a live controller backs the current track: it carries
+            // the true stop position the bar must keep. Events after a
+            // provider switch or stop are already filtered above and by the
+            // controller-identity guard on the listener.
+            if (data.isPaused === true && !spotifyPlaybackPending && (isSpotifyPlaying || spotifyController)) {
+                if (typeof data.position === 'number') spotifyElapsedMs = data.position;
+                if (typeof data.duration === 'number' && data.duration > 0) trackDurationMs = data.duration;
+                if (trackDurationMs && spotifyElapsedMs >= trackDurationMs - 250) {
+                    spotifyElapsedMs = trackDurationMs;
+                    isPlaybackStopped = true;
+                }
+                setSpotifyPlaybackState(false, activeSpotifyTrack || currentTrackId);
+            }
+        }
+
+        function playSpotifyTrack(trackId, { apiDispatch = false } = {}) {
             const requestToken = ++playbackRequestToken;
+            const wasStopped = isPlaybackStopped;
+            const wasActiveSelection = activeAudioProvider === 'spotify' && currentTrackId === trackId;
             const recording = mediaCatalog.find(media => media.type === 'listen' && media.provider === 'spotify' && media.id === trackId);
             if (!recording) return;
+            // A new request supersedes any failure notice from a previous one.
+            document.getElementById('audioAvailabilityMessage')?.classList.add('hidden');
             currentTrackName = recording.playbackLabel || recording.title;
             currentTrackId = trackId;
             activeAudioProvider = 'spotify';
             isPlaybackStopped = false;
-            if (activeSpotifyTrack !== trackId) spotifyElapsedMs = 0;
-            trackDurationMs = 30000;
+            // A different track or a fresh replay after a stop starts from
+            // zero; a same-track pause or resume keeps both its position and
+            // its known total. For a genuinely new request the total is
+            // unknown until the embed reports it: show no total rather than
+            // a guessed 30 seconds that the first report rewrites.
+            if (!wasActiveSelection || activeSpotifyTrack !== trackId || wasStopped) {
+                spotifyElapsedMs = 0;
+                trackDurationMs = 0;
+            }
             updateSoundbarProgress(spotifyElapsedMs);
-            document.getElementById('soundbarLabel').textContent = currentTrackName;
+            setSoundbarLabel(currentTrackName);
             document.getElementById('soundbar').classList.remove('hidden');
             pendingSoundCloudPlaybackId = null;
             pendingSoundCloudPlaybackStartsAtZero = false;
             clearSoundCloudLoading();
+            // A new Spotify request must not inherit a previous request's
+            // visible loading message: it restarts its own delay. The
+            // API-ready dispatch of the already-armed request keeps the
+            // running reveal instead of hiding and restarting it.
+            if (!(apiDispatch && armedSpotifyTrackId === trackId)) hideSoundbarLoading('spotify');
             pauseSoundCloudPlayers();
             if (!spotifyReady) {
+                if (armedSpotifyTrackId === trackId) {
+                    // Reselecting a track whose request is still waiting on the
+                    // API cancels that request.
+                    cancelSpotifyPending();
+                    return;
+                }
                 pendingSpotifyTrack = trackId;
+                armSpotifyLoading(trackId);
                 loadSpotifyApi();
                 return;
             }
 
             if (spotifyController) {
-                if (activeSpotifyTrack === trackId && isSpotifyPlaying) {
+                if (activeSpotifyTrack === trackId && spotifyPlaybackPending) {
+                    // Cancel a playback request that has not started yet.
+                    cancelSpotifyPending();
+                    return;
+                }
+                if (wasActiveSelection && activeSpotifyTrack === trackId && isSpotifyPlaying) {
                     spotifyController.pause();
-                    isSpotifyPlaying = false;
                     setSpotifyPlaybackState(false, trackId);
                     return;
                 }
-                if (activeSpotifyTrack === trackId && !isPlaybackStopped) {
+                // Pause/resume applies only while the track is still the
+                // active selection; returning to a track that another
+                // selection displaced starts it from the beginning.
+                if (wasActiveSelection && activeSpotifyTrack === trackId && !wasStopped) {
                     spotifyController.play();
-                    isSpotifyPlaying = true;
-                    setSpotifyPlaybackState(true, trackId);
+                    armSpotifyLoading(trackId);
                     return;
                 }
+                spotifyElapsedMs = 0;
                 spotifyController.loadUri(`spotify:track:${trackId}`);
                 spotifyController.seek(0);
                 spotifyController.play();
                 activeSpotifyTrack = trackId;
-                isSpotifyPlaying = true;
-                setSpotifyPlaybackState(true, trackId);
+                armSpotifyLoading(trackId);
+                return;
+            }
+
+            if (!apiDispatch && armedSpotifyTrackId === trackId && spotifyPlaybackPending) {
+                // A direct reselection while the request still waits on the
+                // controller callback cancels that request. The API-ready
+                // dispatch passes apiDispatch so the queued first playback is
+                // never cancelled by this guard.
+                cancelSpotifyPending();
                 return;
             }
 
             const container = document.createElement('div');
             container.className = 'spotify-player';
             document.body.appendChild(container);
+            // The request is pending from this call, not only once the
+            // controller callback runs: arm the loading feedback, watchdog
+            // and cancel affordance before the asynchronous createController.
+            armSpotifyLoading(trackId);
             spotifyReady.createController(container, { width: 1, height: 1 }, controller => {
+                if (requestToken !== playbackRequestToken || activeAudioProvider !== 'spotify') {
+                    // A stale callback must not become the live controller:
+                    // destroy the orphaned embed and its container.
+                    controller.destroy?.();
+                    container.remove();
+                    return;
+                }
                 spotifyController = controller;
-                if (requestToken !== playbackRequestToken || activeAudioProvider !== 'spotify') return;
+                if (typeof controller.addListener === 'function') {
+                    // Events from a superseded or destroyed controller are
+                    // stale, even if an already-queued delivery still runs
+                    // after the controller was torn down.
+                    controller.addListener('playback_update', event => {
+                        if (controller !== spotifyController) return;
+                        handleSpotifyPlaybackUpdate(event);
+                    });
+                }
+                pendingSpotifyTrack = null;
                 controller.loadUri(`spotify:track:${currentTrackId}`);
                 controller.seek(0);
                 controller.play();
                 activeSpotifyTrack = currentTrackId;
-                isSpotifyPlaying = true;
-                setSpotifyPlaybackState(true, currentTrackId);
+                armSpotifyLoading(currentTrackId);
             });
         }
 
         function setSpotifyPlaybackState(playing, trackId) {
+            hideSoundbarLoading('spotify');
             isAudioPlaying = playing;
+            isSpotifyPlaying = playing;
             if (playing) isPlaybackStopped = false;
-            if (playing) startSpotifyProgressTimer();
-            else {
-                if (spotifyPlaybackStartedAt) spotifyElapsedMs = Date.now() - spotifyPlaybackStartedAt;
-                spotifyPlaybackStartedAt = null;
-                stopSoundbarProgressTimer();
-                updateSoundbarProgress(spotifyElapsedMs);
-            }
+            stopSoundbarProgressTimer();
+            updateSoundbarProgress(spotifyElapsedMs);
             document.getElementById('soundStatusIcon').className = `fa-solid fa-${playing ? 'pause' : 'play'} text-sm`;
             document.getElementById('soundbarPauseIcon').className = `fa-solid fa-${playing ? 'pause' : 'play'} text-xs`;
             document.getElementById('soundbarPauseBtn').setAttribute('aria-label', playing ? 'Pause playback' : 'Resume playback');
             document.getElementById('soundbarPauseBtn').title = playing ? 'Pause playback' : 'Resume playback';
-            document.getElementById('soundbarLabel').textContent = currentTrackName;
+            setSoundbarLabel(currentTrackName);
             document.getElementById('soundbar').classList.remove('hidden');
             document.getElementById('waveContainer').classList.toggle('paused', !playing);
             updatePlaybackIcons();
@@ -2203,25 +2584,38 @@
                 return;
             }
             if (activeAudioProvider === 'spotify') {
+                if (spotifyPlaybackPending) {
+                    // Cancel a playback request that has not started yet.
+                    cancelSpotifyPending();
+                    return;
+                }
                 if (!spotifyController) {
+                    if (pendingSpotifyTrack) {
+                        // A request still waiting on the player API is
+                        // cancelled here; the button said "Cancel playback
+                        // request", so cancelling is what it must do.
+                        playbackRequestToken += 1;
+                        pendingSpotifyTrack = null;
+                        setSpotifyPlaybackState(false, currentTrackId);
+                        return;
+                    }
                     playSpotifyTrack(currentTrackId);
                     return;
                 }
                 if (isSpotifyPlaying) {
                     spotifyController.pause();
-                    isSpotifyPlaying = false;
                     setSpotifyPlaybackState(false, activeSpotifyTrack);
                 } else {
                     isPlaybackStopped = false;
                     spotifyController.play();
-                    isSpotifyPlaying = true;
-                    setSpotifyPlaybackState(true, activeSpotifyTrack);
+                    armSpotifyLoading(currentTrackId);
                 }
                 return;
             }
 
             if (armedSoundCloudPlaybackId === currentTrackId) {
                 // Cancel a playback request that has not started yet.
+                playbackRequestToken += 1;
                 pendingSoundCloudPlaybackId = null;
                 pendingSoundCloudPlaybackStartsAtZero = false;
                 clearSoundCloudLoading();
@@ -2272,8 +2666,7 @@
                 spotifyController.seek(0);
                 spotifyController.play();
                 activeSpotifyTrack = currentTrackId;
-                isSpotifyPlaying = true;
-                setSpotifyPlaybackState(true, currentTrackId);
+                armSpotifyLoading(currentTrackId);
                 return;
             }
 
@@ -2300,19 +2693,35 @@
         function clearStoppedPlayback() {
             playbackRequestToken += 1;
             stopSoundbarProgressTimer();
+            const stoppedTrackId = currentTrackId;
             pendingSpotifyTrack = null;
             pendingSoundCloudPlaybackId = null;
             pendingSoundCloudPlaybackStartsAtZero = false;
             clearSoundCloudLoading();
             cancelledSoundCloudPlaybackId = currentTrackId;
-            spotifyController?.pause();
+            // Stop is terminal for the Spotify request too: end the
+            // controller's stream so a queued start cannot play behind a
+            // stopped bar.
+            if (spotifyController) {
+                spotifyController.pause?.();
+                spotifyController.destroy?.();
+                spotifyController = null;
+            }
             pauseSoundCloudPlayers();
+            // Stop discards the stopped recording's position: rewind its
+            // SoundCloud widget so a later selection cannot resume where it
+            // paused. This matters when the stopped recording is the
+            // configured default, which stays current after the clear and is
+            // otherwise replayed from its paused position.
+            for (const rewindId of new Set([stoppedTrackId, defaultTrackId])) {
+                if (rewindId && readySoundCloudPlayers.has(rewindId)) soundcloudPlayers[rewindId]?.seekTo(0);
+            }
             activeSpotifyTrack = null;
             isSpotifyPlaying = false;
             isAudioPlaying = false;
             isPlaybackStopped = false;
             spotifyElapsedMs = 0;
-            spotifyPlaybackStartedAt = null;
+            clearSpotifyLoading();
             trackDurationMs = 0;
             currentTrackName = defaultTrackName;
             currentTrackId = defaultTrackId;
@@ -2322,7 +2731,7 @@
             document.getElementById('soundbarPauseIcon').className = 'fa-solid fa-play text-xs';
             document.getElementById('soundbarPauseBtn').setAttribute('aria-label', 'Pause playback');
             document.getElementById('soundbarPauseBtn').title = 'Pause playback';
-            document.getElementById('soundbarLabel').textContent = defaultTrackName;
+            setSoundbarLabel(defaultTrackName);
             document.getElementById('waveContainer').classList.add('paused');
             updatePlaybackIcons();
             document.getElementById('soundbar').classList.add('hidden');
@@ -2330,7 +2739,7 @@
 
         function setPlaybackState(playing) {
             isAudioPlaying = playing;
-            document.getElementById('soundbarLabel').textContent = currentTrackName;
+            setSoundbarLabel(currentTrackName);
             if (playing) isPlaybackStopped = false;
             const activeTrack = document.querySelector(`[data-track="${currentTrackId}"]`);
             document.querySelectorAll('[data-track] .fa-play, [data-track] .fa-pause').forEach(icon => {
@@ -2355,6 +2764,24 @@
             }
 
             stopSoundbarProgressTimer();
+            // Pause freezes the true position: re-anchor the bar to the
+            // player's own report so no interpolated frame leaves the fill
+            // ahead of where playback actually stopped. Snap to the last
+            // player sample first so a slow or missing position response
+            // cannot leave an interpolated frame on screen; the callback
+            // then applies the fresh position.
+            if (progressSample) updateSoundbarProgress(progressSample.positionMs, progressSample.durationMs);
+            const pauseTrackId = currentTrackId;
+            const pauseRequestToken = playbackRequestToken;
+            soundcloudPlayers[pauseTrackId]?.getPosition(position => {
+                // A play request, cancel or stop made while the position
+                // request was in flight owns the bar now: only a still-
+                // current SoundCloud pause may re-anchor it. Stop's own
+                // pause mints a fresh request after the token advance, so
+                // the hidden bar is the signal that Stop, not a pause,
+                // owns this answer.
+                if (playbackRequestToken === pauseRequestToken && !isAudioPlaying && activeAudioProvider === 'soundcloud' && currentTrackId === pauseTrackId && !document.getElementById('soundbar').classList.contains('hidden')) updateSoundbarProgress(position);
+            });
             document.getElementById('waveContainer').classList.add('paused');
             document.getElementById('soundStatusIcon').className = 'fa-solid fa-play text-sm';
             document.getElementById('soundbarPauseIcon').className = 'fa-solid fa-play text-xs';
@@ -2383,6 +2810,7 @@
 
             if (activeAudioProvider === 'soundcloud' && id === currentTrackId && isAudioPlaying && armedSoundCloudPlaybackId === id) {
                 // Cancel a playback request that has not started yet.
+                playbackRequestToken += 1;
                 pendingSoundCloudPlaybackId = null;
                 pendingSoundCloudPlaybackStartsAtZero = false;
                 clearSoundCloudLoading();
@@ -2397,12 +2825,47 @@
                 return;
             }
 
+            if (activeAudioProvider === 'soundcloud' && id === currentTrackId && !isPlaybackStopped) {
+                // Paused mid-track: selecting the same recording resumes it
+                // where it paused. Only returning to a track that another
+                // selection displaced starts it from the beginning.
+                notice?.classList.add('hidden');
+                isPlaybackStopped = false;
+                armSoundCloudLoading(id);
+                if (!player) {
+                    pendingSoundCloudPlaybackId = id;
+                    pendingSoundCloudPlaybackStartsAtZero = false;
+                    const requestedSoundCloudTrackId = id;
+                    initialiseSoundCloudPlayers().catch(() => {
+                        if (activeAudioProvider === 'soundcloud' && armedSoundCloudPlaybackId === requestedSoundCloudTrackId) showTrackUnavailable();
+                    });
+                    return;
+                }
+                if (readySoundCloudPlayers.has(id)) player.play();
+                else {
+                    pendingSoundCloudPlaybackId = id;
+                    pendingSoundCloudPlaybackStartsAtZero = false;
+                }
+                return;
+            }
+
             notice?.classList.add('hidden');
             pendingSpotifyTrack = null;
-            if (isSpotifyPlaying && spotifyController) {
-                spotifyController.pause();
-                isSpotifyPlaying = false;
+            if (spotifyController) {
+                // Any replaced Spotify controller is terminal, not paused: a
+                // returning visitor starts the track from the beginning on a
+                // fresh embed, so a surviving paused controller has no resume
+                // role - and its late queued events must never repaint the
+                // bar. Pause/resume keeps its controller only while Spotify
+                // stays the active provider.
+                spotifyController.pause?.();
+                spotifyController.destroy?.();
+                spotifyController = null;
+                activeSpotifyTrack = null;
+                spotifyElapsedMs = 0;
             }
+            clearSpotifyLoading();
+            isSpotifyPlaying = false;
             isAudioPlaying = false;
 
             const recording = mediaCatalog.find(media => media.type === 'listen' && media.provider === 'soundcloud' && media.id === id);
@@ -2412,7 +2875,7 @@
             currentTrackId = id;
             trackDurationMs = 0;
             updateSoundbarProgress();
-            document.getElementById('soundbarLabel').textContent = currentTrackName;
+            setSoundbarLabel(currentTrackName);
             notice?.classList.add('hidden');
             pauseSoundCloudPlayers(id);
             loadSoundCloudProgressMetadata(id);

@@ -22,10 +22,14 @@ async function serveSnapshot(page, update) {
   });
   await page.addInitScript(() => {
     window.__calls = [];
+    window.__spotifyHandlers = {};
     window.__spotifyApi = {
       createController: (_element, _options, callback) => callback({
         loadUri: uri => window.__calls.push(['spotify', uri]),
         seek: () => {}, play: () => {}, pause: () => {},
+        addListener: (event, handler) => {
+          window.__spotifyHandlers[event] = handler;
+        },
       }),
     };
     const Widget = element => {
@@ -68,6 +72,12 @@ test('generated catalogue keeps renamed Work relationships and editorial action 
   await expect(actions.first()).toHaveAttribute('data-spotify-track', '1o0qiFnwPPgBA3k6QWVPM8');
   await actions.first().click();
   await expect.poll(() => page.evaluate(() => window.__calls)).toContainEqual(['spotify', 'spotify:track:1o0qiFnwPPgBA3k6QWVPM8']);
+  // The bar shows playing only once the Spotify player confirms the request.
+  await page.evaluate(() =>
+    window.__spotifyHandlers.playback_update?.({
+      data: { isPaused: false, isBuffering: false, position: 0, duration: 30000 },
+    }),
+  );
   await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
   await actions.first().click();
   await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Resume playback');
@@ -85,7 +95,8 @@ test('new SoundCloud recording supplies its player configuration and can be the 
   await page.goto('/');
   await page.locator('#ambientSoundBtn').click();
   await expect.poll(() => page.evaluate(() => window.__calls)).toContainEqual(['soundcloud', 'soundcloudPlayer-new-recording']);
-  await expect(page.locator('#soundbarLabel')).toHaveText('New public recording');
+  await expect(page.locator('#soundbarTitle')).toHaveText('New public recording');
+  await expect(page.locator('#soundbarPerformer')).toHaveText('');
   await expect(page.locator('#soundcloudPlayer-new-recording')).toHaveAttribute('src', /samanthafernando%2Fnew-recording/);
   await page.locator('#soundbarStopBtn').click();
   await expect(page.locator('#soundbar')).toBeHidden();
@@ -101,7 +112,8 @@ test('new Spotify URL supplies the playback ID and header default without a hard
   await page.goto('/');
   await page.locator('#ambientSoundBtn').click();
   await expect.poll(() => page.evaluate(() => window.__calls)).toContainEqual(['spotify', 'spotify:track:7lmUNPa9oAkmYwdo88guI4']);
-  await expect(page.locator('#soundbarLabel')).toHaveText('New Spotify recording');
+  await expect(page.locator('#soundbarTitle')).toHaveText('New Spotify recording');
+  await expect(page.locator('#soundbarPerformer')).toHaveText('');
 });
 
 test('CMS quotes and markup render as text, with functional media actions in both themes', async ({page}) => {
