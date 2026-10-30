@@ -795,8 +795,11 @@ test('soundbar is anchored to the viewport bottom with readable theme colours', 
   await expect(page.locator('#soundbarTimes')).toHaveCSS('color', 'rgb(212, 212, 212)');
 
   await page.locator('#themeToggleBtn').click();
-  await expect(soundbar).toHaveCSS('color', 'rgb(24, 33, 31)');
-  await expect(page.locator('#soundbarTimes')).toHaveCSS('color', 'rgb(93, 101, 95)');
+  // Light mode keeps the dark, amber-lit bar so it contrasts with the
+  // cream page: cream text on a deep amber surface.
+  await expect(soundbar).toHaveCSS('color', 'rgb(253, 243, 227)');
+  await expect(soundbar).toHaveCSS('background-color', 'rgb(110, 53, 0)');
+  await expect(page.locator('#soundbarTimes')).toHaveCSS('color', 'rgb(238, 207, 163)');
 });
 
 test('soundbar is anchored to the viewport bottom on mobile @mobile', async ({ page }) => {

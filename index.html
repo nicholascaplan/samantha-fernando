@@ -399,7 +399,6 @@
         #soundbarLoading.hidden { display: none; }
         #soundbar.loading #soundbarProgress, #soundbar.loading #soundbarTimes { visibility: hidden; }
         .loading-spinner { width: 0.55rem; height: 0.55rem; flex: none; border-radius: 50%; border: 1.5px solid rgba(245, 245, 245, 0.3); border-top-color: #f6bf7b; animation: soundbar-loading-spin 1s linear infinite; }
-        .light-mode .loading-spinner { border-color: rgba(24, 33, 31, 0.2); border-top-color: #944900; }
         @keyframes soundbar-loading-spin { to { transform: rotate(360deg); } }
         @media (prefers-reduced-motion: reduce) {
             .loading-spinner { animation: none; }
@@ -407,10 +406,16 @@
         #soundbarControls { position: absolute; right: 1.25rem; top: 50%; display: flex; gap: 0.2rem; transform: translateY(-50%); }
         #soundbarControls button { color: #f6bf7b; }
         #soundbarControls button:hover { background: rgba(180, 83, 9, 0.24); }
-        .light-mode #soundbar { color: #18211f; }
-        .light-mode #soundbarTimes { color: #5d655f; }
-        .light-mode #soundbarControls button { color: #944900; }
-        .light-mode #soundbarControls button:hover { background: #f0e7d6; }
+        /* In light mode the cream glass surface disappears against the cream
+           page, so the bar keeps the dark, amber-lit treatment it has in dark
+           mode: strong contrast with the page, same palette. */
+        .light-mode #soundbar { background: #6e3500; border-color: rgba(246, 191, 123, 0.35); color: #fdf3e3; }
+        .light-mode #soundbarTimes { color: #eecfa3; }
+        .light-mode #soundbarControls button { color: #f6bf7b; }
+        .light-mode #soundbarControls button:hover { background: rgba(246, 191, 123, 0.18); }
+        .light-mode #soundbarProgress { border-color: rgba(246, 191, 123, 0.45); background: rgba(246, 191, 123, 0.2); }
+        .light-mode #soundbarProgressFill { background: #f6bf7b; box-shadow: 0 0 0.4rem rgba(246, 191, 123, 0.65); }
+        .light-mode .loading-spinner { border-color: rgba(246, 191, 123, 0.35); border-top-color: #f6bf7b; }
         @media (max-width: 420px) {
             #soundbar { padding: 0.5rem 6.5rem 0.625rem 1rem; }
             #soundbarControls { right: 0.75rem; }
