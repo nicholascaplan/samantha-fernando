@@ -52,6 +52,22 @@ const lookUpCard = page => page.locator('#worksContainer [data-track="look-up"]'
 const fireWidgetEvent = (page, event) =>
   page.evaluate(evt => window.__soundCloudPlayers.soundcloudPlayerLookUp.handlers[evt]?.(), event);
 
+// Serve /listen/ with the SoundCloud recording as the configured default.
+// Throws when the catalogue output does not contain the expected marker, so
+// a build change fails the test instead of silently skipping the scenario.
+async function serveSoundCloudDefault(page) {
+  await page.route('**/listen/', async route => {
+    const response = await route.fetch();
+    const original = await response.text();
+    const body = original.replace(
+      '"defaultRecording":"spotify-3YV79qjiJLOgYjjEzTsVEy"',
+      '"defaultRecording":"soundcloud-look-up"',
+    );
+    if (body === original) throw new Error('defaultRecording marker not found in /listen/ output');
+    await route.fulfill({ response, body });
+  });
+}
+
 test('defers SoundCloud requests until playback is requested', async ({ page }) => {
   const soundCloudRequests = [];
   await page.route('https://w.soundcloud.com/**', route => {
@@ -768,14 +784,7 @@ test('reselecting a SoundCloud default after stop starts it from the beginning',
   // Serve the catalogue with a SoundCloud recording as the configured
   // default: after Stop the bar returns to that recording, so it stays the
   // current track for the next selection.
-  await page.route('**/listen/', async route => {
-    const response = await route.fetch();
-    const body = (await response.text()).replace(
-      '"defaultRecording":"spotify-3YV79qjiJLOgYjjEzTsVEy"',
-      '"defaultRecording":"soundcloud-look-up"',
-    );
-    await route.fulfill({ response, body });
-  });
+  await serveSoundCloudDefault(page);
   await page.goto('/listen/');
 
   await lookUpCard(page).click();
@@ -802,14 +811,7 @@ test('reselecting a SoundCloud default after stop starts it from the beginning',
 
 test('stopping a recording that displaced a SoundCloud default rewinds the default too', async ({ page }) => {
   await mockSoundCloud(page);
-  await page.route('**/listen/', async route => {
-    const response = await route.fetch();
-    const body = (await response.text()).replace(
-      '"defaultRecording":"spotify-3YV79qjiJLOgYjjEzTsVEy"',
-      '"defaultRecording":"soundcloud-look-up"',
-    );
-    await route.fulfill({ response, body });
-  });
+  await serveSoundCloudDefault(page);
   await page.goto('/listen/');
 
   const faultlineCard = page.locator('#worksContainer [data-track="faultline"]');
