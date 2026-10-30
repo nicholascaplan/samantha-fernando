@@ -26,6 +26,15 @@ async function mockSpotify(page, { deferControllerCallback = false, deferApiRead
       },
     };
     localStorage.setItem('analyticsConsent', 'rejected');
+    // Test-only: the site's CSS smooth scrolling animates Playwright's
+    // scroll-into-view, which can leave a computed click point behind the
+    // gliding page (seen as a WebKit CI flake). The product keeps smooth
+    // scrolling; specs settle it instantly.
+    document.addEventListener('DOMContentLoaded', () => {
+      const style = document.createElement('style');
+      style.textContent = 'html { scroll-behavior: auto !important; }';
+      document.head.appendChild(style);
+    });
   }, deferControllerCallback);
   await page.route('https://open.spotify.com/embed/iframe-api/v1', route =>
     route.fulfill({

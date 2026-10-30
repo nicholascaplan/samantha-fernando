@@ -40,6 +40,15 @@ async function mockSoundCloud(page, { position = 0 } = {}) {
     Widget.Events = { READY: 'READY', PLAY: 'PLAY', PAUSE: 'PAUSE', FINISH: 'FINISH', ERROR: 'ERROR' };
     window.SC = { Widget };
     localStorage.setItem('analyticsConsent', 'rejected');
+    // Test-only: the site's CSS smooth scrolling animates Playwright's
+    // scroll-into-view, which can leave a computed click point behind the
+    // gliding page (seen as a WebKit CI flake). The product keeps smooth
+    // scrolling; specs settle it instantly.
+    document.addEventListener('DOMContentLoaded', () => {
+      const style = document.createElement('style');
+      style.textContent = 'html { scroll-behavior: auto !important; }';
+      document.head.appendChild(style);
+    });
   }, position);
   await page.route('https://w.soundcloud.com/player/api.js', route =>
     route.fulfill({ contentType: 'application/javascript', body: '' }),
@@ -848,6 +857,36 @@ test('a stale pause position cannot repaint the bar after Stop', async ({ page }
   await page.evaluate(() => window.__deferredPositions.soundcloudPlayerLookUp?.(30000));
   await expect.poll(() => page.locator('#soundbarProgressFill').evaluate(el => el.style.width)).toBe('0%');
   expect(await page.locator('#soundbarElapsedTime').evaluate(el => el.textContent)).toBe('0:00');
+});
+
+test('a position answer minted by Stop itself cannot repaint the stopped bar', async ({ page }) => {
+  await mockSoundCloud(page, { position: 5000 });
+  await page.route('**/listen/', async route => {
+    const response = await route.fetch();
+    const body = (await response.text()).replace(
+      '"defaultRecording":"spotify-3YV79qjiJLOgYjjEzTsVEy"',
+      '"defaultRecording":"soundcloud-look-up"',
+    );
+    await route.fulfill({ response, body });
+  });
+  await page.goto('/listen/');
+
+  await lookUpCard(page).click();
+  await expect.poll(() => page.evaluate(() => Boolean(window.__soundCloudPlayers?.soundcloudPlayerLookUp))).toBe(true);
+  await fireWidgetEvent(page, 'READY');
+  await fireWidgetEvent(page, 'PLAY');
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
+
+  // Stop while playing: the widget's pause transition fires inside the stop
+  // and mints a fresh position request after the request-token advance, so
+  // only the hidden bar can tell that answer it came too late.
+  await page.evaluate(() => { window.__deferPositions = true; });
+  await page.locator('#soundbarStopBtn').click();
+  await expect(page.locator('#soundbar')).toBeHidden();
+
+  await page.evaluate(() => window.__deferredPositions.soundcloudPlayerLookUp?.(30000));
+  await expect.poll(() => page.locator('#soundbarElapsedTime').evaluate(el => el.textContent)).toBe('0:00');
+  expect(await page.locator('#soundbarProgressFill').evaluate(el => el.style.width)).toBe('0%');
 });
 
 test('reselecting the paused recording resumes where it paused', async ({ page }) => {
