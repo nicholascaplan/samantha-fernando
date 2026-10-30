@@ -800,6 +800,52 @@ test('reselecting a SoundCloud default after stop starts it from the beginning',
   ]);
 });
 
+test('stopping a recording that displaced a SoundCloud default rewinds the default too', async ({ page }) => {
+  await mockSoundCloud(page);
+  await page.route('**/listen/', async route => {
+    const response = await route.fetch();
+    const body = (await response.text()).replace(
+      '"defaultRecording":"spotify-3YV79qjiJLOgYjjEzTsVEy"',
+      '"defaultRecording":"soundcloud-look-up"',
+    );
+    await route.fulfill({ response, body });
+  });
+  await page.goto('/listen/');
+
+  const faultlineCard = page.locator('#worksContainer [data-track="faultline"]');
+  const fireOn = (page, widget, event) =>
+    page.evaluate(([widget, evt]) => window.__soundCloudPlayers[widget].handlers[evt]?.(), [widget, event]);
+
+  // The default plays, then another recording displaces it mid-position.
+  await lookUpCard(page).click();
+  await expect.poll(() => page.evaluate(() => Boolean(window.__soundCloudPlayers?.soundcloudPlayerLookUp))).toBe(true);
+  await fireOn(page, 'soundcloudPlayerLookUp', 'READY');
+  await fireOn(page, 'soundcloudPlayerLookUp', 'PLAY');
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
+
+  await faultlineCard.click();
+  await expect.poll(() => page.evaluate(() => Boolean(window.__soundCloudPlayers?.soundcloudPlayerFaultline))).toBe(true);
+  await fireOn(page, 'soundcloudPlayerFaultline', 'READY');
+  await fireOn(page, 'soundcloudPlayerFaultline', 'PLAY');
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
+
+  // Stop: the bar returns to the default. Reselecting it must start it
+  // from the beginning, not where its displacement paused it.
+  // Sample before the stop: Stop itself performs the rewind, so the
+  // reselection's play must follow a seekTo(0) logged during the stop.
+  const callsBeforeStop = await page.evaluate(() => window.__soundCloudCalls.length);
+  await page.locator('#soundbarStopBtn').click();
+  await lookUpCard(page).click();
+
+  const calls = await page.evaluate(from => window.__soundCloudCalls
+    .slice(from)
+    .filter(([name, element]) => element === 'soundcloudPlayerLookUp' && (name === 'seekTo' || name === 'play')), callsBeforeStop);
+  expect(calls).toEqual([
+    ['seekTo', 'soundcloudPlayerLookUp', 0],
+    ['play', 'soundcloudPlayerLookUp'],
+  ]);
+});
+
 test('reselecting after stop starts the recording from the beginning', async ({ page }) => {
   await mockSoundCloud(page);
   await page.goto('/listen/');

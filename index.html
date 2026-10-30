@@ -2567,7 +2567,9 @@
             // paused. This matters when the stopped recording is the
             // configured default, which stays current after the clear and is
             // otherwise replayed from its paused position.
-            if (stoppedTrackId && readySoundCloudPlayers.has(stoppedTrackId)) soundcloudPlayers[stoppedTrackId]?.seekTo(0);
+            for (const rewindId of new Set([stoppedTrackId, defaultTrackId])) {
+                if (rewindId && readySoundCloudPlayers.has(rewindId)) soundcloudPlayers[rewindId]?.seekTo(0);
+            }
             activeSpotifyTrack = null;
             isSpotifyPlaying = false;
             isAudioPlaying = false;
