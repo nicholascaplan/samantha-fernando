@@ -807,7 +807,7 @@ test('failure notice after a cancelled request names the new track, not the canc
 
   // Select B; its controller callback stalls. The watchdog fires.
   await everythingPasses.click();
-  await expect(page.locator('#soundbarTitle')).toHaveText(/Everything Passes/);
+  await expect(page.locator('#soundbarTitle')).toHaveText('Everything Passes, Everything is Connected');
   await page.clock.runFor(16000);
   await expect(page.locator('#audioAvailabilityMessage')).toBeVisible();
 
