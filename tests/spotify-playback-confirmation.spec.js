@@ -1025,5 +1025,6 @@ test('never flashes the progress rows while a Spotify request is pending', async
   await fireSpotifyUpdate(page, { isPaused: false, isBuffering: false, position: 1000, duration: 21000 });
   await expect(page.locator('#soundbarLoading')).toBeHidden();
   await expect(page.locator('#soundbarProgress')).toBeVisible();
+  await expect(page.locator('#soundbarTimes')).toBeVisible();
   await expect(page.locator('#soundbarElapsedTime')).toHaveText('0:01');
 });
