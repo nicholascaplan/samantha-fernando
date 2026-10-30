@@ -2,15 +2,23 @@ const { test, expect } = require('@playwright/test');
 
 // A controllable SoundCloud widget API: READY/PLAY are fired explicitly by
 // each test so pending-playback timing stays deterministic.
-async function mockSoundCloud(page) {
-  await page.addInitScript(() => {
+async function mockSoundCloud(page, { position = 0 } = {}) {
+  await page.addInitScript(position => {
     window.__soundCloudCalls = [];
     const Widget = element => {
       const handlers = {};
       const player = {
         bind: (event, handler) => { handlers[event] = handler; },
         getDuration: callback => callback(60_000),
-        getPosition: callback => callback(0),
+        // Tests can hold the position response by setting
+        // window.__deferPositions; resolve it via __deferredPositions.
+        getPosition: callback => {
+          if (window.__deferPositions) {
+            (window.__deferredPositions ??= {})[element.id] = callback;
+            return;
+          }
+          callback(position);
+        },
         pause: () => {
           window.__soundCloudCalls.push(['pause', element.id]);
           handlers.PAUSE?.();
@@ -27,7 +35,7 @@ async function mockSoundCloud(page) {
     Widget.Events = { READY: 'READY', PLAY: 'PLAY', PAUSE: 'PAUSE', FINISH: 'FINISH', ERROR: 'ERROR' };
     window.SC = { Widget };
     localStorage.setItem('analyticsConsent', 'rejected');
-  });
+  }, position);
   await page.route('https://w.soundcloud.com/player/api.js', route =>
     route.fulfill({ contentType: 'application/javascript', body: '' }),
   );
@@ -759,6 +767,39 @@ test('a request still pending after the grace window shows the loading message w
   await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
   await expect(page.locator('#soundbarLoading')).toBeHidden();
   await expect(page.locator('#soundbarProgress')).toBeVisible();
+});
+
+test('a SoundCloud pause snaps the fill to the last player report before the position answer arrives', async ({ page }) => {
+  await mockSoundCloud(page, { position: 5000 });
+  await installPausedClock(page);
+  await page.goto('/listen/');
+
+  await lookUpCard(page).click();
+  await expect.poll(() => page.evaluate(() => Boolean(window.__soundCloudPlayers?.soundcloudPlayerLookUp))).toBe(true);
+  await fireWidgetEvent(page, 'READY');
+  await fireWidgetEvent(page, 'PLAY');
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
+
+  // The progress timer lands a real report at 5s of 60s, then the fill
+  // glides ahead of it on the wall clock.
+  await page.clock.runFor(500);
+  await expect(page.locator('#soundbarElapsedTime')).toHaveText('0:05');
+  await page.clock.runFor(1000);
+  const widthPercent = () => page.locator('#soundbarProgressFill').evaluate(el => parseFloat(el.style.width));
+  await expect.poll(widthPercent).toBeGreaterThan(9);
+
+  // The pause must snap the fill back to the 5s report in the same turn,
+  // even while the fresh position answer is still outstanding.
+  await page.evaluate(() => { window.__deferPositions = true; });
+  const pausedWidth = await page.evaluate(() => {
+    window.__soundCloudPlayers.soundcloudPlayerLookUp.handlers.PAUSE?.();
+    return parseFloat(document.getElementById('soundbarProgressFill').style.width);
+  });
+  expect(pausedWidth).toBeCloseTo((5000 / 60000) * 100, 1);
+
+  // The fresh position applies when the answer finally arrives.
+  await page.evaluate(() => window.__deferredPositions.soundcloudPlayerLookUp?.(4800));
+  await expect.poll(widthPercent).toBeCloseTo((4800 / 60000) * 100, 1);
 });
 
 test('reselecting the paused recording resumes where it paused', async ({ page }) => {

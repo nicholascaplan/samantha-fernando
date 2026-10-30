@@ -855,6 +855,28 @@ test('glides the progress fill between the player\'s one-per-second reports', as
   await expect.poll(widthPercent).toBeCloseTo(13, 1);
 });
 
+test('stops gliding when reduced motion is turned on mid-playback', async ({ page }) => {
+  await mockSpotify(page);
+  await installPausedClock(page);
+  await page.goto('/listen/');
+
+  await balconiesCard(page).click();
+  const widthPercent = () => page.locator('#soundbarProgressFill').evaluate(el => parseFloat(el.style.width));
+
+  await fireSpotifyUpdate(page, { isPaused: false, isBuffering: false, position: 1000, duration: 20000 });
+  await expect(page.locator('#soundbarElapsedTime')).toHaveText('0:01');
+  await page.clock.runFor(500);
+  await expect.poll(widthPercent).toBeGreaterThan(5.5);
+
+  // The preference flips mid-playback: the next frame stops the glide and
+  // snaps back to the player's last report, and the fill stays there.
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.clock.runFor(500);
+  expect(await widthPercent()).toBeCloseTo(5, 1);
+  await page.clock.runFor(500);
+  expect(await widthPercent()).toBeCloseTo(5, 1);
+});
+
 test('holds the fill at the player\'s reports when reduced motion is preferred', async ({ page }) => {
   await mockSpotify(page);
   await installPausedClock(page);

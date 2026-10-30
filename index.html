@@ -2170,6 +2170,14 @@
                 soundbarProgressRaf = null;
                 return;
             }
+            // The preference can change mid-playback: honour it on the next
+            // frame rather than gliding on, and snap back to the player's
+            // last real report.
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                stopSoundbarProgressSmoothing();
+                updateSoundbarProgress(progressSample.positionMs, progressSample.durationMs);
+                return;
+            }
             const displayMs = progressSample.durationMs
                 ? Math.min(progressSample.durationMs, progressSample.positionMs + (performance.now() - progressSample.atMs))
                 : progressSample.positionMs + (performance.now() - progressSample.atMs);
@@ -2722,7 +2730,11 @@
             stopSoundbarProgressTimer();
             // Pause freezes the true position: re-anchor the bar to the
             // player's own report so no interpolated frame leaves the fill
-            // ahead of where playback actually stopped.
+            // ahead of where playback actually stopped. Snap to the last
+            // player sample first so a slow or missing position response
+            // cannot leave an interpolated frame on screen; the callback
+            // then applies the fresh position.
+            if (progressSample) updateSoundbarProgress(progressSample.positionMs, progressSample.durationMs);
             const pauseTrackId = currentTrackId;
             soundcloudPlayers[pauseTrackId]?.getPosition(position => {
                 // A selection made while the position request was in flight
