@@ -781,12 +781,14 @@ test('a SoundCloud pause snaps the fill to the last player report before the pos
   await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
 
   // The progress timer lands a real report at 5s of 60s, then the fill
-  // glides ahead of it on the wall clock.
+  // glides ahead of it on the wall clock. Stay clear of the timer's 500ms
+  // poll boundaries: a poll landing exactly on the clock edge would
+  // re-anchor the sample and make this assertion timing-fragile.
   await page.clock.runFor(500);
   await expect(page.locator('#soundbarElapsedTime')).toHaveText('0:05');
-  await page.clock.runFor(1000);
+  await page.clock.runFor(400);
   const widthPercent = () => page.locator('#soundbarProgressFill').evaluate(el => parseFloat(el.style.width));
-  await expect.poll(widthPercent).toBeGreaterThan(9);
+  await expect.poll(widthPercent).toBeGreaterThan(8.5);
 
   // The pause must snap the fill back to the 5s report in the same turn,
   // even while the fresh position answer is still outstanding.
