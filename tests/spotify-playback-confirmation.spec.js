@@ -854,3 +854,85 @@ test('glides the progress fill between the player\'s one-per-second reports', as
   await page.clock.runFor(500);
   await expect.poll(widthPercent).toBeCloseTo(13, 1);
 });
+
+test('holds the fill at the player\'s reports when reduced motion is preferred', async ({ page }) => {
+  await mockSpotify(page);
+  await installPausedClock(page);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/listen/');
+
+  await balconiesCard(page).click();
+  const widthPercent = () => page.locator('#soundbarProgressFill').evaluate(el => parseFloat(el.style.width));
+
+  await fireSpotifyUpdate(page, { isPaused: false, isBuffering: false, position: 1000, duration: 20000 });
+  await expect(page.locator('#soundbarElapsedTime')).toHaveText('0:01');
+  expect(await widthPercent()).toBeCloseTo(5, 1);
+
+  // Half a second passes: no glide under reduced motion - the fill moves only
+  // when the player reports.
+  await page.clock.runFor(500);
+  expect(await widthPercent()).toBeCloseTo(5, 1);
+
+  await fireSpotifyUpdate(page, { isPaused: false, isBuffering: false, position: 2000, duration: 20000 });
+  await expect(page.locator('#soundbarElapsedTime')).toHaveText('0:02');
+  expect(await widthPercent()).toBeCloseTo(10, 1);
+});
+
+test('a SoundCloud pause report arriving after a Spotify selection cannot move the Spotify bar', async ({ page }) => {
+  await mockSpotify(page);
+  await page.addInitScript(() => {
+    window.__soundCloudCalls = [];
+    const Widget = element => {
+      const handlers = {};
+      const player = {
+        bind: (event, handler) => { handlers[event] = handler; },
+        getDuration: callback => callback(60_000),
+        // Holds the position answer back so a test can deliver it late.
+        getPosition: callback => { window.__soundCloudDeferredPosition = callback; },
+        pause: () => {
+          window.__soundCloudCalls.push(['pause', element.id]);
+          handlers.PAUSE?.();
+        },
+        play: () => {
+          window.__soundCloudCalls.push(['play', element.id]);
+        },
+        seekTo: position => window.__soundCloudCalls.push(['seekTo', element.id, position]),
+      };
+      window.__soundCloudPlayers ??= {};
+      window.__soundCloudPlayers[element.id] = { handlers, player };
+      return player;
+    };
+    Widget.Events = { READY: 'READY', PLAY: 'PLAY', PAUSE: 'PAUSE', FINISH: 'FINISH', ERROR: 'ERROR' };
+    window.SC = { Widget };
+  });
+  await page.route('https://w.soundcloud.com/player/api.js', route =>
+    route.fulfill({ contentType: 'application/javascript', body: '' }),
+  );
+  await page.route('https://w.soundcloud.com/player/?**', route =>
+    route.fulfill({ contentType: 'text/html', body: '' }),
+  );
+  await page.goto('/listen/');
+
+  // Play a SoundCloud recording, then pause it: the pause re-anchor asks the
+  // widget for its position, and this mock holds that answer back.
+  await page.locator('#worksContainer [data-track="look-up"]').click();
+  await page.evaluate(() => window.__soundCloudPlayers.soundcloudPlayerLookUp.handlers.READY?.());
+  await expect.poll(() => page.evaluate(() => window.__soundCloudCalls)).toContainEqual([
+    'play',
+    'soundcloudPlayerLookUp',
+  ]);
+  await page.evaluate(() => window.__soundCloudPlayers.soundcloudPlayerLookUp.handlers.PLAY?.());
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
+  await page.locator('#soundbarPauseBtn').click();
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Resume playback');
+
+  // Select a Spotify track before the SoundCloud position answer returns.
+  await balconiesCard(page).click();
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Cancel playback request');
+  await expect(page.locator('#soundbarElapsedTime')).toHaveText('0:00');
+
+  // The late answer belongs to the displaced SoundCloud pause: the Spotify
+  // bar must stay at zero.
+  await page.evaluate(() => window.__soundCloudDeferredPosition(9000));
+  await expect(page.locator('#soundbarElapsedTime')).toHaveText('0:00');
+});

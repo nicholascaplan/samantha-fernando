@@ -431,6 +431,7 @@
         @keyframes soundbar-loading-spin { to { transform: rotate(360deg); } }
         @media (prefers-reduced-motion: reduce) {
             .loading-spinner { animation: none; }
+            #soundbarProgressFill { transition: none; }
         }
         #soundbarControls { margin-left: auto; display: flex; gap: 0.2rem; flex: none; }
         #soundbarControls button { color: #f6bf7b; }
@@ -2178,6 +2179,9 @@
         }
 
         function startSoundbarProgressSmoothing() {
+            // Reduced motion: no continuous glide - the fill moves only on
+            // the player's own reports.
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
             document.getElementById('soundbarProgressFill').classList.add('smooth');
             if (soundbarProgressRaf === null) soundbarProgressRaf = window.requestAnimationFrame(renderSmoothedProgress);
         }
@@ -2719,8 +2723,12 @@
             // Pause freezes the true position: re-anchor the bar to the
             // player's own report so no interpolated frame leaves the fill
             // ahead of where playback actually stopped.
-            soundcloudPlayers[currentTrackId]?.getPosition(position => {
-                if (!isAudioPlaying) updateSoundbarProgress(position);
+            const pauseTrackId = currentTrackId;
+            soundcloudPlayers[pauseTrackId]?.getPosition(position => {
+                // A selection made while the position request was in flight
+                // owns the bar now: only a still-current SoundCloud pause may
+                // re-anchor it.
+                if (!isAudioPlaying && activeAudioProvider === 'soundcloud' && currentTrackId === pauseTrackId) updateSoundbarProgress(position);
             });
             document.getElementById('waveContainer').classList.add('paused');
             document.getElementById('soundStatusIcon').className = 'fa-solid fa-play text-sm';
