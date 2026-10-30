@@ -82,6 +82,8 @@ test('shows loading feedback with the piece name as soon as playback is requeste
   // presentation, and the piece name stays visible underneath it.
   await expect(page.locator('#soundbarLoading')).toBeVisible();
   await expect(page.locator('#soundbarLoading')).toHaveText('Loading audio…');
+  await expect(page.locator('#soundbarProgress')).toBeHidden();
+  await expect(page.locator('#soundbarTimes')).toBeHidden();
   await expect(page.locator('#soundbarLabel')).toBeVisible();
   await expect(page.locator('#soundbarLabel')).toHaveText(/Look Up/);
 
@@ -102,9 +104,13 @@ test('a promptly started playback still clears the loading feedback', async ({ p
 
   await lookUpCard(page).click();
   await expect(page.locator('#soundbar')).toBeVisible();
-  await expect(page.locator('#soundbarLoading')).toBeVisible();
+  // Inside the 0.3s reveal grace: the loading message must still be
+  // unrevealed and the progress/time rows must not have yielded.
+  await page.clock.runFor(250);
+  await expect(page.locator('#soundbarLoading')).toBeHidden();
+  await expect(page.locator('#soundbarProgress')).toBeVisible();
+  await expect(page.locator('#soundbarTimes')).toBeVisible();
 
-  await page.clock.runFor(400);
   await fireWidgetEvent(page, 'READY');
   await fireWidgetEvent(page, 'PLAY');
   await expect(page.locator('#soundbarLoading')).toBeHidden();

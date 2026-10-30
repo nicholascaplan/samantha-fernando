@@ -148,6 +148,8 @@ test('shows loading feedback with the piece name as soon as playback is requeste
   // presentation, and the piece name stays visible underneath it.
   await expect(page.locator('#soundbarLoading')).toBeVisible();
   await expect(page.locator('#soundbarLoading')).toHaveText('Loading audio…');
+  await expect(page.locator('#soundbarProgress')).toBeHidden();
+  await expect(page.locator('#soundbarTimes')).toBeHidden();
   await expect(page.locator('#soundbarLabel')).toBeVisible();
   await expect(page.locator('#soundbarLabel')).toHaveText(/Balconies/);
 
@@ -176,10 +178,18 @@ test('keeps the revealed loading message steady while the player finishes settin
   // dispatch so a restarted (still delayed) animation cannot slip past.
   let styles = await page.evaluate(() => {
     window.__spotifyDeferredApiReady();
-    const style = getComputedStyle(document.getElementById('soundbarLoading'));
-    return { visibility: style.visibility, display: style.display };
+    const loading = getComputedStyle(document.getElementById('soundbarLoading'));
+    const progress = getComputedStyle(document.getElementById('soundbarProgress'));
+    const times = getComputedStyle(document.getElementById('soundbarTimes'));
+    return {
+      loading: { visibility: loading.visibility, display: loading.display },
+      rows: { progress: progress.visibility, times: times.visibility },
+    };
   });
-  expect(styles).toEqual({ visibility: 'visible', display: 'flex' });
+  expect(styles).toEqual({
+    loading: { visibility: 'visible', display: 'flex' },
+    rows: { progress: 'hidden', times: 'hidden' },
+  });
 
   // The deferred controller handle exists once the ready API has fielded
   // the site's createController call; wait for it before invoking.
@@ -189,10 +199,18 @@ test('keeps the revealed loading message steady while the player finishes settin
   styles = await page.evaluate(() => {
     const deferred = window.__spotifyDeferredController;
     deferred.callback(deferred.controller);
-    const style = getComputedStyle(document.getElementById('soundbarLoading'));
-    return { visibility: style.visibility, display: style.display };
+    const loading = getComputedStyle(document.getElementById('soundbarLoading'));
+    const progress = getComputedStyle(document.getElementById('soundbarProgress'));
+    const times = getComputedStyle(document.getElementById('soundbarTimes'));
+    return {
+      loading: { visibility: loading.visibility, display: loading.display },
+      rows: { progress: progress.visibility, times: times.visibility },
+    };
   });
-  expect(styles).toEqual({ visibility: 'visible', display: 'flex' });
+  expect(styles).toEqual({
+    loading: { visibility: 'visible', display: 'flex' },
+    rows: { progress: 'hidden', times: 'hidden' },
+  });
 });
 
 test('surfaces the unavailable message when playback never starts', async ({ page }) => {
