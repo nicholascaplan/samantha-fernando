@@ -420,13 +420,16 @@
         #soundbarLoading { grid-row: 3 / span 2; grid-column: 1; display: flex; align-items: center; justify-content: center; gap: 0.35rem; text-align: center; font-size: 10px; }
         #soundbarLoading.hidden { display: none; }
         /* Loading feedback is for a wait the listener can actually feel: a
-           request that confirms within 0.3s never shows the message or hides
-           the progress rows, so fast starts never flash. The reveal keeps
-           the hidden state out of the accessibility tree until it appears. */
+           request that confirms within 0.3s never shows the message, so fast
+           starts never flash. The reveal keeps the hidden state out of the
+           accessibility tree until it appears. */
         #soundbar.loading #soundbarLoading { animation: soundbar-loading-reveal 0.15s ease 0.3s backwards; }
         @keyframes soundbar-loading-reveal { from { opacity: 0; visibility: hidden; } to { opacity: 1; visibility: visible; } }
-        #soundbar.loading #soundbarProgress, #soundbar.loading #soundbarTimes { animation: soundbar-rows-yield 0.01s 0.3s forwards; }
-        @keyframes soundbar-rows-yield { to { visibility: hidden; } }
+        /* The rows yield as soon as the request starts: a 0:00 bar that
+           vanishes when the message arrives reads as a flash, so the rows
+           area simply stays empty (layout preserved) until playback confirms
+           and the bar appears with its real position. */
+        #soundbar.loading #soundbarProgress, #soundbar.loading #soundbarTimes { visibility: hidden; }
         .loading-spinner { width: 0.55rem; height: 0.55rem; flex: none; border-radius: 50%; border: 1.5px solid rgba(246, 191, 123, 0.35); border-top-color: #f6bf7b; animation: soundbar-loading-spin 1s linear infinite; }
         @keyframes soundbar-loading-spin { to { transform: rotate(360deg); } }
         @media (prefers-reduced-motion: reduce) {
