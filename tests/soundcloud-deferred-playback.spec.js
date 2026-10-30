@@ -104,12 +104,21 @@ test('a promptly started playback still clears the loading feedback', async ({ p
 
   await lookUpCard(page).click();
   await expect(page.locator('#soundbar')).toBeVisible();
-  // Inside the 0.3s reveal grace: the loading message must still be
-  // unrevealed and the progress/time rows must not have yielded.
-  await page.clock.runFor(250);
-  await expect(page.locator('#soundbarLoading')).toBeHidden();
-  await expect(page.locator('#soundbarProgress')).toBeVisible();
-  await expect(page.locator('#soundbarTimes')).toBeVisible();
+  // Pin the soundbar animation timeline at 250ms, inside the 0.3s reveal
+  // grace: the loading message must still be unrevealed. Stepping to 450ms
+  // must reveal it, proving the assertions observe the intended timeline.
+  const checkpoint = async (time) => page.evaluate((t) => {
+    for (const a of document.getElementById('soundbar').getAnimations({ subtree: true })) {
+      a.pause();
+      a.currentTime = t;
+    }
+    return getComputedStyle(document.getElementById('soundbarLoading')).visibility;
+  }, time);
+  expect(await checkpoint(250)).toBe('hidden');
+  expect(await checkpoint(450)).toBe('visible');
+  await page.evaluate(() => {
+    for (const a of document.getElementById('soundbar').getAnimations({ subtree: true })) a.play();
+  });
 
   await fireWidgetEvent(page, 'READY');
   await fireWidgetEvent(page, 'PLAY');

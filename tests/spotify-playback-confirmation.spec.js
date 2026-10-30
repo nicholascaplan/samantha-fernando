@@ -173,6 +173,11 @@ test('keeps the revealed loading message steady while the player finishes settin
   // wait for the handle before invoking it.
   await page.waitForFunction(() => window.__spotifyDeferredApiReady);
 
+  // Confirm the post-reveal state before dispatching: the progress and time
+  // rows must already have yielded.
+  await expect(page.locator('#soundbarProgress')).toBeHidden();
+  await expect(page.locator('#soundbarTimes')).toBeHidden();
+
   // The API becoming ready must not hide the revealed message and restart its
   // delay. Read the computed style in the same JavaScript turn as the ready
   // dispatch so a restarted (still delayed) animation cannot slip past.
