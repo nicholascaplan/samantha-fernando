@@ -753,3 +753,67 @@ test('surfaces the unavailable message when the Spotify API fails to load', asyn
   );
   await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Resume playback');
 });
+
+// Custom mock: the first controller confirms; the second (post-cancel)
+// never calls back, simulating a stalled embed for the new selection.
+async function mockSpotifyStallOnSecond(page) {
+  await page.addInitScript(() => {
+    window.__spotifyCalls = [];
+    window.__spotifyHandlers = {};
+    let created = 0;
+    window.__spotifyIFrameApi = {
+      createController: (_container, _options, callback) => {
+        created += 1;
+        const controller = {
+          loadUri: uri => window.__spotifyCalls.push(['loadUri', uri]),
+          seek: position => window.__spotifyCalls.push(['seek', position]),
+          play: () => window.__spotifyCalls.push(['play']),
+          pause: () => window.__spotifyCalls.push(['pause']),
+          destroy: () => window.__spotifyCalls.push(['destroy']),
+          addListener: (event, handler) => { window.__spotifyHandlers[event] = handler; },
+        };
+        if (created === 1) callback(controller);
+      },
+    };
+    localStorage.setItem('analyticsConsent', 'rejected');
+  });
+  await page.route('https://open.spotify.com/embed/iframe-api/v1', route =>
+    route.fulfill({ contentType: 'application/javascript', body: 'window.onSpotifyIframeApiReady(window.__spotifyIFrameApi);' }));
+  await page.route('https://w.soundcloud.com/**', route => route.abort());
+}
+
+test('failure notice after a cancelled request names the new track, not the cancelled one', async ({ page }) => {
+  await mockSpotifyStallOnSecond(page);
+  await installPausedClock(page);
+  await page.goto('/listen/');
+  const balconies = page.locator('#worksContainer [data-spotify-track="2wNL47uCuwDpbOqCIpbSTS"]');
+  const everythingPasses = page.locator('#worksContainer [data-spotify-track="3YV79qjiJLOgYjjEzTsVEy"]');
+
+  // A confirms.
+  await balconies.click();
+  await expect.poll(() => page.evaluate(() => Boolean(window.__spotifyHandlers.playback_update))).toBe(true);
+  await page.evaluate(() => window.__spotifyHandlers.playback_update({ data: { isPaused: false, isBuffering: false, position: 0, duration: 30000 } }));
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
+
+  // Pause, resume (pending again), then cancel by reselecting A.
+  await page.locator('#soundbarPauseBtn').click();
+  await page.evaluate(() => window.__spotifyHandlers.playback_update({ data: { isPaused: true, isBuffering: false, position: 5000, duration: 30000 } }));
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Resume playback');
+  await page.locator('#soundbarPauseBtn').click();
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Cancel playback request');
+  await balconies.click();
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Resume playback');
+  expect(await page.evaluate(() => window.__spotifyCalls.filter(c => c[0] === 'destroy').length)).toBe(1);
+
+  // Select B; its controller callback stalls. The watchdog fires.
+  await everythingPasses.click();
+  await expect(page.locator('#soundbarTitle')).toHaveText(/Everything Passes/);
+  await page.clock.runFor(16000);
+  await expect(page.locator('#audioAvailabilityMessage')).toBeVisible();
+
+  // The failure link and state must name B, the stalled request - not A.
+  await expect(page.locator('#audioAvailabilityMessage a')).toHaveAttribute(
+    'href',
+    'https://open.spotify.com/track/3YV79qjiJLOgYjjEzTsVEy',
+  );
+});

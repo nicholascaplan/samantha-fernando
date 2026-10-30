@@ -2225,6 +2225,10 @@
                 spotifyController.destroy?.();
                 spotifyController = null;
             }
+            // The destroyed controller's track is no longer active: a later
+            // request's failure must not resolve to it instead of the
+            // current request.
+            activeSpotifyTrack = null;
             // The next request starts a fresh controller from the beginning:
             // the bar must not offer to resume a position that no longer exists.
             spotifyElapsedMs = 0;
@@ -2247,6 +2251,10 @@
                 spotifyController.destroy?.();
                 spotifyController = null;
             }
+            // The destroyed controller's track is no longer active: if this
+            // failure belongs to a newer request, the notice and card state
+            // must name that request, not the stale track.
+            activeSpotifyTrack = null;
             // The destroyed controller's position no longer exists.
             spotifyElapsedMs = 0;
             setSpotifyPlaybackState(false, activeSpotifyTrack || currentTrackId);
