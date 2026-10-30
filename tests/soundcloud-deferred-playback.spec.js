@@ -149,6 +149,9 @@ test('shows loading feedback with the piece name as soon as playback is requeste
   ]);
   await fireWidgetEvent(page, 'PLAY');
   await expect(page.locator('#soundbarLoading')).toBeHidden();
+  // The yielded rows come back once the wait is over.
+  await expect(page.locator('#soundbarProgress')).toBeVisible();
+  await expect(page.locator('#soundbarTimes')).toBeVisible();
   await expect(page.locator('#soundbarTitle')).toBeVisible();
 });
 
@@ -165,17 +168,22 @@ test('a promptly started playback still clears the loading feedback', async ({ p
   await lookUpCard(page).click();
   await expect(page.locator('#soundbar')).toBeVisible();
   // Pin the soundbar animation timeline at 250ms, inside the 0.3s reveal
-  // grace: the loading message must still be unrevealed. Stepping to 450ms
-  // must reveal it, proving the assertions observe the intended timeline.
+  // grace: the loading message must still be unrevealed and the rows already
+  // yielded in the request's first frame. Stepping to 450ms must reveal the
+  // message, proving the assertions observe the intended timeline.
   const checkpoint = async (time) => page.evaluate((t) => {
     for (const a of document.getElementById('soundbar').getAnimations({ subtree: true })) {
       a.pause();
       a.currentTime = t;
     }
-    return getComputedStyle(document.getElementById('soundbarLoading')).visibility;
+    return {
+      loading: getComputedStyle(document.getElementById('soundbarLoading')).visibility,
+      progress: getComputedStyle(document.getElementById('soundbarProgress')).visibility,
+      times: getComputedStyle(document.getElementById('soundbarTimes')).visibility,
+    };
   }, time);
-  expect(await checkpoint(250)).toBe('hidden');
-  expect(await checkpoint(450)).toBe('visible');
+  expect(await checkpoint(250)).toEqual({ loading: 'hidden', progress: 'hidden', times: 'hidden' });
+  expect(await checkpoint(450)).toEqual({ loading: 'visible', progress: 'hidden', times: 'hidden' });
   await pauseStyle.evaluate((node) => node.remove());
   await page.evaluate(() => {
     for (const a of document.getElementById('soundbar').getAnimations({ subtree: true })) a.play();
@@ -184,6 +192,9 @@ test('a promptly started playback still clears the loading feedback', async ({ p
   await fireWidgetEvent(page, 'READY');
   await fireWidgetEvent(page, 'PLAY');
   await expect(page.locator('#soundbarLoading')).toBeHidden();
+  // A prompt start brings the rows straight back.
+  await expect(page.locator('#soundbarProgress')).toBeVisible();
+  await expect(page.locator('#soundbarTimes')).toBeVisible();
 
   await page.clock.runFor(2000);
   await expect(page.locator('#soundbarLoading')).toBeHidden();

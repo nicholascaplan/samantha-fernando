@@ -177,7 +177,24 @@ test('shows loading feedback with the piece name as soon as playback is requeste
   await installPausedClock(page);
   await page.goto('/listen/');
 
+  // Capture the request's first frame from inside the click event itself: a
+  // page.evaluate after click() returns can land past the 0.3s reveal and
+  // pass or fail on timing rather than on what the visitor actually saw.
+  await page.evaluate(() => {
+    document.addEventListener('click', () => {
+      window.__pendingFirstFrame = {
+        progress: getComputedStyle(document.getElementById('soundbarProgress')).visibility,
+        times: getComputedStyle(document.getElementById('soundbarTimes')).visibility,
+        loading: getComputedStyle(document.getElementById('soundbarLoading')).visibility,
+      };
+    }, { once: true });
+  });
   await balconiesCard(page).click();
+  // The same frame as the request: the rows have already yielded - nothing
+  // shows and then disappears - and the loading message has not revealed yet.
+  const firstFrame = await page.evaluate(() => window.__pendingFirstFrame);
+  expect(firstFrame).toEqual({ progress: 'hidden', times: 'hidden', loading: 'hidden' });
+
   await expect(page.locator('#soundbar')).toBeVisible();
   // One-step reveal: the loading feedback is part of the pending
   // presentation, and the piece name stays visible underneath it.
@@ -190,6 +207,9 @@ test('shows loading feedback with the piece name as soon as playback is requeste
 
   await fireSpotifyUpdate(page, { isPaused: false, isBuffering: false, position: 0, duration: 30000 });
   await expect(page.locator('#soundbarLoading')).toBeHidden();
+  // The yielded rows come back once the wait is over.
+  await expect(page.locator('#soundbarProgress')).toBeVisible();
+  await expect(page.locator('#soundbarTimes')).toBeVisible();
   await expect(page.locator('#soundbarTitle')).toBeVisible();
   await expect(page.locator('#audioAvailabilityMessage')).toBeHidden();
 });
