@@ -992,18 +992,28 @@ test('a SoundCloud pause report arriving after a Spotify selection cannot move t
   // bar must stay at zero.
   await page.evaluate(() => window.__soundCloudDeferredPosition(9000));
   await expect(page.locator('#soundbarElapsedTime')).toHaveText('0:00');
+});
+
 test('never flashes the progress rows while a Spotify request is pending', async ({ page }) => {
   await mockSpotify(page);
   await page.goto('/listen/');
 
+  // Capture the request's first frame from inside the click event itself: a
+  // page.evaluate after click() returns can land past the 0.3s reveal and
+  // pass or fail on timing rather than on what the visitor actually saw.
+  await page.evaluate(() => {
+    document.addEventListener('click', () => {
+      window.__pendingFirstFrame = {
+        progress: getComputedStyle(document.getElementById('soundbarProgress')).visibility,
+        times: getComputedStyle(document.getElementById('soundbarTimes')).visibility,
+        loading: getComputedStyle(document.getElementById('soundbarLoading')).visibility,
+      };
+    }, { once: true });
+  });
   await balconiesCard(page).click();
   // The same frame as the request: the rows have already yielded - nothing
   // shows and then disappears - and the loading message has not revealed yet.
-  const duringPending = await page.evaluate(() => ({
-    progress: getComputedStyle(document.getElementById('soundbarProgress')).visibility,
-    times: getComputedStyle(document.getElementById('soundbarTimes')).visibility,
-    loading: getComputedStyle(document.getElementById('soundbarLoading')).visibility,
-  }));
+  const duringPending = await page.evaluate(() => window.__pendingFirstFrame);
   expect(duringPending).toEqual({ progress: 'hidden', times: 'hidden', loading: 'hidden' });
 
   // After the 0.3s grace window the message takes over the (already empty)
