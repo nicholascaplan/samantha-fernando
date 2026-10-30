@@ -763,6 +763,43 @@ test('reselecting the paused recording resumes where it paused', async ({ page }
   await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
 });
 
+test('reselecting a SoundCloud default after stop starts it from the beginning', async ({ page }) => {
+  await mockSoundCloud(page);
+  // Serve the catalogue with a SoundCloud recording as the configured
+  // default: after Stop the bar returns to that recording, so it stays the
+  // current track for the next selection.
+  await page.route('**/listen/', async route => {
+    const response = await route.fetch();
+    const body = (await response.text()).replace(
+      '"defaultRecording":"spotify-3YV79qjiJLOgYjjEzTsVEy"',
+      '"defaultRecording":"soundcloud-look-up"',
+    );
+    await route.fulfill({ response, body });
+  });
+  await page.goto('/listen/');
+
+  await lookUpCard(page).click();
+  await expect.poll(() => page.evaluate(() => Boolean(window.__soundCloudPlayers?.soundcloudPlayerLookUp))).toBe(true);
+  await fireWidgetEvent(page, 'READY');
+  await fireWidgetEvent(page, 'PLAY');
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
+
+  const callsFromPlay = await page.evaluate(() => window.__soundCloudCalls.length);
+  await page.locator('#soundbarStopBtn').click();
+  await lookUpCard(page).click();
+
+  const calls = await page.evaluate(from => window.__soundCloudCalls
+    .slice(from)
+    .filter(([name, element]) => element === 'soundcloudPlayerLookUp' && (name === 'pause' || name === 'seekTo' || name === 'play')), callsFromPlay);
+  // Stop discards the position: the widget is rewound before the reselection
+  // plays it, so nothing can resume where the stopped playback paused.
+  expect(calls).toEqual([
+    ['pause', 'soundcloudPlayerLookUp'],
+    ['seekTo', 'soundcloudPlayerLookUp', 0],
+    ['play', 'soundcloudPlayerLookUp'],
+  ]);
+});
+
 test('reselecting after stop starts the recording from the beginning', async ({ page }) => {
   await mockSoundCloud(page);
   await page.goto('/listen/');

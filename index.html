@@ -2547,6 +2547,7 @@
         function clearStoppedPlayback() {
             playbackRequestToken += 1;
             stopSoundbarProgressTimer();
+            const stoppedTrackId = currentTrackId;
             pendingSpotifyTrack = null;
             pendingSoundCloudPlaybackId = null;
             pendingSoundCloudPlaybackStartsAtZero = false;
@@ -2561,6 +2562,12 @@
                 spotifyController = null;
             }
             pauseSoundCloudPlayers();
+            // Stop discards the stopped recording's position: rewind its
+            // SoundCloud widget so a later selection cannot resume where it
+            // paused. This matters when the stopped recording is the
+            // configured default, which stays current after the clear and is
+            // otherwise replayed from its paused position.
+            if (stoppedTrackId && readySoundCloudPlayers.has(stoppedTrackId)) soundcloudPlayers[stoppedTrackId]?.seekTo(0);
             activeSpotifyTrack = null;
             isSpotifyPlaying = false;
             isAudioPlaying = false;
