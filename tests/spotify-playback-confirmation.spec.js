@@ -614,3 +614,23 @@ test('stopping playback ends the Spotify controller and its events', async ({ pa
   );
   await expect(page.locator('#soundbar')).toBeHidden();
 });
+
+test('a failed resume after the watchdog resets the bar position to zero', async ({ page }) => {
+  await mockSpotify(page);
+  await installPausedClock(page);
+  await page.goto('/listen/');
+
+  await balconiesCard(page).click();
+  await fireSpotifyUpdate(page, { isPaused: false, isBuffering: false, position: 5234, duration: 30000 });
+  await fireSpotifyUpdate(page, { isPaused: true, isBuffering: false, position: 5234, duration: 30000 });
+  await expect(page.locator('#soundbarProgress')).toHaveAttribute('aria-valuenow', '5234');
+
+  // Resume, then let the watchdog fire before the player confirms: the
+  // destroyed controller's position must not linger on the bar.
+  await balconiesCard(page).click();
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Cancel playback request');
+  await page.clock.runFor(16000);
+  await expect(page.locator('#audioAvailabilityMessage')).toBeVisible();
+  await expect(page.locator('#soundbarProgress')).toHaveAttribute('aria-valuenow', '0');
+  await expect(page.locator('#soundbarElapsedTime')).toHaveText('0:00');
+});

@@ -2186,6 +2186,8 @@
                 spotifyController.destroy?.();
                 spotifyController = null;
             }
+            // The destroyed controller's position no longer exists.
+            spotifyElapsedMs = 0;
             setSpotifyPlaybackState(false, activeSpotifyTrack || currentTrackId);
             const recording = mediaCatalog.find(media => media.type === 'listen' && media.provider === 'spotify' && media.id === (activeSpotifyTrack || currentTrackId));
             const notice = document.getElementById('audioAvailabilityMessage');
