@@ -101,7 +101,7 @@ test('shows loading feedback with the piece name as soon as playback is requeste
   await expect(page.locator('#soundbarProgress')).toBeHidden();
   await expect(page.locator('#soundbarTimes')).toBeHidden();
   await expect(page.locator('#soundbarTitle')).toBeVisible();
-  await expect(page.locator('#soundbarTitle')).toHaveText(/Look Up/);
+  await expect(page.locator('#soundbarTitle')).toHaveText('Look Up');
 
   await fireWidgetEvent(page, 'READY');
   await expect.poll(() => page.evaluate(() => window.__soundCloudCalls)).toContainEqual([
@@ -347,7 +347,7 @@ test('a request waiting on the controller callback stays pending and cancellable
   // Still pending: loading feedback and the piece name stay visible, and
   // the button still offers to cancel the request.
   await expect(page.locator('#soundbarLoading')).toBeVisible();
-  await expect(page.locator('#soundbarTitle')).toHaveText(/Balconies/);
+  await expect(page.locator('#soundbarTitle')).toHaveText('Balconies');
   await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Cancel playback request');
   // Cancelling ends the request instead of requesting the track again.
   await page.locator('#soundbarPauseBtn').click();
@@ -675,7 +675,7 @@ test('switching to SoundCloud ends a playing Spotify controller and its events',
   // torn down, not merely paused.
   await lookUpCard(page).click();
   await expect.poll(() => page.evaluate(() => window.__spotifyCalls)).toContainEqual(['destroy']);
-  await expect(page.locator('#soundbarTitle')).toHaveText(/Look Up/);
+  await expect(page.locator('#soundbarTitle')).toHaveText('Look Up');
 
   // A start the Spotify embed had already queued cannot touch the SoundCloud bar.
   const callsAtSwitch = await page.evaluate(() => window.__spotifyCalls.length);
@@ -684,7 +684,7 @@ test('switching to SoundCloud ends a playing Spotify controller and its events',
       data: { playingURI: 'spotify:track:2wNL47uCuwDpbOqCIpbSTS', isPaused: false, isBuffering: false, position: 2000, duration: 30000 },
     }),
   );
-  await expect(page.locator('#soundbarTitle')).toHaveText(/Look Up/);
+  await expect(page.locator('#soundbarTitle')).toHaveText('Look Up');
   expect(await page.evaluate(() => window.__spotifyCalls.length)).toBe(callsAtSwitch);
 });
 
@@ -752,7 +752,7 @@ test('a request still pending after the grace window shows the loading message w
   // the progress rows displaced.
   await fireWidgetEvent(page, 'READY');
   await expect(page.locator('#soundbarLoading')).toBeVisible();
-  await expect(page.locator('#soundbarTitle')).toHaveText(/Look Up/);
+  await expect(page.locator('#soundbarTitle')).toHaveText('Look Up');
   await expect(page.locator('#soundbarProgress')).toBeHidden();
   // A later confirmation clears the message and restores the rows.
   await fireWidgetEvent(page, 'PLAY');
