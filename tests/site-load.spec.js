@@ -767,9 +767,14 @@ test('SoundCloud queued playback responds to pause and finish events', async ({ 
   await page.locator('#worksContainer [data-track="look-up"]').click();
   await expect.poll(() => page.evaluate(() => Boolean(window.__soundCloudPlayers?.soundcloudPlayerLookUp))).toBe(true);
   await page.evaluate(() => window.__soundCloudPlayers.soundcloudPlayerLookUp.handlers.READY());
+  // Wait for the player's own play() acknowledgement before trusting the
+  // bar: the request path presents the playing label optimistically, so the
+  // label alone cannot prove the queued playback actually started.
+  await expect.poll(() => page.evaluate(() => window.__soundCloudCalls)).toContainEqual(['play', 'soundcloudPlayerLookUp']);
   await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
 
   await page.locator('#soundbarPauseBtn').click();
+  await expect.poll(() => page.evaluate(() => window.__soundCloudCalls)).toContainEqual(['pause', 'soundcloudPlayerLookUp']);
   await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Resume playback');
 
   await page.evaluate(() => window.__soundCloudPlayers.soundcloudPlayerLookUp.handlers.FINISH());
