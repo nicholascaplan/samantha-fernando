@@ -157,6 +157,12 @@ test('treats a real pause at the end as finished and replays from the start', as
 
   // Reselecting the finished track starts it over instead of resuming the end.
   await balconiesCard(page).click();
+  // The fresh request has no player report yet: the bar must reset to the
+  // indeterminate pending state, not carry the finished position or total.
+  await expect(page.locator('#soundbarProgress')).not.toHaveAttribute('aria-valuenow', /.*/);
+  await expect(page.locator('#soundbarProgress')).not.toHaveAttribute('aria-valuemax', /.*/);
+  await expect(page.locator('#soundbarElapsedTime')).toHaveText('0:00');
+  await expect(page.locator('#soundbarDurationTime')).toBeHidden();
   const calls = await page.evaluate(() => window.__spotifyCalls);
   expect(calls.filter(call => call[0] === 'loadUri')).toHaveLength(2);
   expect(calls.filter(call => call[0] === 'seek')).toEqual([
