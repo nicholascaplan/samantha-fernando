@@ -102,6 +102,11 @@ test('a promptly started playback still clears the loading feedback', async ({ p
   await installPausedClock(page);
   await page.goto('/listen/');
 
+  // Pause the soundbar animations before the click so the reveal cannot
+  // finish in real time before the checkpoint seeks its timeline.
+  const pauseStyle = await page.addStyleTag({
+    content: '#soundbar, #soundbar * { animation-play-state: paused !important; }',
+  });
   await lookUpCard(page).click();
   await expect(page.locator('#soundbar')).toBeVisible();
   // Pin the soundbar animation timeline at 250ms, inside the 0.3s reveal
@@ -116,6 +121,7 @@ test('a promptly started playback still clears the loading feedback', async ({ p
   }, time);
   expect(await checkpoint(250)).toBe('hidden');
   expect(await checkpoint(450)).toBe('visible');
+  await pauseStyle.evaluate((node) => node.remove());
   await page.evaluate(() => {
     for (const a of document.getElementById('soundbar').getAnimations({ subtree: true })) a.play();
   });
