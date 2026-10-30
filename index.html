@@ -696,8 +696,8 @@
             .bio-mobile-portrait {
                 display: block;
                 float: right;
-                width: 6.5rem;
-                height: 6.5rem;
+                width: min(40vw, 10rem);
+                height: min(40vw, 10rem);
                 margin: 0 0 0.5rem 1rem;
                 overflow: hidden;
                 border: 1px solid rgba(24, 33, 31, 0.24);
@@ -1114,6 +1114,7 @@
                     <div>
                         <span class="text-xs font-mono text-amber-500 tracking-widest uppercase">Biography</span>
                         <h2 class="text-3xl sm:text-5xl font-serif font-light text-neutral-100 mt-2 leading-tight">Samantha Fernando</h2>
+                        <p class="mt-1 font-serif italic text-neutral-400">b. 1984</p>
                     </div>
                     <div class="bio-mobile-portrait" aria-hidden="true">
                         <img src="assets/sam-1-1200.webp" alt="" width="1200" height="800" loading="lazy">
