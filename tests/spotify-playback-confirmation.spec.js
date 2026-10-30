@@ -2,8 +2,8 @@ const { test, expect } = require('@playwright/test');
 
 // A controllable Spotify IFrame API: playback_update events are fired
 // explicitly by each test so playback state stays deterministic.
-async function mockSpotify(page) {
-  await page.addInitScript(() => {
+async function mockSpotify(page, { deferControllerCallback = false, deferApiReady = false } = {}) {
+  await page.addInitScript(defer => {
     window.__spotifyCalls = [];
     window.__spotifyHandlers = {};
     window.__spotifyIFrameApi = {
@@ -18,15 +18,21 @@ async function mockSpotify(page) {
             window.__spotifyHandlers[event] = handler;
           },
         };
-        callback(controller);
+        if (defer) {
+          window.__spotifyDeferredController = { callback, controller };
+        } else {
+          callback(controller);
+        }
       },
     };
     localStorage.setItem('analyticsConsent', 'rejected');
-  });
+  }, deferControllerCallback);
   await page.route('https://open.spotify.com/embed/iframe-api/v1', route =>
     route.fulfill({
       contentType: 'application/javascript',
-      body: 'window.onSpotifyIframeApiReady(window.__spotifyIFrameApi);',
+      body: deferApiReady
+        ? 'window.__spotifyDeferredApiReady = () => window.onSpotifyIframeApiReady(window.__spotifyIFrameApi);'
+        : 'window.onSpotifyIframeApiReady(window.__spotifyIFrameApi);',
     }),
   );
   await page.route('https://w.soundcloud.com/**', route => route.abort());
@@ -149,6 +155,33 @@ test('shows loading feedback with the piece name as soon as playback is requeste
   await expect(page.locator('#soundbarLoading')).toBeHidden();
   await expect(page.locator('#soundbarLabel')).toBeVisible();
   await expect(page.locator('#audioAvailabilityMessage')).toBeHidden();
+});
+
+test('keeps the revealed loading message steady while the player finishes setting up', async ({ page }) => {
+  await mockSpotify(page, { deferControllerCallback: true, deferApiReady: true });
+  await page.goto('/listen/');
+
+  await balconiesCard(page).click();
+  // The reveal runs on the real compositor clock: once the 0.3s grace has
+  // passed, the message is visible.
+  await expect(page.locator('#soundbarLoading')).toBeVisible();
+
+  // The API becoming ready must not hide the revealed message and restart its
+  // delay. Read the computed style in the same JavaScript turn as the ready
+  // dispatch so a restarted (still delayed) animation cannot slip past.
+  let visibility = await page.evaluate(() => {
+    window.__spotifyDeferredApiReady();
+    return getComputedStyle(document.getElementById('soundbarLoading')).visibility;
+  });
+  expect(visibility).toBe('visible');
+
+  // The asynchronous controller callback must not restart it either.
+  visibility = await page.evaluate(() => {
+    const deferred = window.__spotifyDeferredController;
+    deferred.callback(deferred.controller);
+    return getComputedStyle(document.getElementById('soundbarLoading')).visibility;
+  });
+  expect(visibility).toBe('visible');
 });
 
 test('surfaces the unavailable message when playback never starts', async ({ page }) => {

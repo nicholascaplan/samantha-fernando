@@ -2136,10 +2136,11 @@
 
         function armSpotifyLoading(trackId) {
             // A re-entered request (the API was still loading) keeps the
-            // pending clock it already had rather than starting over; the
-            // loading feedback the entry point just cleared is shown again.
+            // pending clock it already had rather than starting over. It also
+            // keeps a running reveal: restarting the animation hides a visible
+            // message for another delay, so only an unowned message is reshown.
             if (armedSpotifyTrackId === trackId) {
-                if (spotifyPlaybackPending) showSoundbarLoading('spotify');
+                if (spotifyPlaybackPending && soundbarLoadingOwner !== 'spotify') showSoundbarLoading('spotify');
                 return;
             }
             clearSpotifyLoading();
@@ -2279,8 +2280,10 @@
             pendingSoundCloudPlaybackStartsAtZero = false;
             clearSoundCloudLoading();
             // A new Spotify request must not inherit a previous request's
-            // visible loading message: it restarts its own delay.
-            hideSoundbarLoading('spotify');
+            // visible loading message: it restarts its own delay. The
+            // API-ready dispatch of the already-armed request keeps the
+            // running reveal instead of hiding and restarting it.
+            if (!(apiDispatch && armedSpotifyTrackId === trackId)) hideSoundbarLoading('spotify');
             pauseSoundCloudPlayers();
             if (!spotifyReady) {
                 if (armedSpotifyTrackId === trackId) {
