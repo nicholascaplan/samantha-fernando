@@ -873,6 +873,27 @@ test('failure notice after a cancelled request names the new track, not the canc
   );
 });
 
+test('a visitor pause keeps the position the player reports with its paused update', async ({ page }) => {
+  await mockSpotify(page);
+  await installPausedClock(page);
+  await page.goto('/listen/');
+
+  await balconiesCard(page).click();
+  await fireSpotifyUpdate(page, { isPaused: false, isBuffering: false, position: 1000, duration: 30000 });
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
+  await expect(page.locator('#soundbarProgress')).toHaveAttribute('aria-valuenow', '1000');
+
+  // The visitor pauses: the bar switches to paused immediately. The
+  // player's own paused update arrives after that and carries the true
+  // stop position; the bar must keep it rather than the last sample.
+  await page.locator('#soundbarPauseBtn').click();
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Resume playback');
+  await fireSpotifyUpdate(page, { isPaused: true, isBuffering: false, position: 5000, duration: 30000 });
+  await expect(page.locator('#soundbarProgress')).toHaveAttribute('aria-valuenow', '5000');
+  await expect(page.locator('#soundbarElapsedTime')).toHaveText('0:05');
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Resume playback');
+});
+
 test('glides the progress fill between the player\'s one-per-second reports', async ({ page }) => {
   await mockSpotify(page);
   await installPausedClock(page);

@@ -2379,7 +2379,13 @@
                 setSpotifyPlaybackState(true, activeSpotifyTrack || currentTrackId);
                 return;
             }
-            if (data.isPaused === true && isSpotifyPlaying && !spotifyPlaybackPending) {
+            // A visitor-initiated pause clears isSpotifyPlaying before the
+            // player's own paused update arrives, so accept that update
+            // whenever a live controller backs the current track: it carries
+            // the true stop position the bar must keep. Events after a
+            // provider switch or stop are already filtered above and by the
+            // controller-identity guard on the listener.
+            if (data.isPaused === true && !spotifyPlaybackPending && (isSpotifyPlaying || spotifyController)) {
                 if (typeof data.position === 'number') spotifyElapsedMs = data.position;
                 if (typeof data.duration === 'number' && data.duration > 0) trackDurationMs = data.duration;
                 if (trackDurationMs && spotifyElapsedMs >= trackDurationMs - 250) {
