@@ -13,6 +13,7 @@ async function mockSpotify(page) {
           seek: position => window.__spotifyCalls.push(['seek', position]),
           play: () => window.__spotifyCalls.push(['play']),
           pause: () => window.__spotifyCalls.push(['pause']),
+          destroy: () => window.__spotifyCalls.push(['destroy']),
           addListener: (event, handler) => {
             window.__spotifyHandlers[event] = handler;
           },
@@ -271,35 +272,6 @@ test('reselecting a track waiting on the controller callback cancels the request
   await expect(page.locator('#audioAvailabilityMessage')).toBeHidden();
 });
 
-test('a stale same-track report from a cancelled request cannot confirm the re-armed one', async ({ page }) => {
-  await mockSpotify(page);
-  await installPausedClock(page);
-  await page.goto('/listen/');
-
-  await balconiesCard(page).click();
-  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Cancel playback request');
-  // Cancel, then reselect the same track: the new request is pending again.
-  await page.locator('#soundbarPauseBtn').click();
-  await balconiesCard(page).click();
-  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Cancel playback request');
-
-  // A late playing report from the cancelled generation carries the same URI:
-  // it must not confirm the new request, move the bar, or stop the watchdog.
-  await fireSpotifyUpdate(page, { playingURI: 'spotify:track:2wNL47uCuwDpbOqCIpbSTS', isPaused: false, isBuffering: false, position: 5000, duration: 413000 });
-  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Cancel playback request');
-  await expect(page.locator('#soundbarElapsedTime')).toHaveText('0:00');
-  await page.clock.runFor(600);
-  await expect(page.locator('#soundbarLoading')).toBeVisible();
-
-  // The controller's paused acknowledgement drains the guard; the next real
-  // playing report confirms the new request normally.
-  await fireSpotifyUpdate(page, { playingURI: 'spotify:track:2wNL47uCuwDpbOqCIpbSTS', isPaused: true, position: 0, duration: 413000 });
-  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Cancel playback request');
-  await fireSpotifyUpdate(page, { playingURI: 'spotify:track:2wNL47uCuwDpbOqCIpbSTS', isPaused: false, isBuffering: false, position: 1000, duration: 413000 });
-  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
-  await expect(page.locator('#soundbarElapsedTime')).toHaveText('0:01');
-});
-
 test('cancelling pending playback from the soundbar clears the loading state', async ({ page }) => {
   await mockSpotify(page);
   await installPausedClock(page);
@@ -320,11 +292,13 @@ test('cancelling pending playback from the soundbar clears the loading state', a
   await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Resume playback');
   await expect(page.locator('#soundbarProgress')).toHaveAttribute('aria-valuenow', '0');
   await expect(page.locator('#audioAvailabilityMessage')).toBeHidden();
+  // Cancellation destroys the controller outright: no pause, and the log
+  // shows the teardown instead.
   expect(await page.evaluate(() => window.__spotifyCalls)).toEqual([
     ['loadUri', 'spotify:track:2wNL47uCuwDpbOqCIpbSTS'],
     ['seek', 0],
     ['play'],
-    ['pause'],
+    ['destroy'],
   ]);
 });
 
@@ -437,4 +411,131 @@ test('ignores playback events that report a different track', async ({ page }) =
   await fireSpotifyUpdate(page, { playingURI: 'spotify:track:2wNL47uCuwDpbOqCIpbSTS', isPaused: false, isBuffering: false, position: 1000, duration: 413000 });
   await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
   await expect(page.locator('#soundbarElapsedTime')).toHaveText('0:01');
+});
+
+test('a cancelled request destroys its controller and its late events cannot confirm the re-armed one', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__spotifyControllers = [];
+    window.__spotifyIFrameApi = {
+      createController: (_container, _options, callback) => {
+        const controller = {
+          calls: [],
+          destroyed: false,
+          loadUri: uri => controller.calls.push(['loadUri', uri]),
+          seek: position => controller.calls.push(['seek', position]),
+          play: () => controller.calls.push(['play']),
+          pause: () => controller.calls.push(['pause']),
+          destroy: () => { controller.destroyed = true; },
+          addListener: (event, handler) => { controller.handler = handler; },
+        };
+        window.__spotifyControllers.push(controller);
+        callback(controller);
+      },
+    };
+    localStorage.setItem('analyticsConsent', 'rejected');
+  });
+  await page.route('https://open.spotify.com/embed/iframe-api/v1', route =>
+    route.fulfill({
+      contentType: 'application/javascript',
+      body: 'window.onSpotifyIframeApiReady(window.__spotifyIFrameApi);',
+    }),
+  );
+  await page.route('https://w.soundcloud.com/**', route => route.abort());
+  await installPausedClock(page);
+  await page.goto('/listen/');
+
+  const card = page.locator('#worksContainer [data-spotify-track="2wNL47uCuwDpbOqCIpbSTS"]');
+  await card.click();
+  await expect.poll(() => page.evaluate(() => window.__spotifyControllers.length)).toBe(1);
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Cancel playback request');
+
+  // Cancel, then reselect the same track: the cancelled controller is
+  // destroyed and the new request gets a fresh controller.
+  await page.locator('#soundbarPauseBtn').click();
+  await card.click();
+  await expect.poll(() => page.evaluate(() => window.__spotifyControllers.length)).toBe(2);
+  const tornDown = await page.evaluate(() => window.__spotifyControllers[0].destroyed);
+  expect(tornDown).toBe(true);
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Cancel playback request');
+
+  // Even if an already-queued event from the cancelled controller still
+  // runs, it cannot touch the new request's state.
+  await page.evaluate(() => window.__spotifyControllers[0].handler?.({
+    data: { playingURI: 'spotify:track:2wNL47uCuwDpbOqCIpbSTS', isPaused: false, isBuffering: false, position: 5000, duration: 413000 },
+  }));
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Cancel playback request');
+  await expect(page.locator('#soundbarElapsedTime')).toHaveText('0:00');
+
+  // The new controller's own report confirms the request normally.
+  await page.evaluate(() => window.__spotifyControllers[1].handler?.({
+    data: { playingURI: 'spotify:track:2wNL47uCuwDpbOqCIpbSTS', isPaused: false, isBuffering: false, position: 1000, duration: 413000 },
+  }));
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
+});
+
+test('a stale controller callback cannot replace the live controller', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__spotifyPending = [];
+    window.__spotifyIFrameApi = {
+      createController: (_container, _options, callback) => {
+        const controller = {
+          calls: [],
+          destroyed: false,
+          loadUri: uri => controller.calls.push(['loadUri', uri]),
+          seek: position => controller.calls.push(['seek', position]),
+          play: () => controller.calls.push(['play']),
+          pause: () => controller.calls.push(['pause']),
+          destroy: () => { controller.destroyed = true; },
+          addListener: (event, handler) => { controller.handler = handler; },
+        };
+        window.__spotifyPending.push({ controller, callback });
+      },
+    };
+    localStorage.setItem('analyticsConsent', 'rejected');
+  });
+  await page.route('https://open.spotify.com/embed/iframe-api/v1', route =>
+    route.fulfill({
+      contentType: 'application/javascript',
+      body: 'window.onSpotifyIframeApiReady(window.__spotifyIFrameApi);',
+    }),
+  );
+  await page.route('https://w.soundcloud.com/**', route => route.abort());
+  await installPausedClock(page);
+  await page.goto('/listen/');
+
+  const card = page.locator('#worksContainer [data-spotify-track="2wNL47uCuwDpbOqCIpbSTS"]');
+  await card.click();
+  await expect.poll(() => page.evaluate(() => window.__spotifyPending.length)).toBe(1);
+  // Cancel, then reselect: a second controller creation starts while the
+  // first callback is still held.
+  await page.locator('#soundbarPauseBtn').click();
+  await card.click();
+  await expect.poll(() => page.evaluate(() => window.__spotifyPending.length)).toBe(2);
+
+  // The live callback lands first, the stale one late.
+  await page.evaluate(() => {
+    const live = window.__spotifyPending[1];
+    live.callback(live.controller);
+  });
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Cancel playback request');
+  await page.evaluate(() => {
+    const stale = window.__spotifyPending[0];
+    stale.callback(stale.controller);
+  });
+
+  // The stale controller is destroyed, never stored, never listened to.
+  const state = await page.evaluate(() => ({
+    staleDestroyed: window.__spotifyPending[0].controller.destroyed,
+    staleCalls: window.__spotifyPending[0].controller.calls,
+    staleHandler: Boolean(window.__spotifyPending[0].controller.handler),
+    liveCalls: window.__spotifyPending[1].controller.calls,
+  }));
+  expect(state.staleDestroyed).toBe(true);
+  expect(state.staleCalls).toEqual([]);
+  expect(state.staleHandler).toBe(false);
+  expect(state.liveCalls).toEqual([
+    ['loadUri', 'spotify:track:2wNL47uCuwDpbOqCIpbSTS'],
+    ['seek', 0],
+    ['play'],
+  ]);
 });
