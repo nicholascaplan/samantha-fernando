@@ -2199,7 +2199,13 @@
                 window.cancelAnimationFrame(soundbarProgressRaf);
                 soundbarProgressRaf = null;
             }
-            document.getElementById('soundbarProgressFill').classList.remove('smooth');
+            const fill = document.getElementById('soundbarProgressFill');
+            // A snap written this turn has not rendered yet: flush it while
+            // .smooth still disables the width transition, or restoring the
+            // transition animates from the last rendered glide position and
+            // the bar visibly slides back instead of snapping.
+            void fill.offsetWidth;
+            fill.classList.remove('smooth');
         }
 
         function stopSoundbarProgressTimer() {

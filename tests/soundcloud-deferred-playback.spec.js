@@ -793,11 +793,16 @@ test('a SoundCloud pause snaps the fill to the last player report before the pos
   // The pause must snap the fill back to the 5s report in the same turn,
   // even while the fresh position answer is still outstanding.
   await page.evaluate(() => { window.__deferPositions = true; });
-  const pausedWidth = await page.evaluate(() => {
+  const pausedWidths = await page.evaluate(() => {
     window.__soundCloudPlayers.soundcloudPlayerLookUp.handlers.PAUSE?.();
-    return parseFloat(document.getElementById('soundbarProgressFill').style.width);
+    const fill = document.getElementById('soundbarProgressFill');
+    // Force layout in the same turn: the snap must be what renders, not a
+    // 0.2s transition sliding back from the glide position.
+    const rendered = fill.getBoundingClientRect().width / fill.parentElement.getBoundingClientRect().width * 100;
+    return { style: parseFloat(fill.style.width), rendered };
   });
-  expect(pausedWidth).toBeCloseTo((5000 / 60000) * 100, 1);
+  expect(pausedWidths.style).toBeCloseTo((5000 / 60000) * 100, 1);
+  expect(pausedWidths.rendered).toBeCloseTo((5000 / 60000) * 100, 1);
 
   // The fresh position applies when the answer finally arrives.
   await page.evaluate(() => window.__deferredPositions.soundcloudPlayerLookUp?.(4800));
