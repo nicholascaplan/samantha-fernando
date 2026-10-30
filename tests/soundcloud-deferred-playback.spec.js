@@ -647,3 +647,39 @@ test('switching to SoundCloud ends a playing Spotify controller and its events',
   await expect(page.locator('#soundbarLabel')).toHaveText(/Look Up/);
   expect(await page.evaluate(() => window.__spotifyCalls.length)).toBe(callsAtSwitch);
 });
+
+test('returning to a SoundCloud track that another selection displaced starts it from the beginning', async ({ page }) => {
+  await mockSoundCloud(page);
+  await page.goto('/listen/');
+
+  const illuminationsCard = page.locator('#worksContainer [data-track="illuminations"]');
+  const fireFor = (playerId, event) =>
+    page.evaluate(([id, evt]) => window.__soundCloudPlayers[id].handlers[evt]?.(), [playerId, event]);
+
+  await lookUpCard(page).click();
+  await expect.poll(() => page.evaluate(() => Boolean(window.__soundCloudPlayers?.soundcloudPlayerLookUp))).toBe(true);
+  await fireFor('soundcloudPlayerLookUp', 'READY');
+  await fireFor('soundcloudPlayerLookUp', 'PLAY');
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Pause playback');
+
+  await illuminationsCard.click();
+  await expect.poll(() => page.evaluate(() => Boolean(window.__soundCloudPlayers?.soundcloudPlayerIlluminations))).toBe(true);
+  await fireFor('soundcloudPlayerIlluminations', 'READY');
+  await fireFor('soundcloudPlayerIlluminations', 'PLAY');
+  await expect(page.locator('#soundbarLabel')).toHaveText('4 Illuminations · Xasax Saxophone Quartet at Royaumont Abbey');
+
+  await lookUpCard(page).click();
+  await expect(page.locator('#soundbarLabel')).toHaveText('Look Up · 4 voices, viola da gamba and electronics');
+  const calls = await page.evaluate(() => window.__soundCloudCalls);
+  // Every selection, including the returning one, starts from the beginning.
+  expect(calls.filter(([name]) => name === 'seekTo')).toEqual([
+    ['seekTo', 'soundcloudPlayerLookUp', 0],
+    ['seekTo', 'soundcloudPlayerIlluminations', 0],
+    ['seekTo', 'soundcloudPlayerLookUp', 0],
+  ]);
+  expect(calls.filter(([name]) => name === 'play')).toEqual([
+    ['play', 'soundcloudPlayerLookUp'],
+    ['play', 'soundcloudPlayerIlluminations'],
+    ['play', 'soundcloudPlayerLookUp'],
+  ]);
+});

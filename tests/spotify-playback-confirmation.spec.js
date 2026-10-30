@@ -634,3 +634,54 @@ test('a failed resume after the watchdog resets the bar position to zero', async
   await expect(page.locator('#soundbarProgress')).toHaveAttribute('aria-valuenow', '0');
   await expect(page.locator('#soundbarElapsedTime')).toHaveText('0:00');
 });
+
+
+test('returning to a track that another selection displaced starts it from the beginning', async ({ page }) => {
+  await mockSpotify(page);
+  await page.goto('/listen/');
+
+  const everythingPassesCard = page.locator('#worksContainer [data-spotify-track="3YV79qjiJLOgYjjEzTsVEy"]');
+  await balconiesCard(page).click();
+  await fireSpotifyUpdate(page, { isPaused: false, isBuffering: false, position: 12000, duration: 30000 });
+
+  await everythingPassesCard.click();
+  await fireSpotifyUpdate(page, { isPaused: false, isBuffering: false, position: 8000, duration: 30000 });
+
+  await balconiesCard(page).click();
+  await expect(page.locator('#soundbarLabel')).toHaveText('Balconies · Olivia de Prato');
+
+  // A fresh request: reload and seek to zero, never a mid-track resume.
+  expect(await page.evaluate(() => window.__spotifyCalls)).toEqual([
+    ['loadUri', 'spotify:track:2wNL47uCuwDpbOqCIpbSTS'],
+    ['seek', 0],
+    ['play'],
+    ['loadUri', 'spotify:track:3YV79qjiJLOgYjjEzTsVEy'],
+    ['seek', 0],
+    ['play'],
+    ['loadUri', 'spotify:track:2wNL47uCuwDpbOqCIpbSTS'],
+    ['seek', 0],
+    ['play'],
+  ]);
+  await fireSpotifyUpdate(page, { isPaused: false, isBuffering: false, position: 0, duration: 30000 });
+  await expect(page.locator('#soundbarProgress')).toHaveAttribute('aria-valuenow', '0');
+});
+
+test('surfaces the unavailable message when the Spotify API fails to load', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('analyticsConsent', 'rejected');
+  });
+  await page.route('https://open.spotify.com/embed/iframe-api/v1', route => route.abort());
+  await page.route('https://w.soundcloud.com/**', route => route.abort());
+  await page.goto('/listen/');
+
+  await balconiesCard(page).click();
+  await expect(page.locator('#audioAvailabilityMessage')).toBeVisible();
+  await expect(page.locator('#audioAvailabilityMessage')).toContainText(
+    'Spotify could not start playback in the embedded player.',
+  );
+  await expect(page.locator('#audioAvailabilityMessage a')).toHaveAttribute(
+    'href',
+    'https://open.spotify.com/track/2wNL47uCuwDpbOqCIpbSTS',
+  );
+  await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Resume playback');
+});

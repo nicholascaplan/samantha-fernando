@@ -1955,10 +1955,9 @@
             document.getElementById('waveContainer').classList.add('paused');
         }
 
-        // The loading element is shared between providers: only the provider
-        // that is currently showing it may hide it, so one provider's cleanup
-        // cannot clobber the other's pending feedback. Visible iff an owner
-        // is set.
+        // The loading element is shared: only the provider that is currently
+        // showing it may hide it, so one provider's cleanup cannot clobber the
+        // other's pending feedback. It is visible iff an owner is set.
         let soundbarLoadingOwner = null;
         function showSoundbarLoading(owner) {
             soundbarLoadingOwner = owner;
@@ -2242,6 +2241,7 @@
         function playSpotifyTrack(trackId, { apiDispatch = false } = {}) {
             const requestToken = ++playbackRequestToken;
             const wasStopped = isPlaybackStopped;
+            const wasActiveSelection = activeAudioProvider === 'spotify' && currentTrackId === trackId;
             const recording = mediaCatalog.find(media => media.type === 'listen' && media.provider === 'spotify' && media.id === trackId);
             if (!recording) return;
             // A new request supersedes any failure notice from a previous one.
@@ -2281,12 +2281,15 @@
                     cancelSpotifyPending();
                     return;
                 }
-                if (activeSpotifyTrack === trackId && isSpotifyPlaying) {
+                if (wasActiveSelection && activeSpotifyTrack === trackId && isSpotifyPlaying) {
                     spotifyController.pause();
                     setSpotifyPlaybackState(false, trackId);
                     return;
                 }
-                if (activeSpotifyTrack === trackId && !wasStopped) {
+                // Pause/resume applies only while the track is still the
+                // active selection; returning to a track that another
+                // selection displaced starts it from the beginning.
+                if (wasActiveSelection && activeSpotifyTrack === trackId && !wasStopped) {
                     spotifyController.play();
                     armSpotifyLoading(trackId);
                     return;
