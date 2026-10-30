@@ -1039,7 +1039,7 @@
         <div id="soundbarTrackInfo">
             <span id="soundbarTitle" class="font-semibold">Everything Passes, Everything is Connected</span>
             <span id="soundbarPerformer">The Crossing</span>
-            <div id="soundbarProgress" role="progressbar" aria-label="Track progress" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0">
+            <div id="soundbarProgress" role="progressbar" aria-label="Track progress" aria-valuemin="0">
                 <div id="soundbarProgressFill"></div>
             </div>
             <div id="soundbarTimes" class="text-[10px]">
@@ -2147,8 +2147,17 @@
             const durationTime = document.getElementById('soundbarDurationTime');
             durationTime.textContent = safeDuration ? formatPlaybackTime(safeDuration) : '';
             durationTime.classList.toggle('hidden', !safeDuration);
-            progressBar.setAttribute('aria-valuemax', String(safeDuration));
-            progressBar.setAttribute('aria-valuenow', String(Math.min(safePosition, safeDuration)));
+            // A known total makes the bar determinate; without one the ARIA
+            // range attributes come off entirely (aria-valuemax must be
+            // greater than aria-valuemin, and aria-valuenow applies only
+            // when the value is known).
+            if (safeDuration) {
+                progressBar.setAttribute('aria-valuemax', String(safeDuration));
+                progressBar.setAttribute('aria-valuenow', String(Math.min(safePosition, safeDuration)));
+            } else {
+                progressBar.removeAttribute('aria-valuemax');
+                progressBar.removeAttribute('aria-valuenow');
+            }
             progressBar.setAttribute('aria-valuetext', safeDuration
                 ? `${formatPlaybackTime(safePosition)} of ${formatPlaybackTime(safeDuration)}`
                 : formatPlaybackTime(safePosition));

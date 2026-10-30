@@ -667,8 +667,10 @@ test('soundbar progress display is present and non-interactive', async ({ page }
 
   const progress = page.locator('#soundbarProgress');
   await expect(progress).toHaveAttribute('role', 'progressbar');
-  await expect(progress).toHaveAttribute('aria-valuenow', '0');
-  await expect(progress).toHaveAttribute('aria-valuemax', '0');
+  // No track is loaded: the bar is indeterminate, so it carries no
+  // determinate range attributes (aria-valuemax/aria-valuenow).
+  await expect(progress).not.toHaveAttribute('aria-valuenow', /.+/);
+  await expect(progress).not.toHaveAttribute('aria-valuemax', /.+/);
   await expect(page.locator('#soundbarProgress button, #soundbarProgress input')).toHaveCount(0);
   await expect(page.locator('#soundbarElapsedTime')).toHaveText('0:00');
   await expect(page.locator('#soundbarDurationTime')).toBeHidden();
@@ -736,9 +738,10 @@ test('Spotify loads the selected first track from the beginning', async ({ page 
     'spotify:track:2wNL47uCuwDpbOqCIpbSTS',
   ]);
   await expect.poll(() => page.evaluate(() => window.__spotifyCalls)).toContainEqual(['seek', 0]);
-  // No guessed total: the duration stays unknown until the player reports it.
+  // No guessed total: the duration stays unknown until the player reports
+  // it, so the bar carries no determinate range attributes at all.
   await expect(page.locator('#soundbarDurationTime')).toBeHidden();
-  await expect(page.locator('#soundbarProgress')).toHaveAttribute('aria-valuemax', '0');
+  await expect(page.locator('#soundbarProgress')).not.toHaveAttribute('aria-valuemax', /.+/);
 });
 
 test('SoundCloud and Spotify playback are mutually exclusive', async ({ page }) => {

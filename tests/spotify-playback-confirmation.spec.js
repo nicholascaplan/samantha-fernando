@@ -79,13 +79,15 @@ test('keeps the soundbar position at zero until the player reports playback', as
   await expect(page.locator('#waveContainer')).toHaveClass(/paused/);
 
   // No wall-clock timer may stand in for real playback: without any
-  // playback_update event the position stays exactly where it started.
+  // playback_update event the position stays exactly where it started, and
+  // with the total still unknown the bar is indeterminate (no range
+  // attributes at all).
   await page.waitForTimeout(1200);
-  await expect(page.locator('#soundbarProgress')).toHaveAttribute('aria-valuenow', '0');
+  await expect(page.locator('#soundbarProgress')).not.toHaveAttribute('aria-valuenow', /.+/);
   await expect(page.locator('#soundbarElapsedTime')).toHaveText('0:00');
   // No guessed total: the duration stays unknown until the player reports it.
   await expect(page.locator('#soundbarDurationTime')).toBeHidden();
-  await expect(page.locator('#soundbarProgress')).toHaveAttribute('aria-valuemax', '0');
+  await expect(page.locator('#soundbarProgress')).not.toHaveAttribute('aria-valuemax', /.+/);
 });
 
 test('drives the soundbar position and duration from playback_update events', async ({ page }) => {
@@ -384,7 +386,7 @@ test('cancelling pending playback from the soundbar clears the loading state', a
   await fireSpotifyUpdate(page, { isPaused: false, isBuffering: false, position: 1000, duration: 30000 });
   await page.clock.runFor(16000);
   await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Resume playback');
-  await expect(page.locator('#soundbarProgress')).toHaveAttribute('aria-valuenow', '0');
+  await expect(page.locator('#soundbarProgress')).not.toHaveAttribute('aria-valuenow', /.+/);
   await expect(page.locator('#audioAvailabilityMessage')).toBeHidden();
   // Cancellation destroys the controller outright: no pause, and the log
   // shows the teardown instead.
@@ -658,7 +660,7 @@ test('a failure after the watchdog tears down the controller and a late report c
     }),
   );
   await expect(page.locator('#soundbarPauseBtn')).toHaveAttribute('aria-label', 'Resume playback');
-  await expect(page.locator('#soundbarProgress')).toHaveAttribute('aria-valuenow', '0');
+  await expect(page.locator('#soundbarProgress')).not.toHaveAttribute('aria-valuenow', /.+/);
   await expect(page.locator('#audioAvailabilityMessage')).toBeVisible();
 
   // Resuming after the failure starts a fresh request through the usual path.
