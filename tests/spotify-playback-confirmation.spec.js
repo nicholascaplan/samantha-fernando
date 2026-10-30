@@ -166,22 +166,33 @@ test('keeps the revealed loading message steady while the player finishes settin
   // passed, the message is visible.
   await expect(page.locator('#soundbarLoading')).toBeVisible();
 
+  // The intercepted script defines the deferred API-ready handle when it
+  // executes. The reveal is real-clock and is not proof the script ran, so
+  // wait for the handle before invoking it.
+  await page.waitForFunction(() => window.__spotifyDeferredApiReady);
+
   // The API becoming ready must not hide the revealed message and restart its
   // delay. Read the computed style in the same JavaScript turn as the ready
   // dispatch so a restarted (still delayed) animation cannot slip past.
-  let visibility = await page.evaluate(() => {
+  let styles = await page.evaluate(() => {
     window.__spotifyDeferredApiReady();
-    return getComputedStyle(document.getElementById('soundbarLoading')).visibility;
+    const style = getComputedStyle(document.getElementById('soundbarLoading'));
+    return { visibility: style.visibility, display: style.display };
   });
-  expect(visibility).toBe('visible');
+  expect(styles).toEqual({ visibility: 'visible', display: 'flex' });
+
+  // The deferred controller handle exists once the ready API has fielded
+  // the site's createController call; wait for it before invoking.
+  await page.waitForFunction(() => window.__spotifyDeferredController);
 
   // The asynchronous controller callback must not restart it either.
-  visibility = await page.evaluate(() => {
+  styles = await page.evaluate(() => {
     const deferred = window.__spotifyDeferredController;
     deferred.callback(deferred.controller);
-    return getComputedStyle(document.getElementById('soundbarLoading')).visibility;
+    const style = getComputedStyle(document.getElementById('soundbarLoading'));
+    return { visibility: style.visibility, display: style.display };
   });
-  expect(visibility).toBe('visible');
+  expect(styles).toEqual({ visibility: 'visible', display: 'flex' });
 });
 
 test('surfaces the unavailable message when playback never starts', async ({ page }) => {
